@@ -827,24 +827,37 @@ function login(){
   });
   
   if(!usuario){ err.textContent='Teléfono o contraseña incorrectos'; return; }
-  
+
   usuarioLogueado = usuario;
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
-  
-  // Lucas Marino Aguirre = supervisor, resto = colaborador
-  rolActual = (usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
-  
-  document.getElementById('loginScreen').style.display='none';
-  if(rolActual==='supervisor'){
-    document.getElementById('appSupervisor').classList.add('active');
-    document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
-    actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); filtrarReuniones();
-  } else {
-    document.getElementById('appcolaborador').classList.add('active');
-    document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
-    rendercolaborador();
+
+  function iniciarSesion(rol){
+    rolActual = rol;
+    document.getElementById('loginScreen').style.display='none';
+    if(rolActual==='supervisor'){
+      document.getElementById('appSupervisor').classList.add('active');
+      document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
+      actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); filtrarReuniones();
+    } else {
+      document.getElementById('appcolaborador').classList.add('active');
+      document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
+      rendercolaborador();
+    }
   }
+
+  // Obtener rol real desde la API
+  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + usuario.id)
+    .then(function(r){ return r.ok ? r.json() : Promise.reject('HTTP '+r.status); })
+    .then(function(data){
+      var rol = (data.rol === 'supervisor') ? 'supervisor' : 'colaborador';
+      iniciarSesion(rol);
+    })
+    .catch(function(){
+      // Fallback: usar lógica local
+      var rol = (usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
+      iniciarSesion(rol);
+    });
 }
 
 function logout(){
