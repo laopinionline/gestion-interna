@@ -833,8 +833,7 @@ function login(){
   empActualNombre = usuario.nombre;
   
   // Lucas Marino Aguirre = supervisor, resto = colaborador
-  const esSupervisor = usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre';
-  rolActual = esSupervisor ? 'supervisor' : 'colaborador';
+  rolActual = (usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
   
   document.getElementById('loginScreen').style.display='none';
   if(rolActual==='supervisor'){
