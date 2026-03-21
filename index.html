@@ -879,7 +879,7 @@ function login(){
   }
 
   // Obtener rol real desde la API
-  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + usuario.id)
+  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores/' + usuario.id)
     .then(function(r){ return r.ok ? r.json() : Promise.reject('HTTP '+r.status); })
     .then(function(data){
       var rol = (data.rol === 'supervisor') ? 'supervisor' : 'colaborador';
@@ -1806,7 +1806,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){['mDetalle','mClien
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('onboardingScreen').style.display = '';
   // Cargar colaboradores activos desde API
-  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores')
+  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores')
     .then(function(r){ return r.json(); })
     .then(function(lista){
       var select = document.getElementById('onbColaborador');
@@ -1831,7 +1831,7 @@ function activarCuenta(){
   if(!sel.value){ err.textContent = 'Elegí tu nombre de la lista'; return; }
   if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
   if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + sel.value + '/password', {
+  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores/' + sel.value + '/password', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({password: p1})
