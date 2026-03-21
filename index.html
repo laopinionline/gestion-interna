@@ -1831,8 +1831,8 @@ function activarCuenta(){
   if(!sel.value){ err.textContent = 'Elegí tu nombre de la lista'; return; }
   if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
   if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + sel.value, {
-    method: 'PUT',
+  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + sel.value + '/password', {
+    method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({password: p1})
   })
