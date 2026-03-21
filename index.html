@@ -416,21 +416,28 @@ header{
       <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--blue);margin-top:14px;">Bienvenido al entorno de <span style="color:var(--accent2)">Claw</span> de La Opinión</div>
       <div style="font-size:14px;color:#888;margin-top:6px;">Primer acceso — configurá tu cuenta</div>
     </div>
-    <div class="form-group" style="margin-bottom:14px;text-align:left">
-      <label class="form-label" style="color:#888">Seleccioná tu nombre</label>
-      <select id="onbColaborador" style="width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:#fff;appearance:auto;cursor:pointer;">
-        <option value="">— Elegí tu usuario —</option>
-      </select>
+    <!-- Paso 1: teléfono -->
+    <div id="onbStep1">
+      <div class="form-group" style="margin-bottom:20px;text-align:left">
+        <label class="form-label" style="color:#888">Tu número de teléfono</label>
+        <input type="tel" class="pin-field" id="onbTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')verificarTelefono()">
+        <div style="font-size:12px;color:#aaa;margin-top:6px;">Ingresá el número con el que te registraron en el sistema</div>
+      </div>
+      <button class="btn-login" onclick="verificarTelefono()">Continuar →</button>
     </div>
-    <div class="form-group" style="margin-bottom:14px;text-align:left">
-      <label class="form-label" style="color:#888">Nueva contraseña</label>
-      <input type="password" class="pin-field" id="onbPass1" placeholder="Mínimo 4 caracteres" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px">
+    <!-- Paso 2: contraseña (oculto hasta verificar teléfono) -->
+    <div id="onbStep2" style="display:none;">
+      <div id="onbNombreConfirm" style="background:#f0f4f8;border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:15px;color:var(--blue);font-weight:600;text-align:center;"></div>
+      <div class="form-group" style="margin-bottom:14px;text-align:left">
+        <label class="form-label" style="color:#888">Nueva contraseña</label>
+        <input type="password" class="pin-field" id="onbPass1" placeholder="Mínimo 4 caracteres" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px">
+      </div>
+      <div class="form-group" style="margin-bottom:20px;text-align:left">
+        <label class="form-label" style="color:#888">Confirmar contraseña</label>
+        <input type="password" class="pin-field" id="onbPass2" placeholder="Repetí la contraseña" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')activarCuenta()">
+      </div>
+      <button class="btn-login" onclick="activarCuenta()">Activar mi cuenta</button>
     </div>
-    <div class="form-group" style="margin-bottom:20px;text-align:left">
-      <label class="form-label" style="color:#888">Confirmar contraseña</label>
-      <input type="password" class="pin-field" id="onbPass2" placeholder="Repetí la contraseña" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')activarCuenta()">
-    </div>
-    <button class="btn-login" onclick="activarCuenta()">Activar mi cuenta</button>
     <div class="login-error" id="onbError"></div>
     <div id="onbSuccess" style="display:none;margin-top:16px;padding:14px;background:var(--green-bg);border-radius:10px;color:var(--green);font-size:14px;font-weight:600;"></div>
   </div>
@@ -1800,38 +1807,45 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('clic
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){['mDetalle','mCliente','mOrden','mcolaborador','mReunion','mPerfil'].forEach(cerrarModal);}});
 
 // ══ ONBOARDING ══
+var onbUsuario = null;
+
 (function(){
   var params = new URLSearchParams(window.location.search);
   if(params.get('onboarding') !== 'true') return;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('onboardingScreen').style.display = '';
-  // Cargar colaboradores activos desde API
+})();
+
+function verificarTelefono(){
+  var tel = document.getElementById('onbTel').value.trim().replace(/[^0-9]/g,'');
+  var err = document.getElementById('onbError');
+  err.textContent = '';
+  if(!tel){ err.textContent = 'Ingresá tu número de teléfono'; return; }
   fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores')
     .then(function(r){ return r.json(); })
     .then(function(lista){
-      var select = document.getElementById('onbColaborador');
-      lista.filter(function(c){ return c.estado === 'activo'; })
-        .sort(function(a,b){ return a.nombre.localeCompare(b.nombre); })
-        .forEach(function(c){
-          var opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.nombre;
-          select.appendChild(opt);
-        });
+      var match = lista.find(function(c){
+        return (c.telefono||'').replace(/[^0-9]/g,'') === tel && c.estado === 'activo';
+      });
+      if(!match){ err.textContent = 'No encontramos ese número en el sistema. Consultá a tu supervisor.'; return; }
+      onbUsuario = match;
+      document.getElementById('onbStep1').style.display = 'none';
+      document.getElementById('onbStep2').style.display = '';
+      document.getElementById('onbNombreConfirm').textContent = '¡Hola, ' + match.nombre.split(' ')[0] + '! Elegí tu contraseña.';
+      document.getElementById('onbPass1').focus();
     })
-    .catch(function(){ document.getElementById('onbError').textContent = 'Error al cargar colaboradores. Recargá la página.'; });
-})();
+    .catch(function(){ err.textContent = 'Error de conexión. Recargá la página.'; });
+}
 
 function activarCuenta(){
-  var sel = document.getElementById('onbColaborador');
   var p1 = document.getElementById('onbPass1').value;
   var p2 = document.getElementById('onbPass2').value;
   var err = document.getElementById('onbError');
   err.textContent = '';
-  if(!sel.value){ err.textContent = 'Elegí tu nombre de la lista'; return; }
+  if(!onbUsuario){ err.textContent = 'Error: reiniciá el proceso'; return; }
   if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
   if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores/' + sel.value + '/password', {
+  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores/' + onbUsuario.id + '/password', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({password: p1})
@@ -1842,10 +1856,8 @@ function activarCuenta(){
     var ok = document.getElementById('onbSuccess');
     ok.style.display = 'block';
     ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
-    document.querySelector('#onboardingScreen .btn-login').disabled = true;
-    setTimeout(function(){
-      window.location.href = window.location.pathname;
-    }, 2000);
+    document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
   })
   .catch(function(){ err.textContent = 'Error al activar la cuenta. Intentá de nuevo.'; });
 }
