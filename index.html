@@ -408,6 +408,34 @@ header{
 </head>
 <body>
 
+<!-- ══════════ ONBOARDING ══════════ -->
+<div class="login-screen" id="onboardingScreen" style="display:none;">
+  <div class="login-box" style="max-width:440px;">
+    <div style="margin-bottom:24px">
+      <img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;">
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--blue);margin-top:14px;">Bienvenido al sistema de La Opinión</div>
+      <div style="font-size:14px;color:#888;margin-top:6px;">Primer acceso — configurá tu cuenta</div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;text-align:left">
+      <label class="form-label" style="color:#888">Seleccioná tu nombre</label>
+      <select id="onbColaborador" style="width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:#fff;appearance:auto;cursor:pointer;">
+        <option value="">— Elegí tu usuario —</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;text-align:left">
+      <label class="form-label" style="color:#888">Nueva contraseña</label>
+      <input type="password" class="pin-field" id="onbPass1" placeholder="Mínimo 4 caracteres" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;text-align:left">
+      <label class="form-label" style="color:#888">Confirmar contraseña</label>
+      <input type="password" class="pin-field" id="onbPass2" placeholder="Repetí la contraseña" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')activarCuenta()">
+    </div>
+    <button class="btn-login" onclick="activarCuenta()">Activar mi cuenta</button>
+    <div class="login-error" id="onbError"></div>
+    <div id="onbSuccess" style="display:none;margin-top:16px;padding:14px;background:var(--green-bg);border-radius:10px;color:var(--green);font-size:14px;font-weight:600;"></div>
+  </div>
+</div>
+
 <!-- ══════════ LOGIN ══════════ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
@@ -1770,6 +1798,57 @@ function abrirModal(id){document.getElementById(id).classList.add('active');docu
 function cerrarModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow='';}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)cerrarModal(m.id);});});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){['mDetalle','mCliente','mOrden','mcolaborador','mReunion','mPerfil'].forEach(cerrarModal);}});
+
+// ══ ONBOARDING ══
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('onboarding') !== 'true') return;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('onboardingScreen').style.display = '';
+  // Cargar colaboradores activos desde API
+  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores')
+    .then(function(r){ return r.json(); })
+    .then(function(lista){
+      var select = document.getElementById('onbColaborador');
+      lista.filter(function(c){ return c.estado === 'activo'; })
+        .sort(function(a,b){ return a.nombre.localeCompare(b.nombre); })
+        .forEach(function(c){
+          var opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.nombre;
+          select.appendChild(opt);
+        });
+    })
+    .catch(function(){ document.getElementById('onbError').textContent = 'Error al cargar colaboradores. Recargá la página.'; });
+})();
+
+function activarCuenta(){
+  var sel = document.getElementById('onbColaborador');
+  var p1 = document.getElementById('onbPass1').value;
+  var p2 = document.getElementById('onbPass2').value;
+  var err = document.getElementById('onbError');
+  err.textContent = '';
+  if(!sel.value){ err.textContent = 'Elegí tu nombre de la lista'; return; }
+  if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
+  if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
+  fetch('https://role-unless-lease-directors.trycloudflare.com/colaboradores/' + sel.value, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({password: p1})
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(){
+    err.textContent = '';
+    var ok = document.getElementById('onbSuccess');
+    ok.style.display = 'block';
+    ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
+    document.querySelector('#onboardingScreen .btn-login').disabled = true;
+    setTimeout(function(){
+      window.location.href = window.location.pathname;
+    }, 2000);
+  })
+  .catch(function(){ err.textContent = 'Error al activar la cuenta. Intentá de nuevo.'; });
+}
 </script>
 
 <!-- MODAL PERFIL -->
