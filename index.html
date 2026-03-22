@@ -859,7 +859,7 @@ function login(){
   if(!telInput||!pass){ err.textContent='Ingresá teléfono y contraseña'; return; }
   
   // Validar contra la API (esto asegura que usa contraseñas actualizadas)
-  fetch('https://genre-tiny-pathology-across.trycloudflare.com/login', {
+  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/login', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({telefono: telInput, password: pass})
@@ -897,7 +897,7 @@ function login(){
   }
 
   // Obtener rol real desde la API
-  fetch('https://genre-tiny-pathology-across.trycloudflare.com/colaboradores/' + usuario.id)
+  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/colaboradores/' + usuario.id)
     .then(function(r){ return r.ok ? r.json() : Promise.reject('HTTP '+r.status); })
     .then(function(data){
       var rol = (data.rol === 'supervisor') ? 'supervisor' : 'colaborador';
@@ -1832,7 +1832,7 @@ function verificarTelefono(){
   var err = document.getElementById('onbError');
   err.textContent = '';
   if(!tel){ err.textContent = 'Ingresá tu número de teléfono'; return; }
-  fetch('https://genre-tiny-pathology-across.trycloudflare.com/colaboradores')
+  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/colaboradores')
     .then(function(r){ return r.json(); })
     .then(function(lista){
       var match = lista.find(function(c){
@@ -1856,7 +1856,7 @@ function activarCuenta(){
   if(!onbUsuario){ err.textContent = 'Error: reiniciá el proceso'; return; }
   if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
   if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch('https://genre-tiny-pathology-across.trycloudflare.com/colaboradores/' + onbUsuario.id + '/password', {
+  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/colaboradores/' + onbUsuario.id + '/password', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({password: p1})
