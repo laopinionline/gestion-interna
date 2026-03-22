@@ -961,18 +961,9 @@ async function login(){
     }
   }
 
-  // Obtener rol real desde la API
-  fetch('https://thirty-virginia-devoted-recommendation.trycloudflare.com/colaboradores/' + usuario.id)
-    .then(function(r){ return r.ok ? r.json() : Promise.reject('HTTP '+r.status); })
-    .then(function(data){
-      var rol = (data.rol === 'supervisor') ? 'supervisor' : 'colaborador';
-      iniciarSesion(rol);
-    })
-    .catch(function(){
-      // Fallback: usar lógica local
-      var rol = (usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
-      iniciarSesion(rol);
-    });
+  // Detectar rol localmente — supervisor es emp01 o quien tenga rol supervisor
+  var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
+  iniciarSesion(rol);
 }
 
 function logout(){
