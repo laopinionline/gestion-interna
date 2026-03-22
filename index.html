@@ -405,6 +405,8 @@ header{
 .perfil-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--paper2);}
 
 </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -813,6 +815,80 @@ header{
 <div class="toast" id="toast"></div>
 
 <script>
+
+  // ══════════ FIREBASE CONFIG ══════════
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-YCiTQXUSIqRHmhPU8S9CP04LfTxlsvM",
+    authDomain: "laopinion-gestion.firebaseapp.com",
+    projectId: "laopinion-gestion",
+    storageBucket: "laopinion-gestion.firebasestorage.app",
+    messagingSenderId: "434546688331",
+    appId: "1:434546688331:web:b706816e5260c8493628ce"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ══════════ FIRESTORE SYNC ══════════
+  let firestoreReady = false;
+
+  async function cargarDatosFirestore() {
+    try {
+      const cols = ['colaboradores','clientes','ordenes','reuniones'];
+      for (const col of cols) {
+        const snap = await db.collection(col).get();
+        if (!snap.empty) {
+          const datos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          localStorage.setItem('d_' + col, JSON.stringify(datos));
+          if (col === 'colaboradores') colaboradores = datos;
+          if (col === 'clientes') clientes = datos;
+          if (col === 'ordenes') ordenes = datos;
+          if (col === 'reuniones') reuniones = datos;
+        } else {
+          // Si Firestore está vacío, subir datos locales
+          const local = JSON.parse(localStorage.getItem('d_' + col) || '[]');
+          if (local.length > 0) {
+            const batch = db.batch();
+            local.forEach(item => {
+              const ref = db.collection(col).doc(item.id || uid());
+              batch.set(ref, item);
+            });
+            await batch.commit();
+          }
+        }
+      }
+      firestoreReady = true;
+      console.log('Firestore sincronizado OK');
+    } catch(e) {
+      console.warn('Firestore no disponible, usando localStorage:', e);
+      firestoreReady = false;
+    }
+  }
+
+  async function guardarEnFirestore(coleccion, datos) {
+    if (!firestoreReady) return;
+    try {
+      const batch = db.batch();
+      // Primero borrar todos los docs de la colección
+      const snap = await db.collection(coleccion).get();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      // Luego escribir los nuevos
+      datos.forEach(item => {
+        const ref = db.collection(coleccion).doc(item.id);
+        batch.set(ref, item);
+      });
+      await batch.commit();
+    } catch(e) {
+      console.warn('Error guardando en Firestore:', e);
+    }
+  }
+
+  // Sobrescribir guardarDatos para que también sincronice con Firestore
+  function guardarYSincronizar(clave, datos) {
+    localStorage.setItem(clave, JSON.stringify(datos));
+    const mapa = {'d_colaboradores':'colaboradores','d_clientes':'clientes','d_ordenes':'ordenes','d_reuniones':'reuniones'};
+    if (mapa[clave]) guardarEnFirestore(mapa[clave], datos);
+  }
+
 // ══ PINS ══
 // Login por teléfono + contraseña — se gestiona desde el perfil de cada colaborador
 
@@ -852,7 +928,7 @@ function toast(msg,tipo=''){
 // ══ LOGIN ══
 // Rol detectado automáticamente por login
 
-function login(){
+async function login(){
   const telInput = document.getElementById('loginTel').value.trim().replace(/[^0-9]/g,'');
   const pass = document.getElementById('loginPass').value.trim();
   const err = document.getElementById('loginError');
@@ -1371,7 +1447,7 @@ function completarTarea(id){
 // ══ COLABORADORES ══
 let editandoEmpId = null;
 
-function saveEmps(){ localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); }
+function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
 
 function abrirModalcolaborador(id){
   editandoEmpId = id || null;
@@ -1846,7 +1922,7 @@ function activarCuenta(){
   var idx = colaboradores.findIndex(function(c){ return c.id === onbUsuario.id; });
   if(idx === -1){ err.textContent = 'Error: usuario no encontrado'; return; }
   colaboradores[idx].password = p1;
-  localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores));
+  guardarYSincronizar('d_colaboradores', colaboradores);
   err.textContent = '';
   var ok = document.getElementById('onbSuccess');
   ok.style.display = 'block';
@@ -1854,6 +1930,12 @@ function activarCuenta(){
   document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
   setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
 }
+
+  // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
+  cargarDatosFirestore().then(() => {
+    console.log('Datos cargados desde Firestore');
+  });
+
 </script>
 
 <!-- MODAL PERFIL -->
