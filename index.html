@@ -439,7 +439,7 @@ header{
     <div id="onbStep1">
       <div class="form-group" style="margin-bottom:20px;text-align:left">
         <label class="form-label" style="color:#888">Tu número de teléfono</label>
-        <input type="tel" class="pin-field" id="onbTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')verificarTelefono()">
+        <input type="tel" class="pin-field" id="onbTel" autocomplete="off" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')verificarTelefono()">
         <div style="font-size:12px;color:#aaa;margin-top:6px;">Ingresá el número con el que te registraron en el sistema</div>
       </div>
       <button class="btn-login" onclick="verificarTelefono()">Continuar →</button>
@@ -475,7 +475,7 @@ header{
     </div>
     <div class="form-group" style="margin-bottom:14px;text-align:left">
       <label class="form-label" style="color:#888">Teléfono</label>
-      <input type="tel" class="pin-field" id="loginTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+      <input type="tel" class="pin-field" id="loginTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
     </div>
     <div class="form-group" style="margin-bottom:20px;text-align:left">
       <label class="form-label" style="color:#888">Contraseña</label>
