@@ -590,6 +590,14 @@ header{
           <option value="en-curso">En curso</option>
           <option value="cancelada">Cancelada</option>
         </select>
+        <select class="filter-sel" id="filtroOrdenEquipo" onchange="filtrarOrdenes()" style="margin-right:8px">
+          <option value="">Todos los equipos</option>
+          <option value="Redacción">📰 Redacción</option>
+          <option value="Digital">💻 Digital</option>
+          <option value="Administración">📋 Administración</option>
+          <option value="Comercial">💼 Comercial</option>
+          <option value="Dirección">⭐ Dirección</option>
+        </select>
         <select class="filter-sel" id="filtroOrdenCliente" onchange="filtrarOrdenes()">
           <option value="">Todos los clientes</option>
         </select>
@@ -804,6 +812,23 @@ header{
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-select" id="soEstado"><option value="pendiente">Pendiente</option><option value="completada">Completada</option><option value="cancelada">Cancelada</option></select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Equipo</label>
+          <select class="form-select" id="soEquipo" onchange="actualizarTiposTarea()">
+            <option value="">— Todos —</option>
+            <option value="Redacción">📰 Redacción</option>
+            <option value="Digital">💻 Digital</option>
+            <option value="Administración">📋 Administración</option>
+            <option value="Comercial">💼 Comercial</option>
+            <option value="Dirección">⭐ Dirección</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de tarea</label>
+          <select class="form-select" id="soTipo" onchange="completarDescDesdeТipo()">
+            <option value="">— Seleccionar —</option>
+          </select>
+        </div>
         <div class="form-group form-full"><label class="form-label">Descripción / Tarea *</label><input type="text" class="form-input" id="soDesc" placeholder="Ej: Revisar métricas GA4, monitorear servidor..."></div>
         <div class="form-group form-full"><label class="form-label">Colaboradores asignados <span style="color:#bbb;font-weight:400">(opcional, podés seleccionar varios)</span></label>
           <div id="socolaboradoresWrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;background:var(--paper);border-radius:8px;padding:12px;border:1.5px solid var(--line);min-height:52px;"></div>
@@ -812,6 +837,15 @@ header{
           <select class="form-select" id="soCliente"><option value="">— Sin cliente —</option></select>
         </div>
         <div class="form-group form-full"><label class="form-label">Notas / Detalle</label><textarea class="form-textarea" id="soNotas" placeholder="Links, instrucciones, contexto..."></textarea></div>
+        <div class="form-group form-full" id="seccionComentarios" style="display:none">
+          <label class="form-label">💬 Comentarios y recomendaciones</label>
+          <div id="listaComentarios" style="margin-bottom:8px;max-height:180px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="form-input" id="nuevoComentario" placeholder="Escribí un comentario o recomendación..." style="flex:1">
+            <button class="btn-blue" onclick="agregarComentario()" style="white-space:nowrap">Comentar</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">⚠️ Los comentarios requieren devolución del director del área</div>
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn-danger" id="btnEliminarOrden" style="display:none" onclick="eliminarOrden()">🗑 Eliminar</button>
@@ -999,6 +1033,180 @@ async function login(){
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
   iniciarSesion(rol);
 }
+
+
+// ══════════ TIPOS DE TAREA POR EQUIPO ══════════
+const TAREAS_POR_EQUIPO = {
+  'Redacción': [
+    'Subir nota al diario digital',
+    'Cobertura especial',
+    'Entrevista',
+    'Producción para streaming',
+    'Cobertura del HCD',
+    'Nota policiales/judiciales',
+    'Nota deportes',
+    'Nota cultura',
+    'Nota tendencias/sociales',
+    'Video para Instagram',
+    'Reel viral',
+    'Vivo en tribunales',
+  ],
+  'Digital': [
+    'Armado PDF diario físico',
+    'Publicación en Instagram',
+    'Recorte de programa streaming',
+    'Diseño pieza publicitaria',
+    'Subir banner web',
+    'Post en Twitter/X',
+    'Post en Facebook',
+    'Reel para redes',
+    'Subtítulos/títulos para video',
+    'Control de pautas publicadas',
+    'Newsletter WhatsApp',
+    'Diseño separador radio',
+  ],
+  'Administración': [
+    'Conciliación bancaria',
+    'Seguimiento de pago de cliente',
+    'Papelería pauta gubernamental',
+    'Coordinación edicto judicial',
+    'Aviso fúnebre',
+    'Carga de cliente LO365',
+    'Visita a prestador LO365',
+    'Control de vencimiento pauta',
+    'Gestión suplemento especial',
+    'Nómina / pagos',
+  ],
+  'Comercial': [
+    'Visita a cliente',
+    'Llamado de seguimiento',
+    'Propuesta comercial',
+    'Renovación de pauta',
+    'Alta de cliente nuevo',
+    'Reunión con cliente',
+    'Seguimiento de cobro',
+    'Incorporación prestador LO365',
+    'Cierre de venta',
+  ],
+  'Dirección': [
+    'Reunión de equipo semanal',
+    'Definición estrategia editorial',
+    'Revisión de métricas',
+    'Reporte a Lucas',
+    'Planificación semanal',
+    'Seguimiento de colaborador',
+    'Aprobación de contenido',
+  ],
+};
+
+function actualizarTiposTarea(){
+  const equipo = document.getElementById('soEquipo')?.value || '';
+  const sel = document.getElementById('soTipo');
+  if(!sel) return;
+  const tipos = TAREAS_POR_EQUIPO[equipo] || [];
+  sel.innerHTML = '<option value="">— Seleccionar tipo —</option>' +
+    tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+  // Filtrar colaboradores por equipo
+  filtrarColabsPorEquipo(equipo);
+}
+
+function filtrarColabsPorEquipo(equipo){
+  document.querySelectorAll('.colab-check-wrap').forEach(wrap => {
+    const empId = wrap.dataset.empId;
+    const emp = colaboradores.find(c => c.id === empId);
+    if(!equipo || !emp || emp.equipo === equipo || rolActual === 'supervisor'){
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+    }
+  });
+}
+
+function completarDescDesdeТipo(){
+  const tipo = document.getElementById('soTipo')?.value || '';
+  if(tipo && !document.getElementById('soDesc').value){
+    document.getElementById('soDesc').value = tipo;
+  }
+}
+
+// ══════════ COMENTARIOS EN ÓRDENES ══════════
+function agregarComentario(){
+  const texto = document.getElementById('nuevoComentario')?.value.trim();
+  if(!texto){ toast('Escribí un comentario','err'); return; }
+  if(!editandoOrdenId){ toast('Guardá la orden primero','err'); return; }
+  const orden = ordenes.find(o => o.id === editandoOrdenId);
+  if(!orden) return;
+  if(!orden.comentarios) orden.comentarios = [];
+  orden.comentarios.push({
+    id: uid(),
+    texto,
+    autor: empActualNombre || 'Supervisor',
+    autorId: empActualId || 'emp01',
+    fecha: new Date().toLocaleDateString('es-AR'),
+    hora: new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
+    requiereDevolucion: true,
+    resuelto: false,
+  });
+  guardarYSincronizar('d_ordenes', ordenes);
+  document.getElementById('nuevoComentario').value = '';
+  renderComentarios(orden);
+  toast('Comentario agregado ✓','ok');
+}
+
+function renderComentarios(orden){
+  const lista = document.getElementById('listaComentarios');
+  if(!lista || !orden) return;
+  const comentarios = orden.comentarios || [];
+  if(!comentarios.length){
+    lista.innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin comentarios aún.</div>';
+    return;
+  }
+  lista.innerHTML = comentarios.map(c => `
+    <div style="background:${c.resuelto?'#f0fff0':'#fff8e1'};border-left:3px solid ${c.resuelto?'#4caf50':'#ff9800'};padding:8px 12px;border-radius:4px;margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:13px">${c.autor}</strong>
+        <span style="font-size:11px;color:#aaa">${c.fecha} ${c.hora}</span>
+      </div>
+      <div style="font-size:13px;margin:4px 0">${c.texto}</div>
+      ${c.requiereDevolucion && !c.resuelto ? `<div style="font-size:11px;color:#e65100">⚠️ Requiere devolución del director</div>` : ''}
+      ${c.resuelto ? `<div style="font-size:11px;color:#4caf50">✅ Resuelto</div>` : ''}
+      ${(rolActual==='supervisor' && !c.resuelto) ? `<button onclick="resolverComentario('${orden.id}','${c.id}')" style="font-size:11px;background:none;border:1px solid #4caf50;color:#4caf50;padding:2px 8px;border-radius:4px;cursor:pointer;margin-top:4px">Marcar resuelto</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function resolverComentario(ordenId, comentarioId){
+  const orden = ordenes.find(o => o.id === ordenId);
+  if(!orden || !orden.comentarios) return;
+  const c = orden.comentarios.find(c => c.id === comentarioId);
+  if(c) c.resuelto = true;
+  guardarYSincronizar('d_ordenes', ordenes);
+  renderComentarios(orden);
+  toast('Comentario resuelto ✓','ok');
+}
+
+// ══════════ VALIDACIÓN DE JERARQUÍA EN ÓRDENES ══════════
+function validarJerarquiaOrden(colaboradoresIds){
+  if(rolActual === 'supervisor') return true; // supervisores pueden asignar a cualquiera
+  if(!colaboradoresIds || !colaboradoresIds.length) return true;
+  const yo = colaboradores.find(c => c.id === empActualId);
+  if(!yo) return true;
+  for(const id of colaboradoresIds){
+    if(id === empActualId){
+      toast('No podés asignarte tareas a vos mismo','err');
+      return false;
+    }
+    const dest = colaboradores.find(c => c.id === id);
+    if(!dest) continue;
+    // No se puede asignar a directores ni al director general
+    if(dest.jerarquia === 'director' || dest.jerarquia === 'director_general'){
+      toast(`No podés asignar tareas a ${dest.nombre.split(' ')[0]} — es director/a`,'err');
+      return false;
+    }
+  }
+  return true;
+}
+
 
 function etiquetaJerarquia(j){
   const mapa = {
@@ -1335,8 +1543,10 @@ function actualizarFiltroOrdenes(){
   // Poblar checkboxes de colaboradores en el modal de orden
   const wrapE = document.getElementById('socolaboradoresWrap');
   if(wrapE) wrapE.innerHTML = colaboradores.map(e=>`
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);">
-      <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> ${e.nombre.split(' ').slice(0,2).join(' ')}
+    <label class="colab-check-wrap" data-emp-id="${e.id}" style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);" title="${e.equipo||''}">
+      <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> 
+      <span>${e.nombre.split(' ').slice(0,2).join(' ')}</span>
+      ${e.equipo?`<span style="font-size:9px;color:#aaa">(${e.equipo})</span>`:''}
     </label>`).join('');
 }
 
@@ -1344,6 +1554,7 @@ function filtrarOrdenes(){
   const fFecha=document.getElementById('filtroOrdenFecha').value;
   const fEst=document.getElementById('filtroOrdenEstado').value;
   const fCli=document.getElementById('filtroOrdenCliente').value;
+  const fEquipo=document.getElementById('filtroOrdenEquipo')?.value||'';
   const h=hoy();
   const inicioSemana=new Date(); inicioSemana.setDate(inicioSemana.getDate()-inicioSemana.getDay());
   let lista=ordenes.filter(o=>{
@@ -1351,6 +1562,7 @@ function filtrarOrdenes(){
     if(fFecha==='semana' && new Date(o.fecha+'T00:00:00')<inicioSemana) return false;
     if(fEst && o.estado!==fEst) return false;
     if(fCli && o.clienteId!==fCli) return false;
+    if(fEquipo && o.equipo!==fEquipo) return false;
     return true;
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
   renderOrdenes(lista);
@@ -1365,7 +1577,7 @@ function renderOrdenes(lista){
     return `<div class="order-item" style="cursor:pointer" onclick="editarOrden('${o.id}')">
       <div class="order-hdr">
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="order-date">📅 ${fmtD(o.fecha)}</div>
+          <div class="order-date">📅 ${fmtD(o.fecha)}${o.equipo?` · <span class="pill-equipo pill-${o.equipo.toLowerCase().replace(/[^a-z]/g,'')}" style="font-size:10px;padding:1px 6px">${o.equipo}</span>`:''}</div>
           ${c?`<span class="order-client-tag">📌 ${c.nombre}</span>`:''}
           ${(()=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);const nombres=ids.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean);return nombres.length?`<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 ${nombres.join(', ')}</span>`:''})()}
         </div>
@@ -1384,8 +1596,14 @@ function abrirNuevaOrden(){
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
   document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
   document.getElementById('btnEliminarOrden').style.display='none';
+  // Limpiar campos nuevos
+  if(document.getElementById('soEquipo')) document.getElementById('soEquipo').value='';
+  if(document.getElementById('soTipo')) document.getElementById('soTipo').innerHTML='<option value="">— Seleccionar tipo —</option>';
+  const secComent = document.getElementById('seccionComentarios');
+  if(secComent) secComent.style.display = 'none';
   // Limpiar checkboxes colaboradores
   document.querySelectorAll('.colab-check').forEach(c=>c.checked=false);
+  document.querySelectorAll('.colab-check-wrap').forEach(w=>w.style.display='');
   abrirModal('mOrden');
 }
 
@@ -1420,6 +1638,16 @@ function editarOrden(id){
     c.checked = asignados.includes(c.value);
   });
   document.getElementById('btnEliminarOrden').style.display='block';
+  // Cargar equipo y tipo
+  if(document.getElementById('soEquipo')) {
+    document.getElementById('soEquipo').value = o.equipo || '';
+    actualizarTiposTarea();
+    if(document.getElementById('soTipo')) document.getElementById('soTipo').value = o.tipo || '';
+  }
+  // Mostrar comentarios
+  const secComent = document.getElementById('seccionComentarios');
+  if(secComent) secComent.style.display = 'block';
+  renderComentarios(o);
   abrirModal('mOrden');
 }
 
@@ -1428,14 +1656,30 @@ function guardarOrdenStandalone(){
   const desc=document.getElementById('soDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
   const colaboradoresIds = [...document.querySelectorAll('.colab-check:checked')].map(c=>c.value);
-  const datos={fecha,desc,notas:document.getElementById('soNotas').value.trim(),estado:document.getElementById('soEstado').value,clienteId:document.getElementById('soCliente').value||null,colaboradoresIds};
+  // Validar jerarquía
+  if(!validarJerarquiaOrden(colaboradoresIds)) return;
+  const equipo = document.getElementById('soEquipo')?.value || '';
+  const tipo = document.getElementById('soTipo')?.value || '';
+  const datos={
+    fecha, desc,
+    equipo, tipo,
+    notas:document.getElementById('soNotas').value.trim(),
+    estado:document.getElementById('soEstado').value,
+    clienteId:document.getElementById('soCliente').value||null,
+    colaboradoresIds,
+    creadoPor: empActualId || 'emp01',
+    creadoPorNombre: empActualNombre || 'Supervisor',
+  };
   if(editandoOrdenId){
     const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
+    // Preservar comentarios al editar
+    datos.comentarios = ordenes[i].comentarios || [];
     ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
   } else {
+    datos.comentarios = [];
     ordenes.push({id:uid(),...datos}); toast('Orden creada ✓','ok');
   }
-  gLS(); filtrarOrdenes(); cerrarModal('mOrden');
+  guardarYSincronizar('d_ordenes', ordenes); filtrarOrdenes(); cerrarModal('mOrden');
 }
 
 function eliminarOrden(){
