@@ -2592,13 +2592,19 @@ function filtrarReuniones(){
 
 function renderReunionCard(r, esSupervisor){
   const status = statusReunion(r);
-  const total = r.participantes.length;
+  // Normalizar participantes — puede venir como array, string JSON, o undefined
+  let participantes = r.participantes;
+  if (!Array.isArray(participantes)) {
+    try { participantes = JSON.parse(participantes || '[]'); } catch { participantes = []; }
+  }
+  r.participantes = participantes;
+  const total = participantes.length;
   const cumplidos = Object.values(r.cumplimiento||{}).filter(Boolean).length;
   const pct = total ? Math.round(cumplidos/total*100) : 0;
   const statusLabel = {hoy:'HOY',proxima:'Próxima',pasada:'Realizada'}[status];
   const statusClass = {hoy:'ms-hoy',proxima:'ms-proxima',pasada:'ms-pasada'}[status];
 
-  const chips = r.participantes.map(pid=>{
+  const chips = participantes.map(pid=>{
     const emp = colaboradores.find(e=>e.id===pid);
     if(!emp)return'';
     const done = r.cumplimiento?.[pid];
