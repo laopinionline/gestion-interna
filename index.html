@@ -78,6 +78,23 @@ header{
 }
 .btn-logout:hover{color:#fff;border-color:rgba(255,255,255,0.6);}
 
+/* Pills equipo */
+.pill-equipo{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.pill-redacción,.pill-redaccion{background:#E3F2FD;color:#1565C0;}
+.pill-digital{background:#E8F5E9;color:#2E7D32;}
+.pill-administración,.pill-administracion{background:#FFF3E0;color:#E65100;}
+.pill-comercial{background:#FCE4EC;color:#C62828;}
+.pill-dirección,.pill-direccion{background:#EDE7F6;color:#4527A0;}
+.pill-externo{background:#F5F5F5;color:#616161;}
+
+/* Pills jerarquía */
+.pill-jerarquia{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.pill-j-director_general{background:#1A3A5C;color:#fff;}
+.pill-j-director{background:#1565C0;color:#fff;}
+.pill-j-responsable{background:#0288D1;color:#fff;}
+.pill-j-colaborador{background:#E0E0E0;color:#424242;}
+.pill-j-externo{background:#BDBDBD;color:#424242;}
+
 .nav-tabs{background:#fff;border-bottom:2px solid var(--paper2);display:flex;padding:0 28px;gap:2px;}
 .nav-tab{
   padding:12px 20px;border:none;background:none;
@@ -405,6 +422,8 @@ header{
 .perfil-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--paper2);}
 
 </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -420,7 +439,7 @@ header{
     <div id="onbStep1">
       <div class="form-group" style="margin-bottom:20px;text-align:left">
         <label class="form-label" style="color:#888">Tu número de teléfono</label>
-        <input type="tel" class="pin-field" id="onbTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')verificarTelefono()">
+        <input type="tel" class="pin-field" id="onbTel" autocomplete="off" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')verificarTelefono()">
         <div style="font-size:12px;color:#aaa;margin-top:6px;">Ingresá el número con el que te registraron en el sistema</div>
       </div>
       <button class="btn-login" onclick="verificarTelefono()">Continuar →</button>
@@ -456,7 +475,7 @@ header{
     </div>
     <div class="form-group" style="margin-bottom:14px;text-align:left">
       <label class="form-label" style="color:#888">Teléfono</label>
-      <input type="tel" class="pin-field" id="loginTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+      <input type="tel" class="pin-field" id="loginTel" placeholder="2477 xxxxxx" style="letter-spacing:normal;font-size:16px;text-align:left;padding:12px 14px" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
     </div>
     <div class="form-group" style="margin-bottom:20px;text-align:left">
       <label class="form-label" style="color:#888">Contraseña</label>
@@ -571,6 +590,14 @@ header{
           <option value="en-curso">En curso</option>
           <option value="cancelada">Cancelada</option>
         </select>
+        <select class="filter-sel" id="filtroOrdenEquipo" onchange="filtrarOrdenes()" style="margin-right:8px">
+          <option value="">Todos los equipos</option>
+          <option value="Redacción">📰 Redacción</option>
+          <option value="Digital">💻 Digital</option>
+          <option value="Administración">📋 Administración</option>
+          <option value="Comercial">💼 Comercial</option>
+          <option value="Dirección">⭐ Dirección</option>
+        </select>
         <select class="filter-sel" id="filtroOrdenCliente" onchange="filtrarOrdenes()">
           <option value="">Todos los clientes</option>
         </select>
@@ -584,6 +611,23 @@ header{
     <div class="view" id="vcolaboradores">
       <div class="toolbar">
         <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="searchEmp" placeholder="Buscar colaborador..." oninput="filtrarcolaboradores()"></div>
+        <select id="filterEquipo" onchange="filtrarcolaboradores()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">
+          <option value="">Todos los equipos</option>
+          <option value="Dirección">⭐ Dirección</option>
+          <option value="Redacción">📰 Redacción</option>
+          <option value="Digital">💻 Digital</option>
+          <option value="Administración">📋 Administración</option>
+          <option value="Comercial">💼 Comercial</option>
+          <option value="Externo">🔗 Externo</option>
+        </select>
+        <select id="filterJerarquia" onchange="filtrarcolaboradores()" style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">
+          <option value="">Todas las jerarquías</option>
+          <option value="director_general">⭐ Director General</option>
+          <option value="director">🔷 Director</option>
+          <option value="responsable">🔹 Responsable</option>
+          <option value="colaborador">👤 Colaborador</option>
+          <option value="externo">🔗 Externo</option>
+        </select>
         
         <span class="count-badge" id="empCountBadge">0</span>
         <button class="btn-primary" onclick="abrirModalcolaborador()">+ Nuevo colaborador</button>
@@ -768,6 +812,23 @@ header{
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-select" id="soEstado"><option value="pendiente">Pendiente</option><option value="completada">Completada</option><option value="cancelada">Cancelada</option></select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Equipo</label>
+          <select class="form-select" id="soEquipo" onchange="actualizarTiposTarea()">
+            <option value="">— Todos —</option>
+            <option value="Redacción">📰 Redacción</option>
+            <option value="Digital">💻 Digital</option>
+            <option value="Administración">📋 Administración</option>
+            <option value="Comercial">💼 Comercial</option>
+            <option value="Dirección">⭐ Dirección</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de tarea</label>
+          <select class="form-select" id="soTipo" onchange="completarDescDesdeТipo()">
+            <option value="">— Seleccionar —</option>
+          </select>
+        </div>
         <div class="form-group form-full"><label class="form-label">Descripción / Tarea *</label><input type="text" class="form-input" id="soDesc" placeholder="Ej: Revisar métricas GA4, monitorear servidor..."></div>
         <div class="form-group form-full"><label class="form-label">Colaboradores asignados <span style="color:#bbb;font-weight:400">(opcional, podés seleccionar varios)</span></label>
           <div id="socolaboradoresWrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;background:var(--paper);border-radius:8px;padding:12px;border:1.5px solid var(--line);min-height:52px;"></div>
@@ -776,6 +837,15 @@ header{
           <select class="form-select" id="soCliente"><option value="">— Sin cliente —</option></select>
         </div>
         <div class="form-group form-full"><label class="form-label">Notas / Detalle</label><textarea class="form-textarea" id="soNotas" placeholder="Links, instrucciones, contexto..."></textarea></div>
+        <div class="form-group form-full" id="seccionComentarios" style="display:none">
+          <label class="form-label">💬 Comentarios y recomendaciones</label>
+          <div id="listaComentarios" style="margin-bottom:8px;max-height:180px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="form-input" id="nuevoComentario" placeholder="Escribí un comentario o recomendación..." style="flex:1">
+            <button class="btn-blue" onclick="agregarComentario()" style="white-space:nowrap">Comentar</button>
+          </div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">⚠️ Los comentarios requieren devolución del director del área</div>
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn-danger" id="btnEliminarOrden" style="display:none" onclick="eliminarOrden()">🗑 Eliminar</button>
@@ -813,13 +883,87 @@ header{
 <div class="toast" id="toast"></div>
 
 <script>
+
+  // ══════════ FIREBASE CONFIG ══════════
+  const firebaseConfig = {
+    apiKey: "AIzaSyB-YCiTQXUSIqRHmhPU8S9CP04LfTxlsvM",
+    authDomain: "laopinion-gestion.firebaseapp.com",
+    projectId: "laopinion-gestion",
+    storageBucket: "laopinion-gestion.firebasestorage.app",
+    messagingSenderId: "434546688331",
+    appId: "1:434546688331:web:b706816e5260c8493628ce"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // ══════════ FIRESTORE SYNC ══════════
+  let firestoreReady = false;
+
+  async function cargarDatosFirestore() {
+    try {
+      const cols = ['colaboradores','clientes','ordenes','reuniones'];
+      for (const col of cols) {
+        const snap = await db.collection(col).get();
+        if (!snap.empty) {
+          const datos = snap.docs.map(d => ({id: d.id, ...d.data()}));
+          localStorage.setItem('d_' + col, JSON.stringify(datos));
+          if (col === 'colaboradores') colaboradores = datos;
+          if (col === 'clientes') clientes = datos;
+          if (col === 'ordenes') ordenes = datos;
+          if (col === 'reuniones') reuniones = datos;
+        } else {
+          // Si Firestore está vacío, subir datos locales
+          const local = JSON.parse(localStorage.getItem('d_' + col) || '[]');
+          if (local.length > 0) {
+            const batch = db.batch();
+            local.forEach(item => {
+              const ref = db.collection(col).doc(item.id || uid());
+              batch.set(ref, item);
+            });
+            await batch.commit();
+          }
+        }
+      }
+      firestoreReady = true;
+      console.log('Firestore sincronizado OK');
+    } catch(e) {
+      console.warn('Firestore no disponible, usando localStorage:', e);
+      firestoreReady = false;
+    }
+  }
+
+  async function guardarEnFirestore(coleccion, datos) {
+    if (!firestoreReady) return;
+    try {
+      const batch = db.batch();
+      // Primero borrar todos los docs de la colección
+      const snap = await db.collection(coleccion).get();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      // Luego escribir los nuevos
+      datos.forEach(item => {
+        const ref = db.collection(coleccion).doc(item.id);
+        batch.set(ref, item);
+      });
+      await batch.commit();
+    } catch(e) {
+      console.warn('Error guardando en Firestore:', e);
+    }
+  }
+
+  // Sobrescribir guardarDatos para que también sincronice con Firestore
+  function guardarYSincronizar(clave, datos) {
+    localStorage.setItem(clave, JSON.stringify(datos));
+    const mapa = {'d_colaboradores':'colaboradores','d_clientes':'clientes','d_ordenes':'ordenes','d_reuniones':'reuniones'};
+    if (mapa[clave]) guardarEnFirestore(mapa[clave], datos);
+  }
+
 // ══ PINS ══
 // Login por teléfono + contraseña — se gestiona desde el perfil de cada colaborador
 
 // ══ STORE ══
 let clientes = JSON.parse(localStorage.getItem('d_clientes') || '[{"id": "cli01", "nombre": "Municipalidad de Pergamino", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli02", "nombre": "Gobierno de CABA", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli03", "nombre": "Gobierno de Buenos Aires", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli04", "nombre": "Gobierno de San Nicolás", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli05", "nombre": "Gobierno de Zárate", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli06", "nombre": "Gobierno de San Pedro", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli07", "nombre": "Gobierno de Junín", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli08", "nombre": "Gobierno de Rojas", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli09", "nombre": "Gobierno de Arrecifes", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli10", "nombre": "Gobierno de Colón", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli11", "nombre": "Gobierno de Salto", "rubro": "Gobierno", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli12", "nombre": "CELP", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli13", "nombre": "Abatti", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli14", "nombre": "OSDE", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli15", "nombre": "AlBorde", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli16", "nombre": "Budowa", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli17", "nombre": "L Propiedades (Manzoni)", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli18", "nombre": "Herramientas Pergamino", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli19", "nombre": "Edificio Merced", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli20", "nombre": "Nymz Arquitectura", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli21", "nombre": "Cubata", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli22", "nombre": "Montanari Fiat", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli23", "nombre": "Montanari Ford", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli24", "nombre": "Tierra Dorada", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli25", "nombre": "Pergamino Muebles", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli26", "nombre": "Sport Club", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli27", "nombre": "Calzados Pedrito", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli28", "nombre": "Ipplis", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli29", "nombre": "Zicu Burguers", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli30", "nombre": "Aralar", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli31", "nombre": "Boutique Wines", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli32", "nombre": "Pergamino Automotores", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli33", "nombre": "Chunas", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli34", "nombre": "Chacra Servicios + Aires", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli35", "nombre": "ENTRE", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli36", "nombre": "GOOGLE", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli37", "nombre": "Patrocinadas", "rubro": "Notas", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli38", "nombre": "Metalsol", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli39", "nombre": "Scofano & CIA", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli40", "nombre": "La Pequeña Familia", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli41", "nombre": "Apud Computacion", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli42", "nombre": "Almacenes Juana", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli43", "nombre": "Alquilo Todo", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli44", "nombre": "Clínica Pergamino", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli45", "nombre": "Restaurantes Linares", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}, {"id": "cli46", "nombre": "Obregon Muebles", "rubro": "Empresa", "estado": "activo", "telefono": "", "email": "", "pauta": "", "pautaInicio": "", "pautaVence": "", "notas": "", "fechaAlta": "01/01/2024"}]');
 let ordenes  = JSON.parse(localStorage.getItem('d_ordenes')  || '[]');
-let colaboradores = JSON.parse(localStorage.getItem('d_colaboradores') || '[{"id": "emp01", "nombre": "Lucas Marino Aguirre", "puesto": "Dueño / Director General", "telefono": "2477 303295", "email": "lucasmarinoaguirre@gmail.com", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477303295"}, {"id": "emp02", "nombre": "Adriana Maschietto", "puesto": "Directora Administrativa", "telefono": "2477-341644", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477341644"}, {"id": "emp03", "nombre": "Viviana Luckman", "puesto": "Administración — Clientes Gubernamentales / Facturación", "telefono": "2477 346417", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477346417"}, {"id": "emp04", "nombre": "Bautista Bienzobas (Kiri)", "puesto": "Administración — Conciliaciones / Clientes LO365", "telefono": "2477 508546", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477508546"}, {"id": "emp05", "nombre": "Carolina Cocconi", "puesto": "Responsable Comercial — Ventas", "telefono": "2477 363294", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477363294"}, {"id": "emp06", "nombre": "Claudio Berrios", "puesto": "Administración", "telefono": "2477 533338", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477533338"}, {"id": "emp07", "nombre": "Guillermo Baduy (Toto)", "puesto": "Director Periodístico", "telefono": "2477 660521", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477660521"}, {"id": "emp08", "nombre": "Alfonso Godoy (Poroto)", "puesto": "Periodista — Policiales / Judiciales / Google", "telefono": "2477 592442", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477592442"}, {"id": "emp09", "nombre": "Carolina Yacobone", "puesto": "Periodista — General / Salud / Gastronomía / Tendencias", "telefono": "2477 312106", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477312106"}, {"id": "emp10", "nombre": "Néstor Suárez", "puesto": "Periodista — Cultura / General", "telefono": "2477 452087", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477452087"}, {"id": "emp11", "nombre": "Fernando Bongiovanni", "puesto": "Periodista — Deportes / General", "telefono": "2477 457790", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477457790"}, {"id": "emp12", "nombre": "Luciano Zuccarelli", "puesto": "Periodista Freelance — Política / Tendencias", "telefono": "2477 558320", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477558320"}, {"id": "emp13", "nombre": "Lucía Armanino", "puesto": "Periodista — Concejo Deliberante / Club Douglas Haig", "telefono": "2477 300768", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477300768"}, {"id": "emp14", "nombre": "Federico Delloso", "puesto": "Periodista — General", "telefono": "2477 451566", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477451566"}, {"id": "emp15", "nombre": "Loro Squarini", "puesto": "Conductor — La Gloria o Devoto (YouTube)", "telefono": "", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": ""}, {"id": "emp16", "nombre": "Matías Pascali", "puesto": "Director de Contenidos", "telefono": "2477 027003", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477027003"}, {"id": "emp17", "nombre": "Xavi Manzocco", "puesto": "Contenidos — Herramientas IA / Soluciones Comerciales", "telefono": "2477 681549", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477681549"}, {"id": "emp18", "nombre": "Luciano Bissone (Luchi)", "puesto": "Contenidos — Redes Sociales / Diseño / Video", "telefono": "2477 676197", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477676197"}, {"id": "emp19", "nombre": "Marcos Bidondo", "puesto": "Contenidos — Diseño / Redes Sociales", "telefono": "2477 684294", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477684294"}, {"id": "emp20", "nombre": "Carlos Ponte (Cocco)", "puesto": "Contenidos — Diario Físico / Banners Web", "telefono": "2477 650558", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477650558"}, {"id": "emp21", "nombre": "Rocío Barreiro (Rochi)", "puesto": "Contenidos — Diseño / Redes / Diario Físico", "telefono": "2477 593811", "email": "", "estado": "activo", "fechaAlta": "01/01/2024", "password": "1234", "telLogin": "2477593811"}]');
+let colaboradores = JSON.parse(localStorage.getItem('d_colaboradores') || '[{"id": "emp01", "nombre": "Lucas Marino Aguirre", "puesto": "Director General", "equipo": "Dirección", "jerarquia": "director_general", "telefono": "2477 303295", "email": "lucasmarinoaguirre@gmail.com", "password": "laopi2026", "telLogin": "2477303295"}, {"id": "emp02", "nombre": "Adriana Maschietto", "puesto": "Directora Administrativa", "equipo": "Administración", "jerarquia": "director", "telefono": "2477-341644", "email": "", "password": "1234", "telLogin": "2477341644"}, {"id": "emp05", "nombre": "Carolina Cocconi", "puesto": "Directora Comercial", "equipo": "Comercial", "jerarquia": "director", "telefono": "2477 363294", "email": "", "password": "1234", "telLogin": "2477363294"}, {"id": "emp07", "nombre": "Guillermo Baduy (Toto)", "puesto": "Director de Redacción", "equipo": "Redacción", "jerarquia": "director", "telefono": "2477 660521", "email": "", "password": "1234", "telLogin": "2477660521"}, {"id": "emp16", "nombre": "Matías Pascali", "puesto": "Director de Contenidos Digitales", "equipo": "Digital", "jerarquia": "director", "telefono": "2477 027003", "email": "", "password": "1234", "telLogin": "2477027003"}, {"id": "emp08", "nombre": "Alfonso Godoy (Poroto)", "puesto": "Responsable Policiales/Judiciales", "equipo": "Redacción", "jerarquia": "responsable", "telefono": "2477 592442", "email": "", "password": "1234", "telLogin": "2477592442"}, {"id": "emp17", "nombre": "Xavi Manzocco", "puesto": "Responsable IA / Co-director Claw", "equipo": "Digital", "jerarquia": "responsable", "telefono": "2477 681549", "email": "", "password": "1234", "telLogin": "2477681549"}, {"id": "emp09", "nombre": "Carolina Yacobone", "puesto": "Periodista — Temas Generales / Salud / Sociales", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 312106", "email": "", "password": "1234", "telLogin": "2477312106"}, {"id": "emp10", "nombre": "Néstor Suárez", "puesto": "Periodista — Cultura", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 452087", "email": "", "password": "1234", "telLogin": "2477452087"}, {"id": "emp11", "nombre": "Fernando Bongiovanni", "puesto": "Periodista — Deportes", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 457790", "email": "", "password": "1234", "telLogin": "2477457790"}, {"id": "emp12", "nombre": "Luciano Zuccarelli", "puesto": "Periodista Freelance — Tendencias / Política", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 558320", "email": "", "password": "1234", "telLogin": "2477558320"}, {"id": "emp13", "nombre": "Lucía Armanino", "puesto": "Periodista — Arquitectura / Tendencias / HCD", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 300768", "email": "", "password": "1234", "telLogin": "2477300768"}, {"id": "emp14", "nombre": "Federico Delloso", "puesto": "Periodista — Interés General / Logística Diario", "equipo": "Redacción", "jerarquia": "colaborador", "telefono": "2477 451566", "email": "", "password": "1234", "telLogin": "2477451566"}, {"id": "emp22", "nombre": "Eduardo Flores", "puesto": "Colaborador — Estadísticas e Informes", "equipo": "Digital", "jerarquia": "colaborador", "telefono": "", "email": "", "password": "1234", "telLogin": ""}, {"id": "emp18", "nombre": "Luciano Bissone (Luchi)", "puesto": "Responsable Creativo — Redes / Diseño / Video", "equipo": "Digital", "jerarquia": "colaborador", "telefono": "2477 676197", "email": "", "password": "1234", "telLogin": "2477676197"}, {"id": "emp19", "nombre": "Marcos Bidondo", "puesto": "Diseñador — Redes Sociales", "equipo": "Digital", "jerarquia": "colaborador", "telefono": "2477 684294", "email": "", "password": "1234", "telLogin": "2477684294"}, {"id": "emp21", "nombre": "Rocío Barreiro (Rochi)", "puesto": "Diseñadora — Redes / Diario Físico", "equipo": "Digital", "jerarquia": "colaborador", "telefono": "2477 593811", "email": "", "password": "1234", "telLogin": "2477593811"}, {"id": "emp20", "nombre": "Carlos Ponte (Cocco)", "puesto": "Responsable Diario Físico / Banners Web", "equipo": "Digital", "jerarquia": "colaborador", "telefono": "2477 650558", "email": "", "password": "1234", "telLogin": "2477650558"}, {"id": "emp03", "nombre": "Viviana Luckman", "puesto": "Administración — Pautas Gubernamentales / Edictos", "equipo": "Administración", "jerarquia": "colaborador", "telefono": "2477 346417", "email": "", "password": "1234", "telLogin": "2477346417"}, {"id": "emp04", "nombre": "Bautista Bienzobas (Kiri)", "puesto": "Asistente Administrativo — LO365 / Conciliaciones", "equipo": "Administración", "jerarquia": "colaborador", "telefono": "2477 508546", "email": "", "password": "1234", "telLogin": "2477508546"}, {"id": "emp15", "nombre": "Loro Squarini", "puesto": "Conductor — La Gloria o Devoto", "equipo": "Externo", "jerarquia": "externo", "telefono": "", "email": "", "password": "1234", "telLogin": ""}, {"id": "emp23", "nombre": "Martín Capriotti", "puesto": "ITECNIS — Desarrollo App del Grupo", "equipo": "Externo", "jerarquia": "externo", "telefono": "", "email": "", "password": "1234", "telLogin": ""}, {"id": "emp24", "nombre": "Carla Agosti", "puesto": "Responsable DECILA — Academia Digital", "equipo": "Externo", "jerarquia": "externo", "telefono": "", "email": "", "password": "1234", "telLogin": ""}]');
 if(!colaboradores.some(c=>c.id==='emp01')){localStorage.removeItem('d_colaboradores');location.reload();}
 let reuniones = JSON.parse(localStorage.getItem('d_reuniones') || '[]');
 let rolActual = null;
@@ -888,6 +1032,191 @@ function login(){
     });
   })
   .catch(function(){ err.textContent="Teléfono o contraseña incorrectos"; });
+}
+
+
+// ══════════ TIPOS DE TAREA POR EQUIPO ══════════
+const TAREAS_POR_EQUIPO = {
+  'Redacción': [
+    'Subir nota al diario digital',
+    'Cobertura especial',
+    'Entrevista',
+    'Producción para streaming',
+    'Cobertura del HCD',
+    'Nota policiales/judiciales',
+    'Nota deportes',
+    'Nota cultura',
+    'Nota tendencias/sociales',
+    'Video para Instagram',
+    'Reel viral',
+    'Vivo en tribunales',
+  ],
+  'Digital': [
+    'Armado PDF diario físico',
+    'Publicación en Instagram',
+    'Recorte de programa streaming',
+    'Diseño pieza publicitaria',
+    'Subir banner web',
+    'Post en Twitter/X',
+    'Post en Facebook',
+    'Reel para redes',
+    'Subtítulos/títulos para video',
+    'Control de pautas publicadas',
+    'Newsletter WhatsApp',
+    'Diseño separador radio',
+  ],
+  'Administración': [
+    'Conciliación bancaria',
+    'Seguimiento de pago de cliente',
+    'Papelería pauta gubernamental',
+    'Coordinación edicto judicial',
+    'Aviso fúnebre',
+    'Carga de cliente LO365',
+    'Visita a prestador LO365',
+    'Control de vencimiento pauta',
+    'Gestión suplemento especial',
+    'Nómina / pagos',
+  ],
+  'Comercial': [
+    'Visita a cliente',
+    'Llamado de seguimiento',
+    'Propuesta comercial',
+    'Renovación de pauta',
+    'Alta de cliente nuevo',
+    'Reunión con cliente',
+    'Seguimiento de cobro',
+    'Incorporación prestador LO365',
+    'Cierre de venta',
+  ],
+  'Dirección': [
+    'Reunión de equipo semanal',
+    'Definición estrategia editorial',
+    'Revisión de métricas',
+    'Reporte a Lucas',
+    'Planificación semanal',
+    'Seguimiento de colaborador',
+    'Aprobación de contenido',
+  ],
+};
+
+function actualizarTiposTarea(){
+  const equipo = document.getElementById('soEquipo')?.value || '';
+  const sel = document.getElementById('soTipo');
+  if(!sel) return;
+  const tipos = TAREAS_POR_EQUIPO[equipo] || [];
+  sel.innerHTML = '<option value="">— Seleccionar tipo —</option>' +
+    tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+  // Filtrar colaboradores por equipo
+  filtrarColabsPorEquipo(equipo);
+}
+
+function filtrarColabsPorEquipo(equipo){
+  document.querySelectorAll('.colab-check-wrap').forEach(wrap => {
+    const empId = wrap.dataset.empId;
+    const emp = colaboradores.find(c => c.id === empId);
+    if(!equipo || !emp || emp.equipo === equipo || rolActual === 'supervisor'){
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+    }
+  });
+}
+
+function completarDescDesdeТipo(){
+  const tipo = document.getElementById('soTipo')?.value || '';
+  if(tipo && !document.getElementById('soDesc').value){
+    document.getElementById('soDesc').value = tipo;
+  }
+}
+
+// ══════════ COMENTARIOS EN ÓRDENES ══════════
+function agregarComentario(){
+  const texto = document.getElementById('nuevoComentario')?.value.trim();
+  if(!texto){ toast('Escribí un comentario','err'); return; }
+  if(!editandoOrdenId){ toast('Guardá la orden primero','err'); return; }
+  const orden = ordenes.find(o => o.id === editandoOrdenId);
+  if(!orden) return;
+  if(!orden.comentarios) orden.comentarios = [];
+  orden.comentarios.push({
+    id: uid(),
+    texto,
+    autor: empActualNombre || 'Supervisor',
+    autorId: empActualId || 'emp01',
+    fecha: new Date().toLocaleDateString('es-AR'),
+    hora: new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
+    requiereDevolucion: true,
+    resuelto: false,
+  });
+  guardarYSincronizar('d_ordenes', ordenes);
+  document.getElementById('nuevoComentario').value = '';
+  renderComentarios(orden);
+  toast('Comentario agregado ✓','ok');
+}
+
+function renderComentarios(orden){
+  const lista = document.getElementById('listaComentarios');
+  if(!lista || !orden) return;
+  const comentarios = orden.comentarios || [];
+  if(!comentarios.length){
+    lista.innerHTML = '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin comentarios aún.</div>';
+    return;
+  }
+  lista.innerHTML = comentarios.map(c => `
+    <div style="background:${c.resuelto?'#f0fff0':'#fff8e1'};border-left:3px solid ${c.resuelto?'#4caf50':'#ff9800'};padding:8px 12px;border-radius:4px;margin-bottom:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:13px">${c.autor}</strong>
+        <span style="font-size:11px;color:#aaa">${c.fecha} ${c.hora}</span>
+      </div>
+      <div style="font-size:13px;margin:4px 0">${c.texto}</div>
+      ${c.requiereDevolucion && !c.resuelto ? `<div style="font-size:11px;color:#e65100">⚠️ Requiere devolución del director</div>` : ''}
+      ${c.resuelto ? `<div style="font-size:11px;color:#4caf50">✅ Resuelto</div>` : ''}
+      ${(rolActual==='supervisor' && !c.resuelto) ? `<button onclick="resolverComentario('${orden.id}','${c.id}')" style="font-size:11px;background:none;border:1px solid #4caf50;color:#4caf50;padding:2px 8px;border-radius:4px;cursor:pointer;margin-top:4px">Marcar resuelto</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function resolverComentario(ordenId, comentarioId){
+  const orden = ordenes.find(o => o.id === ordenId);
+  if(!orden || !orden.comentarios) return;
+  const c = orden.comentarios.find(c => c.id === comentarioId);
+  if(c) c.resuelto = true;
+  guardarYSincronizar('d_ordenes', ordenes);
+  renderComentarios(orden);
+  toast('Comentario resuelto ✓','ok');
+}
+
+// ══════════ VALIDACIÓN DE JERARQUÍA EN ÓRDENES ══════════
+function validarJerarquiaOrden(colaboradoresIds){
+  if(rolActual === 'supervisor') return true; // supervisores pueden asignar a cualquiera
+  if(!colaboradoresIds || !colaboradoresIds.length) return true;
+  const yo = colaboradores.find(c => c.id === empActualId);
+  if(!yo) return true;
+  for(const id of colaboradoresIds){
+    if(id === empActualId){
+      toast('No podés asignarte tareas a vos mismo','err');
+      return false;
+    }
+    const dest = colaboradores.find(c => c.id === id);
+    if(!dest) continue;
+    // No se puede asignar a directores ni al director general
+    if(dest.jerarquia === 'director' || dest.jerarquia === 'director_general'){
+      toast(`No podés asignar tareas a ${dest.nombre.split(' ')[0]} — es director/a`,'err');
+      return false;
+    }
+  }
+  return true;
+}
+
+
+function etiquetaJerarquia(j){
+  const mapa = {
+    'director_general': '⭐ Director General',
+    'director': '🔷 Director',
+    'responsable': '🔹 Responsable',
+    'colaborador': '👤 Colaborador',
+    'externo': '🔗 Externo'
+  };
+  return mapa[j] || '👤 Colaborador';
 }
 
 function logout(){
@@ -1214,8 +1543,10 @@ function actualizarFiltroOrdenes(){
   // Poblar checkboxes de colaboradores en el modal de orden
   const wrapE = document.getElementById('socolaboradoresWrap');
   if(wrapE) wrapE.innerHTML = colaboradores.map(e=>`
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);">
-      <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> ${e.nombre.split(' ').slice(0,2).join(' ')}
+    <label class="colab-check-wrap" data-emp-id="${e.id}" style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);" title="${e.equipo||''}">
+      <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> 
+      <span>${e.nombre.split(' ').slice(0,2).join(' ')}</span>
+      ${e.equipo?`<span style="font-size:9px;color:#aaa">(${e.equipo})</span>`:''}
     </label>`).join('');
 }
 
@@ -1223,6 +1554,7 @@ function filtrarOrdenes(){
   const fFecha=document.getElementById('filtroOrdenFecha').value;
   const fEst=document.getElementById('filtroOrdenEstado').value;
   const fCli=document.getElementById('filtroOrdenCliente').value;
+  const fEquipo=document.getElementById('filtroOrdenEquipo')?.value||'';
   const h=hoy();
   const inicioSemana=new Date(); inicioSemana.setDate(inicioSemana.getDate()-inicioSemana.getDay());
   let lista=ordenes.filter(o=>{
@@ -1230,6 +1562,7 @@ function filtrarOrdenes(){
     if(fFecha==='semana' && new Date(o.fecha+'T00:00:00')<inicioSemana) return false;
     if(fEst && o.estado!==fEst) return false;
     if(fCli && o.clienteId!==fCli) return false;
+    if(fEquipo && o.equipo!==fEquipo) return false;
     return true;
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
   renderOrdenes(lista);
@@ -1244,7 +1577,7 @@ function renderOrdenes(lista){
     return `<div class="order-item" style="cursor:pointer" onclick="editarOrden('${o.id}')">
       <div class="order-hdr">
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="order-date">📅 ${fmtD(o.fecha)}</div>
+          <div class="order-date">📅 ${fmtD(o.fecha)}${o.equipo?` · <span class="pill-equipo pill-${o.equipo.toLowerCase().replace(/[^a-z]/g,'')}" style="font-size:10px;padding:1px 6px">${o.equipo}</span>`:''}</div>
           ${c?`<span class="order-client-tag">📌 ${c.nombre}</span>`:''}
           ${(()=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);const nombres=ids.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean);return nombres.length?`<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 ${nombres.join(', ')}</span>`:''})()}
         </div>
@@ -1263,8 +1596,14 @@ function abrirNuevaOrden(){
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
   document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
   document.getElementById('btnEliminarOrden').style.display='none';
+  // Limpiar campos nuevos
+  if(document.getElementById('soEquipo')) document.getElementById('soEquipo').value='';
+  if(document.getElementById('soTipo')) document.getElementById('soTipo').innerHTML='<option value="">— Seleccionar tipo —</option>';
+  const secComent = document.getElementById('seccionComentarios');
+  if(secComent) secComent.style.display = 'none';
   // Limpiar checkboxes colaboradores
   document.querySelectorAll('.colab-check').forEach(c=>c.checked=false);
+  document.querySelectorAll('.colab-check-wrap').forEach(w=>w.style.display='');
   abrirModal('mOrden');
 }
 
@@ -1299,6 +1638,16 @@ function editarOrden(id){
     c.checked = asignados.includes(c.value);
   });
   document.getElementById('btnEliminarOrden').style.display='block';
+  // Cargar equipo y tipo
+  if(document.getElementById('soEquipo')) {
+    document.getElementById('soEquipo').value = o.equipo || '';
+    actualizarTiposTarea();
+    if(document.getElementById('soTipo')) document.getElementById('soTipo').value = o.tipo || '';
+  }
+  // Mostrar comentarios
+  const secComent = document.getElementById('seccionComentarios');
+  if(secComent) secComent.style.display = 'block';
+  renderComentarios(o);
   abrirModal('mOrden');
 }
 
@@ -1307,14 +1656,30 @@ function guardarOrdenStandalone(){
   const desc=document.getElementById('soDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
   const colaboradoresIds = [...document.querySelectorAll('.colab-check:checked')].map(c=>c.value);
-  const datos={fecha,desc,notas:document.getElementById('soNotas').value.trim(),estado:document.getElementById('soEstado').value,clienteId:document.getElementById('soCliente').value||null,colaboradoresIds};
+  // Validar jerarquía
+  if(!validarJerarquiaOrden(colaboradoresIds)) return;
+  const equipo = document.getElementById('soEquipo')?.value || '';
+  const tipo = document.getElementById('soTipo')?.value || '';
+  const datos={
+    fecha, desc,
+    equipo, tipo,
+    notas:document.getElementById('soNotas').value.trim(),
+    estado:document.getElementById('soEstado').value,
+    clienteId:document.getElementById('soCliente').value||null,
+    colaboradoresIds,
+    creadoPor: empActualId || 'emp01',
+    creadoPorNombre: empActualNombre || 'Supervisor',
+  };
   if(editandoOrdenId){
     const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
+    // Preservar comentarios al editar
+    datos.comentarios = ordenes[i].comentarios || [];
     ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
   } else {
+    datos.comentarios = [];
     ordenes.push({id:uid(),...datos}); toast('Orden creada ✓','ok');
   }
-  gLS(); filtrarOrdenes(); cerrarModal('mOrden');
+  guardarYSincronizar('d_ordenes', ordenes); filtrarOrdenes(); cerrarModal('mOrden');
 }
 
 function eliminarOrden(){
@@ -1362,7 +1727,7 @@ function completarTarea(id){
 // ══ COLABORADORES ══
 let editandoEmpId = null;
 
-function saveEmps(){ localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); }
+function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
 
 function abrirModalcolaborador(id){
   editandoEmpId = id || null;
@@ -1381,7 +1746,7 @@ function guardarcolaborador(){
   const nombre = document.getElementById('eNombre').value.trim();
   const puesto = document.getElementById('ePuesto').value.trim();
   if(!nombre||!puesto){ toast('Completá nombre y puesto','err'); return; }
-  const datos = { nombre, puesto, telefono: document.getElementById('eTel').value.trim(), email: document.getElementById('eEmail').value.trim(), estado: 'activo' };
+  const datos = { nombre, puesto, equipo: document.getElementById('eEquipo')?.value||'Colaborador', jerarquia: document.getElementById('eJerarquia')?.value||'colaborador', telefono: document.getElementById('eTel').value.trim(), email: document.getElementById('eEmail').value.trim(), estado: 'activo' };
   if(editandoEmpId){
     const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
     colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
@@ -1402,9 +1767,14 @@ function eliminarcolaborador(){
 
 function filtrarcolaboradores(){
   const q = (document.getElementById('searchEmp')?.value||'').toLowerCase();
-  const lista = colaboradores.filter(e =>
-    !q || e.nombre.toLowerCase().includes(q) || e.puesto.toLowerCase().includes(q)
-  );
+  const equipo = document.getElementById('filterEquipo')?.value || '';
+  const jerarquia = document.getElementById('filterJerarquia')?.value || '';
+  const lista = colaboradores.filter(e => {
+    if(q && !e.nombre.toLowerCase().includes(q) && !e.puesto.toLowerCase().includes(q)) return false;
+    if(equipo && e.equipo !== equipo) return false;
+    if(jerarquia && e.jerarquia !== jerarquia) return false;
+    return true;
+  });
   rendercolaboradores(lista);
 }
 
@@ -1421,16 +1791,19 @@ function rendercolaboradores(lista){
     const tareasAsignadas = ordenes.filter(o => { const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]); return ids.includes(e.id); });
     const pendientes = tareasAsignadas.filter(o => o.estado==='pendiente').length;
     const hoyTareas = tareasAsignadas.filter(o => o.fecha===hoy());
+    const equipoClass = (e.equipo||'').toLowerCase().replace(/[^a-z]/g,'');
     return `<div class="client-card activo" onclick="abrirModalcolaborador('${e.id}')">
       <div class="card-header">
         <div class="client-name">${e.nombre}</div>
-        <span class="status-badge badge-${e.estado==='activo'?'activo':'inactivo'}">${e.estado}</span>
+        <span class="pill-jerarquia pill-j-${e.jerarquia||'colaborador'}">${etiquetaJerarquia(e.jerarquia)}</span>
       </div>
       <div class="client-rubro">${e.puesto}</div>
+      <div style="margin:4px 0">
+        <span class="pill-equipo pill-${equipoClass}">${e.equipo||'—'}</span>
+      </div>
       <div>
         ${e.telefono?`<div class="ci-row">📞 ${e.telefono}</div>`:''}
         ${e.email?`<div class="ci-row">✉ ${e.email}</div>`:''}
-        
       </div>
       <div class="card-footer">
         <div class="orders-count">
@@ -1812,7 +2185,7 @@ function verificarTelefono(){
   var err = document.getElementById('onbError');
   err.textContent = '';
   if(!tel){ err.textContent = 'Ingresá tu número de teléfono'; return; }
-  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/colaboradores')
+  fetch(API+'/colaboradores')
     .then(function(r){ return r.json(); })
     .then(function(lista){
       var match = lista.find(function(c){
@@ -1836,7 +2209,7 @@ function activarCuenta(){
   if(!onbUsuario){ err.textContent = 'Error: reiniciá el proceso'; return; }
   if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
   if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
-  fetch('https://deutschland-attempting-standards-accessing.trycloudflare.com/colaboradores/' + onbUsuario.id + '/password', {
+  fetch(API+'/colaboradores/' + onbUsuario.id + '/password', {
     method: 'PATCH',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({password: p1})
@@ -1852,6 +2225,12 @@ function activarCuenta(){
   })
   .catch(function(){ err.textContent = 'Error al activar la cuenta. Intentá de nuevo.'; });
 }
+
+  // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
+  cargarDatosFirestore().then(() => {
+    console.log('Datos cargados desde Firestore');
+  });
+
 </script>
 
 <!-- MODAL PERFIL -->
