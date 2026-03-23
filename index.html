@@ -790,7 +790,7 @@ header{
       <label for="inputFotoPerfil" style="cursor:pointer;display:flex;align-items:center;" title="Cambiar foto de perfil">
         <div id="empAvatarWrap" class="avatar-iniciales lg">??</div>
       </label>
-      <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;position:absolute;width:1px;height:1px;opacity:0;" onchange="subirFotoPerfil(this)">
+      <input type="file" id="inputFotoPerfil" accept="image/*" style="position:absolute;width:60px;height:60px;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
       <span class="user-badge">💻 colaborador</span>
