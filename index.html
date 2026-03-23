@@ -441,6 +441,12 @@ header{
 .perfil-nombre{font-family:'Playfair Display',serif;font-size:20px;text-align:center;margin-bottom:4px;}
 .perfil-puesto{font-size:13px;color:#999;text-align:center;margin-bottom:20px;}
 .perfil-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--paper2);}
+.orden-acciones{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.btn-accion{padding:4px 10px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.btn-recibido{background:var(--green-bg);color:var(--green);}
+.btn-en-curso{background:var(--gold-bg);color:var(--gold);}
+.btn-listo{background:var(--green-bg);color:var(--green);}
+.btn-comentario{background:var(--paper2);color:var(--ink2);}
 
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1196,6 +1202,15 @@ async function login(){
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
   iniciarSesion(rol);
 
+  // Registrar actividad en Firestore
+  if(typeof db !== 'undefined'){
+    db.collection('actividad').doc(empActualId).set({
+      ultimaActividad: new Date().toISOString(),
+      nombre: usuario.nombre,
+      equipo: usuario.equipo || ''
+    }, {merge: true}).catch(e=>console.warn('Actividad error:', e));
+  }
+
   // Aplicar visibilidad por jerarquía y cargar métricas grupo
   aplicarVisibilidad();
   cargarMetricasGrupo();
@@ -1496,7 +1511,48 @@ function proximaSemanaRango(){
   return { inicio: h.toISOString().split('T')[0], fin: fin.toISOString().split('T')[0] };
 }
 
+const DIRECTOR_POR_EQUIPO = {
+  'Redacción': 'emp07',
+  'Digital': 'emp16',
+  'Administración': 'emp02',
+  'Comercial': 'emp05',
+  'Dirección': 'emp01'
+};
+
+async function checkInactividad(){
+  if(rolActual !== 'supervisor') return;
+  if(typeof db === 'undefined') return;
+  try {
+    const snap = await db.collection('actividad').get();
+    const hoyDate = new Date();
+    const tresDiasMs = 3 * 24 * 60 * 60 * 1000;
+    snap.forEach(doc => {
+      const d = doc.data();
+      if(!d.ultimaActividad) return;
+      const ultima = new Date(d.ultimaActividad);
+      if((hoyDate - ultima) > tresDiasMs){
+        const yaExiste = ordenes.find(o => o.desc === 'Inactividad — ' + d.nombre && o.estado === 'pendiente');
+        if(yaExiste) return;
+        const director = DIRECTOR_POR_EQUIPO[d.equipo] || 'emp01';
+        const nuevaOrden = {
+          id: 'inact_' + doc.id + '_' + Date.now(),
+          desc: 'Inactividad — ' + d.nombre,
+          colaboradoresIds: [director],
+          estado: 'pendiente',
+          fecha: hoy(),
+          clienteId: '',
+          comentarios: []
+        };
+        ordenes.push(nuevaOrden);
+        gLS();
+        db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden).catch(e=>console.warn('Firestore inactividad error:', e));
+      }
+    });
+  } catch(e){ console.warn('checkInactividad error:', e); }
+}
+
 function renderDashboard(){
+  checkInactividad();
   document.getElementById('sActivos').textContent = clientes.filter(c=>c.estado==='activo').length;
   document.getElementById('sPausados').textContent = clientes.filter(c=>c.estado==='pausado').length;
   const {inicio, fin} = proximaSemanaRango();
@@ -2308,12 +2364,44 @@ function renderKanban(){
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
       <div class="kc-move">${botones}</div>
+      <div class="orden-acciones">
+        <button onclick="cambiarEstadoOrden('${o.id}', 'recibido')" class="btn-accion btn-recibido">✅ Recibido</button>
+        <button onclick="cambiarEstadoOrden('${o.id}', 'en-curso')" class="btn-accion btn-en-curso">🔄 En curso</button>
+        <button onclick="cambiarEstadoOrden('${o.id}', 'completada')" class="btn-accion btn-listo">✅ Listo</button>
+        <button onclick="abrirComentarioOrden('${o.id}')" class="btn-accion btn-comentario">💬</button>
+      </div>
     </div>`;
   }
 
   document.getElementById('kb-pendiente').innerHTML = pend.length ? pend.map(cardHTML).join('') : '<div class="kanban-empty">Sin tareas pendientes</div>';
   document.getElementById('kb-en-curso').innerHTML = enCurso.length ? enCurso.map(cardHTML).join('') : '<div class="kanban-empty">Nada en curso</div>';
   document.getElementById('kb-listo').innerHTML = listo.length ? listo.map(cardHTML).join('') : '<div class="kanban-empty">Nada completado</div>';
+}
+
+function cambiarEstadoOrden(id, nuevoEstado){
+  const i = ordenes.findIndex(x=>x.id===id);
+  if(i===-1) return;
+  ordenes[i].estado = nuevoEstado;
+  gLS();
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({estado: nuevoEstado, updatedAt: new Date().toISOString()}).catch(e=>console.warn('Firestore update error:', e));
+  }
+  rendercolaborador();
+  toast('Estado: ' + nuevoEstado, 'ok');
+}
+
+function abrirComentarioOrden(id){
+  const texto = prompt('Escribí tu comentario:');
+  if(!texto) return;
+  const i = ordenes.findIndex(x=>x.id===id);
+  if(i===-1) return;
+  const o = ordenes[i];
+  o.comentarios = [...(o.comentarios||[]), {texto, autor: empActualId, fecha: new Date().toISOString()}];
+  gLS();
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).catch(e=>console.warn('Firestore update error:', e));
+  }
+  toast('Comentario guardado', 'ok');
 }
 
 function moverTarea(id, nuevoEstado){
@@ -2559,6 +2647,7 @@ function abrirPerfil(){
   document.getElementById('pNombre').value = u.nombre;
   document.getElementById('pTelefono').value = u.telefono||'';
   document.getElementById('pEmail').value = u.email||'';
+  document.getElementById('pFechaNac').value = u.fechaNacimiento||'';
   document.getElementById('pPassActual').value = '';
   document.getElementById('pPassNueva').value = '';
   document.getElementById('pPassConfirm').value = '';
@@ -2590,6 +2679,8 @@ function guardarPerfil(){
   u.telefono = telefono;
   u.telLogin = telLimpio;
   u.email = email;
+  const fechaNac = document.getElementById('pFechaNac').value;
+  u.fechaNacimiento = fechaNac;
 
   // Sincronizar en el array de colaboradores
   const i = colaboradores.findIndex(c=>c.id===u.id);
@@ -2603,7 +2694,7 @@ function guardarPerfil(){
 
   // Sincronizar email (y nombre/teléfono) en Firestore para Google Sign-In futuro
   if(typeof db !== 'undefined' && u.id){
-    const updateData = { nombre, telefono, email };
+    const updateData = { nombre, telefono, email, fechaNacimiento: fechaNac };
     if(passNueva) updateData.password = passNueva;
     db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
       .catch(err => console.warn('Firestore update error:', err));
@@ -2892,6 +2983,10 @@ function aplicarVisibilidad(){
         <div class="form-group">
           <label class="form-label">Email</label>
           <input class="form-input" id="pEmail" placeholder="tu@email.com" type="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de nacimiento</label>
+          <input type="date" class="form-input" id="pFechaNac">
         </div>
       </div>
 
