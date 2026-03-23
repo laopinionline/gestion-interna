@@ -141,7 +141,7 @@ header{
 .modal-body{padding:22px 26px;}
 
 /* ── DASHBOARD SUPERVISOR ── */
-.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
 .stat-card{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
 .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#999;margin-bottom:6px;}
 .stat-value{font-family:'Playfair Display',serif;font-size:34px;line-height:1;}
@@ -532,8 +532,21 @@ header{
       <div class="dash-grid">
         <div class="stat-card green"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
         <div class="stat-card gold"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
-        <div class="stat-card red"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
-        <div class="stat-card blue"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
+        <div class="stat-card red" style="cursor:pointer" onclick="dashFiltrarOrdenes('pendiente')"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
+        <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
+        <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
+      </div>
+
+      <!-- BLOQUE 1: GA4 -->
+      <div class="dash-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px">
+        <div class="stat-card blue"><div class="stat-label">Lecturas esta semana</div><div class="stat-value" id="sLecturasSemanales">—</div><div class="stat-sub">pageviews GA4</div></div>
+        <div class="stat-card gold"><div class="stat-label">vs semana anterior</div><div class="stat-value" id="sLecturasAnterior">—</div><div class="stat-sub">variación</div></div>
+      </div>
+      <div class="dash-cols" style="grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">📈 Top 5 notas más leídas</div>
+          <div id="dashTop5Notas"><div class="no-data">Cargando datos GA4...</div></div>
+        </div>
       </div>
 
       <div class="dash-cols">
@@ -567,6 +580,30 @@ header{
         <div class="dash-panel">
           <div class="dash-panel-title">📌 Tareas acumuladas por cliente</div>
           <div class="chart-bars" id="dashTareasPorCliente"><div class="no-data">Sin datos</div></div>
+        </div>
+      </div>
+
+      <!-- BLOQUE 3: Reuniones de la semana -->
+      <div class="dash-cols" style="grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">📅 Reuniones esta semana</div>
+          <div id="dashReunionesSemana"><div class="no-data">Sin reuniones esta semana</div></div>
+        </div>
+      </div>
+
+      <!-- BLOQUE 4: Métricas de redes -->
+      <div class="dash-cols" style="grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">📱 Redes sociales</div>
+          <div id="dashRedesSociales" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+        </div>
+      </div>
+
+      <!-- BLOQUE 5: Estado de Claw -->
+      <div class="dash-cols" style="grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">🐾 Estado de Claw</div>
+          <div id="dashEstadoClaw"><div class="no-data">Última actividad: cargando...</div></div>
         </div>
       </div>
     </div>
@@ -1405,6 +1442,14 @@ function renderDashboard(){
   document.getElementById('sPendientes').textContent = tareasSemana.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
   document.getElementById('sCompletadas').textContent = tareasSemana.filter(o=>o.estado==='completada').length;
 
+  // Vencidas: tareas con fecha pasada y no completadas/canceladas
+  const hoyStr = hoy();
+  const vencidas = ordenes.filter(o=>o.fecha<hoyStr && o.estado!=='completada' && o.estado!=='cancelada');
+  document.getElementById('sVencidas').textContent = vencidas.length;
+
+  // ── BLOQUE 1: GA4 ──
+  renderGA4Dashboard();
+
   // Tareas próxima semana
   const divT = document.getElementById('dashTareas');
   if(!tareasSemana.length){ divT.innerHTML='<div class="no-data">No hay tareas para los próximos 7 días</div>'; }
@@ -1442,12 +1487,37 @@ function renderDashboard(){
     }).join('');
   }
 
-  // ── Reuniones próximos 7 días en el dashboard ──
+  // ── BLOQUE 3: Reuniones esta semana ──
   const {inicio: reunInicio, fin: reunFin} = proximaSemanaRango();
   const reunionesSemana = reuniones.filter(r => {
     if(r.tipo==='semanal') return true;
     return r.fecha >= reunInicio && r.fecha <= reunFin;
   }).sort((a,b)=> String(a.tipo==='semanal'?a.diaSemana:a.fecha).localeCompare(String(b.tipo==='semanal'?b.diaSemana:b.fecha)));
+  const divRS = document.getElementById('dashReunionesSemana');
+  if(divRS){
+    if(!reunionesSemana.length){ divRS.innerHTML='<div class="no-data">Sin reuniones esta semana</div>'; }
+    else {
+      divRS.innerHTML = reunionesSemana.map(r=>{
+        const esHoy = r.tipo==='semanal' ? diaSemanaActual()===parseInt(r.diaSemana) : r.fecha===reunInicio;
+        const fechaLabel = r.tipo==='semanal' ? DIAS[parseInt(r.diaSemana)]+'s' : fmtD(r.fecha);
+        const statusClass = esHoy ? 'ms-hoy' : 'ms-proxima';
+        const statusLabel = esHoy ? 'HOY' : 'Próxima';
+        const total = r.participantes?.length||0;
+        const partNombres = (r.participantes||[]).map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean).join(', ');
+        return `<div class="task-today-row" style="cursor:pointer" onclick="cambiarVista('vReuniones',document.querySelectorAll('.nav-tab')[4])">
+          <div class="task-client-dot" style="background:var(--blue)"></div>
+          <div class="task-today-info">
+            <div class="task-today-desc">📆 ${r.titulo}</div>
+            <div class="task-today-meta">${fechaLabel}${r.hora?' · '+r.hora+' hs':''}</div>
+            ${partNombres?`<div class="task-today-meta">👥 ${partNombres}</div>`:(total?`<div class="task-today-meta">👥 ${total} participantes</div>`:'')}
+          </div>
+          <span class="meeting-status ${statusClass}" style="font-size:10px;padding:3px 8px">${statusLabel}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Reuniones legacy (dashReuniones) ──
   const divR = document.getElementById('dashReuniones');
   if(divR){
     if(!reunionesSemana.length){ divR.innerHTML='<div class="no-data">Sin reuniones programadas</div>'; }
@@ -1459,7 +1529,7 @@ function renderDashboard(){
         const statusLabel = esHoy ? 'HOY' : 'Próxima';
         const total = r.participantes?.length||0;
         const cumplidos = Object.values(r.cumplimiento||{}).filter(Boolean).length;
-        return `<div class="task-today-row" style="cursor:pointer" onclick="mostrarVista('vReuniones')">
+        return `<div class="task-today-row" style="cursor:pointer" onclick="cambiarVista('vReuniones',document.querySelectorAll('.nav-tab')[4])">
           <div class="task-client-dot" style="background:var(--blue)"></div>
           <div class="task-today-info">
             <div class="task-today-desc">📆 ${r.titulo}</div>
@@ -1496,6 +1566,106 @@ function renderDashboard(){
     const pct=Math.round((n/maxT)*100);
     return `<div class="chart-row"><div class="chart-label" title="${nom}">${nom}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%;background:${colors[i%colors.length]}">${pct>20?`<span>${n}</span>`:''}</div></div><div class="chart-n">${n}</div></div>`;
   }).join('') : '<div class="no-data">Sin tareas vinculadas a clientes</div>';
+
+  // ── BLOQUE 4: Métricas de redes sociales ──
+  renderRedesSociales();
+
+  // ── BLOQUE 5: Estado de Claw ──
+  renderEstadoClaw();
+}
+
+// ── Helper: filtrar órdenes desde stat-cards del dashboard ──
+function dashFiltrarOrdenes(tipo){
+  cambiarVista('vOrdenes',document.querySelectorAll('.nav-tab')[2]);
+  setTimeout(()=>{
+    const filtroFecha = document.getElementById('filtroOrdenFecha');
+    const filtroEstado = document.getElementById('filtroOrdenEstado');
+    if(tipo==='vencidas'){
+      filtroFecha.value='todas';
+      filtroEstado.value='pendiente';
+    } else {
+      filtroFecha.value='semana';
+      filtroEstado.value=tipo;
+    }
+    filtrarOrdenes();
+  },100);
+}
+
+// ── BLOQUE 1: GA4 Dashboard ──
+function renderGA4Dashboard(){
+  fetch('http://localhost:3737/ga4/top-notas')
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.lecturasSemanales!=null) document.getElementById('sLecturasSemanales').textContent = Number(data.lecturasSemanales).toLocaleString('es-AR');
+      if(data.variacion!=null) document.getElementById('sLecturasAnterior').textContent = data.variacion;
+      const div = document.getElementById('dashTop5Notas');
+      if(data.top5 && data.top5.length){
+        div.innerHTML = data.top5.map((n,i)=>`<div class="task-today-row">
+          <div style="font-weight:700;color:var(--blue2);min-width:20px">${i+1}</div>
+          <div class="task-today-info">
+            <div class="task-today-desc">${n.titulo||n.title||'Sin título'}</div>
+            <div class="task-today-meta">👁 ${Number(n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
+          </div>
+        </div>`).join('');
+      }
+    })
+    .catch(()=>{
+      document.getElementById('dashTop5Notas').innerHTML='<div class="no-data">Cargando datos GA4...</div>';
+    });
+}
+
+// ── BLOQUE 4: Redes sociales ──
+function renderRedesSociales(){
+  const defaults = [
+    {plataforma:'Facebook',icono:'📘',seguidores:'103K'},
+    {plataforma:'Instagram',icono:'📸',seguidores:'54K'},
+    {plataforma:'TikTok',icono:'🎵',seguidores:'16.5K'},
+    {plataforma:'YouTube',icono:'▶️',seguidores:'976'},
+    {plataforma:'X',icono:'✖️',seguidores:'2.663'}
+  ];
+  const div = document.getElementById('dashRedesSociales');
+  const renderCards = (redes)=>{
+    div.innerHTML = redes.map(r=>`<div style="display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:140px">
+      <span style="font-size:20px">${r.icono}</span>
+      <div>
+        <div style="font-size:11px;color:#999;font-weight:600;text-transform:uppercase">${r.plataforma}</div>
+        <div style="font-size:18px;font-weight:700;color:var(--ink)">${r.seguidores}</div>
+      </div>
+    </div>`).join('');
+  };
+  renderCards(defaults);
+  if(typeof db!=='undefined'){
+    db.collection('metricas_redes').get().then(snap=>{
+      if(!snap.empty){
+        const redes = [];
+        snap.forEach(doc=>{
+          const d=doc.data();
+          redes.push({plataforma:d.plataforma||doc.id,icono:d.icono||'📊',seguidores:d.seguidores||'—'});
+        });
+        if(redes.length) renderCards(redes);
+      }
+    }).catch(()=>{});
+  }
+}
+
+// ── BLOQUE 5: Estado de Claw ──
+function renderEstadoClaw(){
+  const div = document.getElementById('dashEstadoClaw');
+  if(typeof db!=='undefined'){
+    db.collection('claw_estado').doc('ultimo').get().then(doc=>{
+      if(doc.exists){
+        const d=doc.data();
+        const ts = d.timestamp ? (d.timestamp.toDate ? d.timestamp.toDate().toLocaleString('es-AR') : new Date(d.timestamp).toLocaleString('es-AR')) : '';
+        div.innerHTML=`<div style="font-size:14px;color:var(--ink)">Última actividad: ${ts||'—'}</div>${d.detalle?`<div style="font-size:12px;color:#999;margin-top:4px">${d.detalle}</div>`:''}`;
+      } else {
+        div.innerHTML='<div class="no-data">Sin datos aún</div>';
+      }
+    }).catch(()=>{
+      div.innerHTML='<div class="no-data">Sin datos aún</div>';
+    });
+  } else {
+    div.innerHTML='<div class="no-data">Sin datos aún</div>';
+  }
 }
 
 // ══ CLIENTES ══
