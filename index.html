@@ -1964,7 +1964,9 @@ function editarClienteActual(){
 function guardarNotasCliente(){
   const c=clientes.find(x=>x.id===clienteActualId); if(!c)return;
   c.notas=document.getElementById('dNotasArea').value;
-  gLS(); toast('Notas guardadas ✓','ok');
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(clienteActualId).update({notas:c.notas}).catch(e=>console.error('Firestore clientes:',e));}
+  toast('Notas guardadas ✓','ok');
 }
 
 function toggleOrderForm(){
@@ -1980,8 +1982,10 @@ function guardarOrdenCliente(){
   const fecha=document.getElementById('oFecha').value;
   const desc=document.getElementById('oDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
-  ordenes.push({id:uid(),fecha,desc,notas:document.getElementById('oNotas').value.trim(),estado:document.getElementById('oEstado').value,clienteId:clienteActualId});
+  const nuevaOrden={id:uid(),fecha,desc,notas:document.getElementById('oNotas').value.trim(),estado:document.getElementById('oEstado').value,clienteId:clienteActualId};
+  ordenes.push(nuevaOrden);
   gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   const c=clientes.find(x=>x.id===clienteActualId);
   renderOrdenesCliente(c); toggleOrderForm(); filtrarOrdenes();
   toast('Orden agregada ✓','ok');
@@ -1990,6 +1994,7 @@ function guardarOrdenCliente(){
 function cambiarEstadoOrden(ordenId,estado){
   const o=ordenes.find(x=>x.id===ordenId); if(!o)return;
   o.estado=estado; gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({estado:estado,updatedAt:new Date().toISOString()}).catch(e=>console.error('Firestore ordenes:',e));}
   const c=clientes.find(x=>x.id===clienteActualId);
   if(c) renderOrdenesCliente(c);
   filtrarOrdenes(); renderDashboard();
@@ -2142,9 +2147,12 @@ function guardarOrdenStandalone(){
     // Preservar comentarios al editar
     datos.comentarios = ordenes[i].comentarios || [];
     ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).set(ordenes[i],{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   } else {
     datos.comentarios = [];
-    ordenes.push({id:uid(),...datos}); toast('Orden creada ✓','ok');
+    const nuevoId=uid();
+    ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   }
   guardarYSincronizar('d_ordenes', ordenes); filtrarOrdenes(); cerrarModal('mOrden');
 }
@@ -2152,7 +2160,9 @@ function guardarOrdenStandalone(){
 function eliminarOrden(){
   if(!confirm('¿Eliminar esta orden?'))return;
   ordenes=ordenes.filter(x=>x.id!==editandoOrdenId);
-  gLS(); filtrarOrdenes(); cerrarModal('mOrden'); toast('Orden eliminada');
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().catch(e=>console.error('Firestore ordenes:',e));}
+  filtrarOrdenes(); cerrarModal('mOrden'); toast('Orden eliminada');
 }
 
 // ══ VISTA COLABORADOR ══
@@ -2241,7 +2251,9 @@ function toggleClientePopup(id){
 
 function completarTarea(id){
   const o=ordenes.find(x=>x.id===id); if(!o)return;
-  o.estado='completada'; gLS(); rendercolaborador(); toast('Tarea completada ✓','ok');
+  o.estado='completada'; gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(e=>console.error('Firestore ordenes:',e));}
+  rendercolaborador(); toast('Tarea completada ✓','ok');
 }
 
 
@@ -2271,9 +2283,12 @@ function guardarcolaborador(){
   if(editandoEmpId){
     const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
     colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).set(colaboradores[i],{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
   } else {
-    colaboradores.push({id:uid(), ...datos});
+    const nuevoId=uid();
+    colaboradores.push({id:nuevoId, ...datos});
     toast('colaborador agregado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
   }
   gLS(); filtrarcolaboradores(); cerrarModal('mcolaborador');
   // also update orden form colaborador selector
@@ -2283,7 +2298,9 @@ function guardarcolaborador(){
 function eliminarcolaborador(){
   if(!confirm('¿Eliminar este colaborador?')) return;
   colaboradores = colaboradores.filter(x=>x.id!==editandoEmpId);
-  gLS(); filtrarcolaboradores(); cerrarModal('mcolaborador'); toast('colaborador eliminado');
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().catch(e=>console.error('Firestore colaboradores:',e));}
+  filtrarcolaboradores(); cerrarModal('mcolaborador'); toast('colaborador eliminado');
 }
 
 function filtrarcolaboradores(){
@@ -2567,9 +2584,12 @@ function guardarReunion(){
     const i = reuniones.findIndex(x=>x.id===editandoReunionId);
     reuniones[i] = {...reuniones[i], ...datos};
     toast('Reunión actualizada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).set(reuniones[i],{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
   } else {
-    reuniones.push({id:uid(), ...datos});
+    const nuevoId=uid();
+    reuniones.push({id:nuevoId, ...datos});
     toast('Reunión creada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
   }
   gLS(); cerrarModal('mReunion'); filtrarReuniones(); renderEmpReuniones();
 }
@@ -2577,7 +2597,9 @@ function guardarReunion(){
 function eliminarReunion(){
   if(!confirm('¿Eliminar esta reunión?'))return;
   reuniones = reuniones.filter(x=>x.id!==editandoReunionId);
-  gLS(); cerrarModal('mReunion'); filtrarReuniones(); toast('Reunión eliminada');
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().catch(e=>console.error('Firestore reuniones:',e));}
+  cerrarModal('mReunion'); filtrarReuniones(); toast('Reunión eliminada');
 }
 
 function filtrarReuniones(){
@@ -2653,7 +2675,9 @@ function toggleCumplimiento(reunionId, empId){
   if(!r)return;
   if(!r.cumplimiento)r.cumplimiento={};
   r.cumplimiento[empId] = !r.cumplimiento[empId];
-  gLS(); renderEmpReuniones();
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(e=>console.error('Firestore reuniones:',e));}
+  renderEmpReuniones();
   toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
 }
 
