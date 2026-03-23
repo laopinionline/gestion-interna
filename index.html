@@ -798,6 +798,13 @@ header{
   <div class="container" style="max-width:1100px">
     <!-- TABLERO MÉTRICAS GRUPO (colaborador) -->
     <div id="tableroMetricasGrupoEmp" class="tablero-metricas-grupo" style="margin-top:18px"></div>
+    <!-- MIS REDES -->
+    <div id="misRedesWidget" style="display:none;margin-bottom:20px;">
+      <div class="dash-panel">
+        <div class="dash-panel-title">📱 Mis Redes</div>
+        <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
+      </div>
+    </div>
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
       <div class="emp-header">
@@ -1098,6 +1105,25 @@ let alertasYouTube = JSON.parse(localStorage.getItem('d_alertas_youtube') || '[]
 
 let empActualId = null;
 let usuarioLogueado = null; // colaborador logueado actual
+
+const REDES_POR_COLABORADOR = {
+  "emp08": [{marca:"laopinionline", plataforma:"facebook", nombre:"Facebook LaOpinionLine"}, {marca:"reportelaopinion", plataforma:"instagram", nombre:"@reportelaopinion"}],
+  "emp18": [{marca:"laopinionline", plataforma:"instagram", nombre:"Instagram LaOpinionLine"}],
+  "emp19": [{marca:"laopinionline", plataforma:"tiktok", nombre:"TikTok LaOpinionLine"}],
+  "emp21": [{marca:"laopinionline", plataforma:"linkedin", nombre:"LinkedIn LaOpinionLine"}],
+  "emp22": [{marca:"laopinionline", plataforma:"spotify", nombre:"Spotify LaOpinionLine"}],
+  "emp16": [{marca:"laopinionline", plataforma:"youtube", nombre:"YouTube LaOpinionLine"}, {marca:"laopinionplay", plataforma:"instagram", nombre:"Instagram LaOpinionPlay"}, {marca:"laopinionplay", plataforma:"tiktok", nombre:"TikTok LaOpinionPlay"}, {marca:"notaalpiepergamino", plataforma:"instagram", nombre:"@notaalpiepergamino"}],
+  "emp17": [{marca:"laopinionplay", plataforma:"twitch", nombre:"Twitch LaOpinionPlay"}],
+  "emp07": [{marca:"laopinioncampo", plataforma:"instagram", nombre:"Instagram LaOpinionCampo"}],
+  "emp04": [{marca:"laopinion365", plataforma:"instagram", nombre:"Instagram LaOpinion365"}],
+  "emp09": [{marca:"fueradepagina", plataforma:"instagram", nombre:"@fueradepagina.lo"}],
+  "emp11": [{marca:"fueradepagina", plataforma:"instagram", nombre:"@fueradepagina.lo"}],
+  "emp15": [{marca:"lagloriaodevoto", plataforma:"instagram", nombre:"@lagloriaodevoto"}],
+  "emp14": [{marca:"reportelaopinion", plataforma:"instagram", nombre:"@reportelaopinion"}],
+  "emp01": "all"
+};
+
+const EMOJI_PLATAFORMA = {facebook:"📘", instagram:"📷", tiktok:"🎵", youtube:"▶️", "twitter/x":"𝕏", x:"𝕏", linkedin:"💼", spotify:"🎧", twitch:"🟣"};
 let clienteActualId = null, editandoClienteId = null, editandoOrdenId = null;
 
 function gLS(){ localStorage.setItem('d_clientes',JSON.stringify(clientes)); localStorage.setItem('d_ordenes',JSON.stringify(ordenes)); localStorage.setItem('d_colaboradores',JSON.stringify(colaboradores)); localStorage.setItem('d_reuniones',JSON.stringify(reuniones)); }
@@ -2147,7 +2173,61 @@ function rendercolaborador(){
 
   renderKanban();
   renderEmpReuniones();
+  renderMisRedes();
 
+}
+
+async function renderMisRedes(){
+  const widget = document.getElementById('misRedesWidget');
+  const content = document.getElementById('misRedesContent');
+  if(!widget || !content) return;
+
+  const cfg = REDES_POR_COLABORADOR[empActualId];
+  if(!cfg){ widget.style.display='none'; return; }
+
+  widget.style.display='block';
+  content.innerHTML='<div class="no-data">Cargando...</div>';
+
+  try {
+    let redes;
+    if(cfg === 'all'){
+      const snap = await db.collection('metricas_redes').get();
+      redes = snap.docs.map(d=>({id:d.id,...d.data()}));
+    } else {
+      const promises = cfg.map(r=>db.collection('metricas_redes').where('marca','==',r.marca).where('plataforma','==',r.plataforma).get());
+      const snaps = await Promise.all(promises);
+      redes = cfg.map((r,i)=>{
+        const docs = snaps[i].docs;
+        return docs.length ? {nombre:r.nombre,...docs[0].data()} : {nombre:r.nombre, plataforma:r.plataforma, sinDatos:true};
+      });
+    }
+
+    if(!redes.length){ content.innerHTML='<div class="no-data">No hay redes asignadas</div>'; return; }
+
+    content.innerHTML = redes.map(r=>{
+      const emoji = EMOJI_PLATAFORMA[r.plataforma] || '🌐';
+      const nombre = r.nombre || `${r.marca} ${r.plataforma}`;
+      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;"><span style="font-size:18px">${emoji}</span><span style="font-weight:500">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
+
+      const seguidores = r.seguidores != null ? Number(r.seguidores).toLocaleString('es-AR') : '—';
+      const eng = r.engagement != null ? r.engagement+'%' : '';
+      const notif = r.notificaciones_pendientes || 0;
+      const badge = notif > 0 ? `<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px">${notif}</span>` : '';
+      const fecha = r.fecha_actualizacion ? `<div style="font-size:11px;color:#999;margin-top:2px">Actualizado: ${r.fecha_actualizacion}</div>` : '';
+
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:18px">${emoji}</span>
+        <span style="font-weight:500">${nombre}</span>${badge}
+        <span style="margin-left:auto;font-weight:600;color:var(--blue)">${seguidores}</span>
+        ${eng ? `<span style="font-size:12px;color:var(--green)">eng ${eng}</span>` : ''}
+        ${fecha}
+      </div>`;
+    }).join('');
+
+  } catch(e){
+    console.error('Error renderMisRedes:',e);
+    content.innerHTML='<div class="no-data">Error al cargar redes</div>';
+  }
 }
 
 function toggleClientePopup(id){
