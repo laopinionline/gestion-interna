@@ -1891,15 +1891,20 @@ function guardarCliente(){
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).set(clientes[i],{merge:true}).catch(e=>console.error('Firestore clientes:',e));}
   } else {
-    clientes.unshift({id:uid(),fechaAlta:new Date().toLocaleDateString('es-AR'),...datos});
+    const nuevoId=uid();
+    const nuevoCliente={id:nuevoId,fechaAlta:new Date().toLocaleDateString('es-AR'),...datos};
+    clientes.unshift(nuevoCliente);
     toast('Cliente agregado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(nuevoId).set(nuevoCliente).catch(e=>console.error('Firestore clientes:',e));}
   }
   gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente');
 }
 
 function eliminarCliente(){
   if(!confirm('¿Eliminar cliente? Las órdenes vinculadas quedarán sin cliente.'))return;
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().catch(e=>console.error('Firestore clientes:',e));}
   clientes=clientes.filter(x=>x.id!==editandoClienteId);
   gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente'); toast('Cliente eliminado');
 }
