@@ -2369,6 +2369,19 @@ function guardarPerfil(){
   if(document.getElementById('svUserName')) document.getElementById('svUserName').textContent = primerNombre;
   if(document.getElementById('empUserName')) document.getElementById('empUserName').textContent = primerNombre;
 
+  // Sincronizar email (y nombre/teléfono) en Firestore para Google Sign-In futuro
+  if(typeof db !== 'undefined' && u.id){
+    const updateData = { nombre, telefono, email };
+    if(passNueva) updateData.password = passNueva;
+    db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
+      .catch(err => console.warn('Firestore update error:', err));
+    // También actualizar en API backend
+    fetch(API + '/colaboradores/' + u.id + '/password', {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({password: passNueva || u.password})
+    }).catch(()=>{});
+  }
+
   gLS(); cerrarModal('mPerfil');
   toast('Perfil actualizado ✓','ok');
 }
