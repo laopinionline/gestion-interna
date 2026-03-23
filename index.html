@@ -540,6 +540,11 @@ header{
           <div class="dash-panel-title">🔔 Alertas de vencimiento de pauta</div>
           <div id="dashAlertas"><div class="no-data">Sin alertas</div></div>
         </div>
+        <!-- Alertas YouTube -->
+        <div class="dash-panel" id="dashYouTubeCard" style="display:none">
+          <div class="dash-panel-title">▶️ Alertas YouTube — Monetización</div>
+          <div id="dashYouTube"><div class="no-data">✅ Sin alertas de YouTube</div></div>
+        </div>
       </div>
 
       <div class="dash-cols">
@@ -909,6 +914,7 @@ header{
           localStorage.setItem('d_' + col, JSON.stringify(datos));
           if (col === 'colaboradores') colaboradores = datos;
           if (col === 'clientes') clientes = datos;
+              if (col === 'd_alertas_youtube') { alertasYouTube = datos; localStorage.setItem('d_alertas_youtube', JSON.stringify(datos)); }
           if (col === 'ordenes') ordenes = datos;
           if (col === 'reuniones') reuniones = datos;
         } else {
@@ -967,6 +973,11 @@ let colaboradores = JSON.parse(localStorage.getItem('d_colaboradores') || '[{"id
 if(!colaboradores.some(c=>c.id==='emp01')){localStorage.removeItem('d_colaboradores');location.reload();}
 let reuniones = JSON.parse(localStorage.getItem('d_reuniones') || '[]');
 let rolActual = null;
+
+// ══ ALERTAS YOUTUBE ══
+// Se cargan desde Firestore — Claw las escribe, el panel las lee
+let alertasYouTube = JSON.parse(localStorage.getItem('d_alertas_youtube') || '[]');
+
 let empActualId = null;
 let usuarioLogueado = null; // colaborador logueado actual
 let clienteActualId = null, editandoClienteId = null, editandoOrdenId = null;
@@ -1021,7 +1032,7 @@ async function login(){
     if(rolActual==='supervisor'){
       document.getElementById('appSupervisor').classList.add('active');
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
-      actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); filtrarReuniones();
+      actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
     } else {
       document.getElementById('appcolaborador').classList.add('active');
       document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
@@ -1208,6 +1219,60 @@ function validarJerarquiaOrden(colaboradoresIds){
 }
 
 
+// ══ ALERTAS YOUTUBE ══
+function renderAlertasYouTube(){
+  const div = document.getElementById('dashYouTube');
+  if(!div) return;
+  // Mostrar solo las alertas no resueltas de los últimos 30 días
+  const recientes = alertasYouTube.filter(a => !a.resuelta).sort((a,b) => b.fecha - a.fecha);
+  if(!recientes.length){
+    div.innerHTML = '<div class="no-data">✅ Sin alertas de YouTube</div>';
+    // Ocultar la card si no hay alertas y no es Pascali
+    const card = document.getElementById('dashYouTubeCard');
+    if(card && empActualId !== 'emp16') card.style.display = 'none';
+    return;
+  }
+  // Mostrar card siempre si hay alertas
+  const card = document.getElementById('dashYouTubeCard');
+  if(card) card.style.display = '';
+  div.innerHTML = recientes.map(a => `
+    <div style="background:#fff3e0;border-left:4px solid #f44336;padding:10px 14px;border-radius:6px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">⚠️ ${a.titulo}</div>
+          <div style="font-size:12px;color:#666">${a.motivo || 'Derechos de autor detectados'}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">${a.fecha ? new Date(a.fecha).toLocaleDateString('es-AR') : ''}</div>
+        </div>
+        ${(rolActual==='supervisor' || empActualId==='emp16') ? `
+          <button onclick="resolverAlertaYT('${a.id}')" style="font-size:11px;background:#4caf50;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;white-space:nowrap;margin-left:8px">
+            ✅ Resolver
+          </button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function resolverAlertaYT(id){
+  const a = alertasYouTube.find(x => x.id === id);
+  if(a){ a.resuelta = true; a.resueltaPor = empActualNombre || 'Supervisor'; a.fechaResolucion = Date.now(); }
+  guardarYSincronizar('d_alertas_youtube', alertasYouTube);
+  renderAlertasYouTube();
+  toast('Alerta resuelta ✓', 'ok');
+}
+
+function agregarAlertaYT(titulo, motivo){
+  alertasYouTube.push({
+    id: uid(),
+    titulo,
+    motivo,
+    fecha: Date.now(),
+    resuelta: false,
+    asignadoA: 'emp16', // Pascali
+  });
+  guardarYSincronizar('d_alertas_youtube', alertasYouTube);
+  renderAlertasYouTube();
+}
+
 function etiquetaJerarquia(j){
   const mapa = {
     'director_general': '⭐ Director General',
@@ -1234,7 +1299,7 @@ function cambiarVista(id, btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById(id).classList.add('active');
-  if(id==='vDash') renderDashboard();
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
   if(id==='vcolaboradores'){ filtrarcolaboradores(); }
   if(id==='vReuniones'){ filtrarReuniones(); }
