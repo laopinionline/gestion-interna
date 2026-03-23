@@ -151,6 +151,18 @@ header{
 .stat-card.red .stat-value{color:var(--accent);}
 .stat-card.blue .stat-value{color:var(--blue2);}
 
+/* ── TABLERO MÉTRICAS GRUPO ── */
+.tablero-metricas-grupo{margin-bottom:22px;}
+.tablero-metricas-grupo .tmg-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:10px;}
+.tablero-metricas-grupo .tmg-row{display:flex;flex-wrap:wrap;gap:10px;}
+.tablero-metricas-grupo .tmg-card{
+  background:#fff;border-radius:10px;border:1.5px solid var(--line);
+  padding:12px 16px;min-width:120px;flex:1;
+}
+.tablero-metricas-grupo .tmg-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#999;margin-bottom:4px;}
+.tablero-metricas-grupo .tmg-card-value{font-family:'Playfair Display',serif;font-size:22px;line-height:1;color:var(--blue2);}
+.tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:#aaa;margin-top:2px;}
+
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
 .dash-panel{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;}
 .dash-panel-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;color:var(--ink);}
@@ -521,7 +533,7 @@ header{
     <button class="nav-tab active" onclick="cambiarVista('vDash',this)">📊 Dashboard</button>
     <button class="nav-tab" onclick="cambiarVista('vClientes',this)">👥 Clientes</button>
     <button class="nav-tab" onclick="cambiarVista('vOrdenes',this)">📋 Órdenes de trabajo</button>
-    <button class="nav-tab" onclick="cambiarVista('vcolaboradores',this)">👤 Colaboradores</button>
+    <button class="nav-tab" id="tabColaboradores" onclick="cambiarVista('vcolaboradores',this)">👤 Colaboradores</button>
     <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">📅 Reuniones</button>
     <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">📈 Productividad</button>
   </div>
@@ -606,6 +618,9 @@ header{
           <div id="dashEstadoClaw"><div class="no-data">Última actividad: cargando...</div></div>
         </div>
       </div>
+
+      <!-- BLOQUE 6: Tablero métricas grupo -->
+      <div id="tableroMetricasGrupoSup" class="tablero-metricas-grupo"></div>
     </div>
 
     <!-- CLIENTES -->
@@ -735,6 +750,8 @@ header{
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpProductividad',this)">📊 Mi Productividad</button>
   </div>
   <div class="container" style="max-width:1100px">
+    <!-- TABLERO MÉTRICAS GRUPO (colaborador) -->
+    <div id="tableroMetricasGrupoEmp" class="tablero-metricas-grupo" style="margin-top:18px"></div>
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
       <div class="emp-header">
@@ -1138,6 +1155,10 @@ async function login(){
   // Detectar rol localmente — supervisor es emp01 o quien tenga rol supervisor
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
   iniciarSesion(rol);
+
+  // Aplicar visibilidad por jerarquía y cargar métricas grupo
+  aplicarVisibilidad();
+  cargarMetricasGrupo();
 }
 
 
@@ -2609,6 +2630,102 @@ function activarCuenta(){
   ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
   document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
   setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
+}
+
+// ══════════ TABLERO MÉTRICAS GRUPO ══════════
+const REDES_FALLBACK = [
+  {red:'Facebook', icono:'📘', seguidores:'103K'},
+  {red:'Instagram', icono:'📷', seguidores:'54K'},
+  {red:'TikTok', icono:'🎵', seguidores:'16.5K'},
+  {red:'YouTube', icono:'▶️', seguidores:'976'},
+  {red:'X', icono:'𝕏', seguidores:'2.663'}
+];
+
+function renderTableroMetricas(containerId, datos){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  let html = '<div class="tmg-title">📊 Métricas del grupo</div><div class="tmg-row">';
+  // GA4
+  html += `<div class="tmg-card"><div class="tmg-card-label">Lecturas esta semana</div><div class="tmg-card-value" id="${containerId}_ga4">${datos.ga4||'cargando...'}</div><div class="tmg-card-sub">pageviews GA4</div></div>`;
+  // Redes
+  (datos.redes||REDES_FALLBACK).forEach(r => {
+    html += `<div class="tmg-card"><div class="tmg-card-label">${r.icono} ${r.red}</div><div class="tmg-card-value">${r.seguidores}</div></div>`;
+  });
+  // Notas publicadas
+  html += `<div class="tmg-card"><div class="tmg-card-label">Notas publicadas</div><div class="tmg-card-value" id="${containerId}_notas">${datos.notas||'—'}</div><div class="tmg-card-sub">esta semana</div></div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function cargarMetricasGrupo(){
+  let datos = { ga4:'cargando...', redes:null, notas:'—' };
+  // Render con fallback primero
+  renderTableroMetricas('tableroMetricasGrupoSup', datos);
+  renderTableroMetricas('tableroMetricasGrupoEmp', datos);
+  // Intentar cargar redes desde Firestore
+  try {
+    const snap = await db.collection('metricas_redes').get();
+    if(!snap.empty){
+      const redes = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        redes.push({red: d.red||doc.id, icono: d.icono||'📱', seguidores: d.seguidores||'—'});
+      });
+      if(redes.length) datos.redes = redes;
+    }
+  } catch(e){ console.log('metricas_redes fallback:', e.message); }
+  // Re-render con datos actualizados
+  renderTableroMetricas('tableroMetricasGrupoSup', datos);
+  renderTableroMetricas('tableroMetricasGrupoEmp', datos);
+}
+
+// ══════════ VISIBILIDAD POR JERARQUÍA ══════════
+function aplicarVisibilidad(){
+  if(!usuarioLogueado) return;
+  const j = usuarioLogueado.jerarquia;
+
+  if(j === 'director_general'){
+    // Ve todo — sin restricciones
+    return;
+  }
+
+  if(j === 'director'){
+    // Ocultar tab Colaboradores
+    const tabCol = document.getElementById('tabColaboradores');
+    if(tabCol) tabCol.style.display = 'none';
+
+    // Parchear filtrarOrdenes para forzar filtro por equipo del director
+    const _filtrarOrdenesOriginal = filtrarOrdenes;
+    filtrarOrdenes = function(){
+      const selEquipo = document.getElementById('filtroOrdenEquipo');
+      if(selEquipo) selEquipo.value = usuarioLogueado.equipo || '';
+      _filtrarOrdenesOriginal();
+    };
+
+    // Parchear filtrarcolaboradores para forzar filtro por equipo
+    const _filtrarcolaboradoresOriginal = filtrarcolaboradores;
+    filtrarcolaboradores = function(){
+      const selEquipo = document.getElementById('filterEquipo');
+      if(selEquipo) selEquipo.value = usuarioLogueado.equipo || '';
+      _filtrarcolaboradoresOriginal();
+    };
+
+    // Re-ejecutar filtros con restricción aplicada
+    filtrarOrdenes();
+    filtrarcolaboradores();
+    return;
+  }
+
+  // responsable o colaborador → forzar vista colaborador
+  if(j === 'responsable' || j === 'colaborador' || j === 'externo'){
+    // Si estaba en supervisor, quitar y poner colaborador
+    document.getElementById('appSupervisor').classList.remove('active');
+    document.getElementById('appcolaborador').classList.add('active');
+    document.getElementById('empUserName').textContent = usuarioLogueado.nombre.split(' ')[0];
+    actualizarAvatarColaborador(usuarioLogueado);
+    rolActual = 'colaborador';
+    rendercolaborador();
+  }
 }
 
   // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
