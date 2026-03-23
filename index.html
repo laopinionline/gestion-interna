@@ -683,6 +683,7 @@ header{
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="cambiarVistaEmp('vEmpKanban',this)">📋 Mis Tareas</button>
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpReuniones',this)">📅 Reuniones</button>
+    <button class="nav-tab" onclick="cambiarVistaEmp('vEmpProductividad',this)">📊 Mi Productividad</button>
   </div>
   <div class="container" style="max-width:1100px">
     <!-- KANBAN -->
@@ -718,6 +719,10 @@ header{
     <!-- REUNIONES COLABORADOR -->
     <div class="view" id="vEmpReuniones">
       <div id="empReunionesList" style="margin-top:4px"></div>
+    </div>
+    <!-- PRODUCTIVIDAD COLABORADOR -->
+    <div class="view" id="vEmpProductividad">
+      <div id="empProductividadContent" style="margin-top:4px"></div>
     </div>
   </div>
 </div>
@@ -1917,6 +1922,61 @@ function cambiarVistaEmp(id, btn){
   document.getElementById(id).classList.add('active');
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpReuniones') renderEmpReuniones();
+  if(id==='vEmpProductividad') renderProductividadEmp();
+}
+
+// ══ PRODUCTIVIDAD COLABORADOR ══
+async function renderProductividadEmp(){
+  const ct = document.getElementById('empProductividadContent');
+  if(!ct) return;
+  if(!empActualId){
+    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+    return;
+  }
+  try {
+    const snap = await db.collection('colaboradores').doc(empActualId).get();
+    const data = snap.exists ? snap.data() : null;
+    const rep = data && data.reporte_diario ? data.reporte_diario : null;
+    if(!rep){
+      ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+      return;
+    }
+    const bloques = [
+      { titulo:'Ayer', datos:rep.ayer },
+      { titulo:'Últimos 7 días', datos:rep.ultimos_7_dias },
+      { titulo:'Últimos 30 días', datos:rep.ultimos_30_dias }
+    ];
+    const metricas = [
+      { key:'produccion', label:'Producción', icon:'📝' },
+      { key:'lecturas', label:'Lecturas', icon:'👁️' },
+      { key:'tiempo_edicion', label:'Tiempo edición', icon:'⏱️' },
+      { key:'seo_score', label:'SEO Score', icon:'🔍' },
+      { key:'performance', label:'Performance', icon:'⚡' }
+    ];
+    let html = '<div style="margin-bottom:12px;color:var(--ink2);font-size:.85rem">Reporte: '+(rep.fecha||'—')+'</div>';
+    bloques.forEach(b=>{
+      html+='<div style="margin-bottom:24px">';
+      html+='<div style="font-family:Playfair Display,serif;font-size:1.15rem;font-weight:700;color:var(--blue);margin-bottom:10px">'+b.titulo+'</div>';
+      html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">';
+      if(b.datos){
+        metricas.forEach(m=>{
+          const val = b.datos[m.key]!=null ? b.datos[m.key] : '—';
+          html+='<div style="background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:16px;text-align:center">';
+          html+='<div style="font-size:1.3rem;margin-bottom:4px">'+m.icon+'</div>';
+          html+='<div style="font-family:DM Sans,sans-serif;font-size:1.5rem;font-weight:700;color:var(--blue)">'+val+'</div>';
+          html+='<div style="font-family:DM Sans,sans-serif;font-size:.8rem;color:var(--ink2);margin-top:2px">'+m.label+'</div>';
+          html+='</div>';
+        });
+      } else {
+        html+='<div class="no-data" style="grid-column:1/-1">Sin datos para este período</div>';
+      }
+      html+='</div></div>';
+    });
+    ct.innerHTML=html;
+  } catch(e){
+    console.error('Error renderProductividadEmp:',e);
+    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+  }
 }
 
 // ══ KANBAN ══
