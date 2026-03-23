@@ -333,6 +333,15 @@ header{
 .toast.ok{background:var(--green);}
 .toast.err{background:var(--accent);}
 
+/* ── AVATAR PERFIL ── */
+.avatar-perfil{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.3);cursor:pointer;transition:opacity 0.2s;}
+.avatar-perfil:hover{opacity:0.8;}
+.avatar-iniciales{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;cursor:pointer;transition:opacity 0.2s;flex-shrink:0;}
+.avatar-iniciales:hover{opacity:0.8;}
+.avatar-iniciales.lg{width:60px;height:60px;font-size:20px;background:rgba(255,255,255,0.15);color:#fff;border:2px solid rgba(255,255,255,0.3);}
+.avatar-iniciales.sm{width:40px;height:40px;font-size:14px;background:#dce8f5;color:var(--blue);}
+.avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr;}.info-grid{grid-template-columns:1fr;}.dash-grid{grid-template-columns:1fr 1fr;}}
 
@@ -424,6 +433,7 @@ header{
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -674,7 +684,9 @@ header{
   <header>
     <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
-      <span class="user-badge">👤 <span id="empUserName">—</span></span>
+      <div id="empAvatarWrap" class="avatar-iniciales lg" onclick="document.getElementById('inputFotoPerfil').click()" title="Cambiar foto de perfil">??</div>
+      <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none" onchange="subirFotoPerfil(this)">
+      <span class="user-badge"><span id="empUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
       <span class="user-badge">💻 colaborador</span>
       <button class="btn-logout" onclick="logout()">Salir</button>
@@ -905,6 +917,7 @@ header{
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const storage = firebase.storage();
 
   // ══════════ FIRESTORE SYNC ══════════
   let firestoreReady = false;
@@ -1009,6 +1022,45 @@ function toast(msg,tipo=''){
   setTimeout(()=>el.className='toast',2800);
 }
 
+// ══ AVATAR / FOTO DE PERFIL ══
+function obtenerIniciales(nombre){
+  return (nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+}
+
+function actualizarAvatarColaborador(usuario){
+  const wrap = document.getElementById('empAvatarWrap');
+  if(!wrap) return;
+  const iniciales = obtenerIniciales(usuario.nombre);
+  if(usuario.fotoUrl){
+    wrap.innerHTML = `<img src="${usuario.fotoUrl}" class="avatar-perfil" alt="Foto" onclick="document.getElementById('inputFotoPerfil').click()">`;
+    wrap.className = '';
+    wrap.style.cssText = '';
+  } else {
+    wrap.textContent = iniciales;
+    wrap.className = 'avatar-iniciales lg';
+  }
+}
+
+async function subirFotoPerfil(input){
+  const file = input.files[0];
+  if(!file || !empActualId) return;
+  toast('Subiendo foto…');
+  try {
+    const ref = storage.ref('fotos-perfil/' + empActualId);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: url });
+    const col = colaboradores.find(c => c.id === empActualId);
+    if(col) col.fotoUrl = url;
+    actualizarAvatarColaborador(col || { nombre: empActualNombre, fotoUrl: url });
+    toast('Foto actualizada ✓','ok');
+  } catch(e){
+    console.error('Error subiendo foto:', e);
+    toast('Error al subir foto','err');
+  }
+  input.value = '';
+}
+
 // ══ LOGIN ══
 // Rol detectado automáticamente por login
 
@@ -1041,6 +1093,7 @@ async function login(){
     } else {
       document.getElementById('appcolaborador').classList.add('active');
       document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
+      actualizarAvatarColaborador(usuario);
       rendercolaborador();
     }
   }
@@ -1888,10 +1941,15 @@ function rendercolaboradores(lista){
     const pendientes = tareasAsignadas.filter(o => o.estado==='pendiente').length;
     const hoyTareas = tareasAsignadas.filter(o => o.fecha===hoy());
     const equipoClass = (e.equipo||'').toLowerCase().replace(/[^a-z]/g,'');
+    const iniciales = (e.nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+    const avatarHtml = e.fotoUrl
+      ? `<img src="${e.fotoUrl}" class="avatar-sm" alt="${e.nombre}">`
+      : `<div class="avatar-iniciales sm">${iniciales}</div>`;
     return `<div class="client-card activo" onclick="abrirModalcolaborador('${e.id}')">
-      <div class="card-header">
-        <div class="client-name">${e.nombre}</div>
-        <span class="pill-jerarquia pill-j-${e.jerarquia||'colaborador'}">${etiquetaJerarquia(e.jerarquia)}</span>
+      <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+        ${avatarHtml}
+        <div style="flex:1"><div class="client-name">${e.nombre}</div>
+        <span class="pill-jerarquia pill-j-${e.jerarquia||'colaborador'}">${etiquetaJerarquia(e.jerarquia)}</span></div>
       </div>
       <div class="client-rubro">${e.puesto}</div>
       <div style="margin:4px 0">
