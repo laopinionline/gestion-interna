@@ -2582,7 +2582,7 @@ function eliminarReunion(){
 
 function filtrarReuniones(){
   const filtro = document.getElementById('filtroReunionEstado')?.value||'';
-  let listaR = [...reuniones].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  let listaR = [...reuniones].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   if(filtro) listaR = listaR.filter(r=>statusReunion(r)===filtro);
   document.getElementById('reunionCountBadge').textContent = listaR.length;
   const cont = document.getElementById('reunionesList');
