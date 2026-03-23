@@ -1239,11 +1239,11 @@ function programaDeAlerta(titulo){
 }
 
 function puedeVerAlertaYT(alerta){
-  if(rolActual === 'supervisor') return true;  // supervisores ven todo
-  if(empActualId === 'emp16') return true;      // Pascali ve todo
-  if(empActualId === 'emp17') return true;      // Xavi ve todo (co-director Claw)
+  if(rolActual === 'supervisor') return true;   // supervisores ven todo
+  if(empActualId === 'emp16') return true;       // Pascali ve todo
+  if(empActualId === 'emp17') return true;       // Xavi ve todo
   const prog = programaDeAlerta(alerta.titulo);
-  if(!prog) return true; // si no se detecta programa, mostrar a todos
+  if(!prog) return false; // programa no reconocido → solo Pascali y Xavi
   const colabs = PROGRAMAS_COLABS[prog] || [];
   return colabs.includes(empActualId);
 }
