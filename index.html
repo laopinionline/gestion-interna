@@ -2165,54 +2165,51 @@ function renderGA4Dashboard(){
 
 // ── BLOQUE 4: Redes sociales ──
 function renderRedesSociales(){
-  const defaults = [
-    {marca:'laopinionline',plataforma:'Facebook',icono:'📘',seguidores:'103K'},
-    {marca:'laopinionline',plataforma:'Instagram',icono:'📸',seguidores:'54K'},
-    {marca:'laopinionline',plataforma:'TikTok',icono:'🎵',seguidores:'16.5K'},
-    {marca:'laopinionline',plataforma:'YouTube',icono:'▶️',seguidores:'976'},
-    {marca:'laopinionline',plataforma:'X',icono:'✖️',seguidores:'2.663'},
-    {marca:'laopinionplay',plataforma:'Instagram',icono:'📸',seguidores:'15.8K'},
-    {marca:'laopinionplay',plataforma:'TikTok',icono:'🎵',seguidores:'1.238'},
-    {marca:'laopinioncampo',plataforma:'Instagram',icono:'📸',seguidores:'3.725'},
-    {marca:'laopinion365',plataforma:'Instagram',icono:'📸',seguidores:'—'},
+  const REDES_CATALOGO = [
+    {marca:'laopinionline', plataforma:'Facebook',  icono:'📘', cuenta:'@laopinionline',  seguidores:'103K', link:'https://facebook.com/laopinionline'},
+    {marca:'laopinionline', plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionline',  seguidores:'54K',  link:'https://instagram.com/laopinionline'},
+    {marca:'laopinionline', plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionline',  seguidores:'16.5K',link:'https://tiktok.com/@laopinionline'},
+    {marca:'laopinionline', plataforma:'YouTube',    icono:'▶️', cuenta:'@LaOpinionPlay',  seguidores:'976',  link:'https://youtube.com/@LaOpinionPlay'},
+    {marca:'laopinionline', plataforma:'X',          icono:'✖️', cuenta:'@LaOpiniONline',  seguidores:'2.663',link:'https://x.com/LaOpiniONline'},
+    {marca:'laopinionplay', plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionplay',  seguidores:'15.8K',link:'https://instagram.com/laopinionplay'},
+    {marca:'laopinionplay', plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionplay',  seguidores:'1.238',link:'https://tiktok.com/@laopinionplay'},
+    {marca:'laopinionplay', plataforma:'Twitch',     icono:'🟣', cuenta:'@laopinionplay',  seguidores:'1.000',link:'https://twitch.tv/twitchlaopinionplay'},
+    {marca:'laopinioncampo',plataforma:'Instagram',  icono:'🌾', cuenta:'@laopinioncampo', seguidores:'3.725',link:'https://instagram.com/laopinioncampo'},
+    {marca:'laopinion365', plataforma:'Instagram',   icono:'📸', cuenta:'@laopinion365',   seguidores:'—',    link:'https://instagram.com/laopinion365'},
   ];
   const div = document.getElementById('dashRedesSociales');
-  const LINKS_REDES = {'laopinionline-facebook':'https://facebook.com/laopinionline','laopinionline-instagram':'https://instagram.com/laopinionline','laopinionline-tiktok':'https://tiktok.com/@laopinionline','laopinionline-youtube':'https://youtube.com/@LaOpinionPlay','laopinionline-x':'https://x.com/LaOpiniONline','laopinionplay-instagram':'https://instagram.com/laopinionplay','laopinionplay-tiktok':'https://tiktok.com/@laopinionplay','laopinionplay-twitch':'https://twitch.tv/twitchlaopinionplay','laopinioncampo-instagram':'https://instagram.com/laopinioncampo','laopinion365-instagram':'https://instagram.com/laopinion365'};
-  const renderCards = (redes)=>{
-    div.innerHTML = redes.map(r=>{
-      const key=(r.marca||'laopinionline')+'-'+(r.plataforma||'').toLowerCase();
-      const link=LINKS_REDES[key]||'#';
-      const NOMBRES_CUENTA = {
-        'laopinionline-facebook':'@laopinionline','laopinionline-instagram':'@laopinionline',
-        'laopinionline-tiktok':'@laopinionline','laopinionline-youtube':'@LaOpinionPlay',
-        'laopinionline-x':'@LaOpiniONline','laopinionplay-instagram':'@laopinionplay',
-        'laopinionplay-tiktok':'@laopinionplay','laopinionplay-twitch':'@laopinionplay',
-        'laopinioncampo-instagram':'@laopinioncampo','laopinion365-instagram':'@laopinion365'
-      };
-      const cuentaLabel = NOMBRES_CUENTA[key] || (r.marca||'');
-      return '<a href="'+link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px;text-decoration:none;">'
-        +'<span style="font-size:20px">'+(r.icono||'📊')+'</span>'
-        +'<div>'
-        +'<div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase">'+(r.plataforma||'')+'</div>'
-        +'<div style="font-size:11px;color:var(--blue2);font-weight:700;">'+cuentaLabel+'</div>'
-        +'<div style="font-size:17px;font-weight:700;color:var(--ink)">'+(r.seguidores||'—')+'</div>'
+  if(!div) return;
+  const renderCards = (redes) => {
+    div.innerHTML = redes.map(r => {
+      return '<a href="'+r.link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:140px;text-decoration:none;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 2px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">'
+        +'<span style="font-size:22px;flex-shrink:0;">'+r.icono+'</span>'
+        +'<div style="min-width:0;">'
+        +'<div style="font-size:10px;color:#bbb;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">'+r.plataforma+'</div>'
+        +'<div style="font-size:11px;color:var(--blue2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.cuenta+'</div>'
+        +'<div style="font-size:18px;font-weight:700;color:var(--ink);line-height:1.2;">'+r.seguidores+'</div>'
         +'</div></a>';
     }).join('');
   };
-  renderCards(defaults);
-  if(typeof db!=='undefined'){
-    db.collection('metricas_redes').get().then(snap=>{
-      if(!snap.empty){
-        const redes = [];
-        snap.forEach(doc=>{
-          const d=doc.data();
-          redes.push({plataforma:d.plataforma||doc.id,icono:d.icono||'📊',seguidores:d.seguidores||'—'});
-        });
-        if(redes.length) renderCards(redes);
-      }
+  // Render inmediato con datos hardcodeados
+  renderCards(REDES_CATALOGO);
+  // Actualizar seguidores desde Firestore si hay datos
+  if(typeof db !== 'undefined'){
+    db.collection('metricas_redes').get().then(snap => {
+      if(snap.empty) return;
+      const actualizados = [...REDES_CATALOGO];
+      snap.forEach(doc => {
+        const d = doc.data();
+        const key = (d.marca||'').toLowerCase() + '-' + (d.plataforma||'').toLowerCase();
+        const idx = actualizados.findIndex(r =>
+          (r.marca+'-'+r.plataforma).toLowerCase() === key
+        );
+        if(idx >= 0 && d.seguidores) actualizados[idx] = {...actualizados[idx], seguidores: d.seguidores};
+      });
+      renderCards(actualizados);
     }).catch(()=>{});
   }
 }
+
 
 // ── BLOQUE 5: Estado de Claw ──
 function renderEstadoClaw(){
