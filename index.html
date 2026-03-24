@@ -2226,12 +2226,13 @@ function renderGA4Dashboard(){
       if(data.lecturasSemanales!=null) document.getElementById('sLecturasSemanales').textContent = Number(data.lecturasSemanales).toLocaleString('es-AR');
       if(data.variacion!=null) document.getElementById('sLecturasAnterior').textContent = data.variacion;
       const div = document.getElementById('dashTop5Notas');
-      if(data.top5 && data.top5.length){
-        div.innerHTML = data.top5.map((n,i)=>`<div class="task-today-row">
+      const listaNotas = data.topNotas || data.top5 || [];
+      if(listaNotas.length){
+        div.innerHTML = listaNotas.map((n,i)=>`<div class="task-today-row">
           <div style="font-weight:700;color:var(--blue2);min-width:20px">${i+1}</div>
           <div class="task-today-info">
             <div class="task-today-desc">${n.titulo||n.title||'Sin título'}</div>
-            <div class="task-today-meta">👁 ${Number(n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
+            <div class="task-today-meta">👁 ${Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
           </div>
         </div>`).join('');
       }
