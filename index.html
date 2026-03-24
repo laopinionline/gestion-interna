@@ -3039,11 +3039,13 @@ function renderKanban(){
   const estados = ['pendiente','en-curso','listo'];
   const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
   const tareas = ordenes.filter(o => {
-    if(o.fecha < kInicio || o.fecha > kFin) return false;
     if(!empActualId) return true;
-    const ids = o.colaboradoresIds?.length ? o.colaboradoresIds : (o.colaboradorId ? [o.colaboradorId] : []);
-    return ids.includes(empActualId);
-  }).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    // Filtrar por asignadoA (campo principal) o colaboradoresIds
+    const asignado = o.asignadoA === empActualId;
+    const enCopia = (o.copiaA||[]).includes(empActualId);
+    const enIds = (o.colaboradoresIds||[]).includes(empActualId) || o.colaboradorId === empActualId;
+    return asignado || enCopia || enIds;
+  }).sort((a,b)=>(a.fechaCreacion||a.fecha||'').localeCompare(b.fechaCreacion||b.fecha||''));
 
   const pend = tareas.filter(o=>o.estado==='pendiente');
   const enCurso = tareas.filter(o=>o.estado==='en-curso');
@@ -3068,7 +3070,7 @@ function renderKanban(){
          <button class="kc-btn next-l" onclick="moverTarea('${o.id}','completada')">✓ Listo</button>`
       : `<button class="kc-btn prev" onclick="moverTarea('${o.id}','en-curso')">↩ Reabrir</button>`;
     return `<div class="kanban-card ${o.estado==='completada'?'completada':''}">
-      <div class="kc-title">${o.desc}</div>
+      <div class="kc-title">${o.titulo||o.desc||'Sin título'}</div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
@@ -3213,6 +3215,13 @@ function eliminarReunion(){
 function filtrarReuniones(){
   const filtro = document.getElementById('filtroReunionEstado')?.value||'';
   let listaR = [...reuniones].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  // Filtrar por participante — colaboradores solo ven sus reuniones
+  if(rolActual !== 'supervisor'){
+    listaR = listaR.filter(r => {
+      const parts = r.participantes || r.participantes_internos || [];
+      return parts.includes(empActualId);
+    });
+  }
   if(filtro) listaR = listaR.filter(r=>statusReunion(r)===filtro);
   document.getElementById('reunionCountBadge').textContent = listaR.length;
   const cont = document.getElementById('reunionesList');
@@ -3460,15 +3469,12 @@ function guardarPerfil(){
     if(passNueva) updateData.password = passNueva;
     db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
       .catch(err => console.warn('Firestore update error:', err));
-    // También actualizar en API backend
-    fetch(API + '/colaboradores/' + u.id + '/password', {
-      method: 'PATCH', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({password: passNueva || u.password})
-    }).catch(()=>{});
+
   }
 
-  gLS(); cerrarModal('mPerfil');
-  toast('Perfil actualizado ✓','ok');
+  try { gLS(); } catch(e) {}
+  cerrarModal('mPerfil');
+  toast('Perfil actualizado ✓', 'ok');
 }
 
 // ══ MODALES ══
