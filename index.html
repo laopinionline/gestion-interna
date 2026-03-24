@@ -1199,6 +1199,15 @@ header{
 <div class="toast" id="toast"></div>
 
 <script>
+// Reubicar modales al body en DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function(){
+  ['mPerfil','mcolaborador','mCliente','mOrden','mReunion','modalCheckColaborador'].forEach(function(id){
+    var m = document.getElementById(id);
+    if(m && m.parentElement && m.parentElement.id !== 'body' && m.parentElement !== document.body){
+      document.body.appendChild(m);
+    }
+  });
+});
 
   // ══════════ FIREBASE CONFIG ══════════
   const firebaseConfig = {
