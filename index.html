@@ -1875,6 +1875,39 @@ function cambiarVistaDrawer(id, btn){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
 }
+function puedeCheckOrden(orden){
+  if(!empActualId) return false;
+  // Propio: cualquiera puede marcar sus propias órdenes
+  if(orden.asignadoA === empActualId) return true;
+  if((orden.copiaA||[]).includes(empActualId)) return true;
+  const yo = colaboradores.find(c=>c.id===empActualId);
+  if(!yo) return false;
+  // Director general: puede con todos
+  if(yo.jerarquia === 'director_general') return true;
+  // Director: puede con su equipo
+  if(yo.jerarquia === 'director'){
+    const target = colaboradores.find(c=>c.id===orden.asignadoA);
+    if(!target) return false;
+    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
+    return dep.includes(empActualId);
+  }
+  return false;
+}
+
+async function marcarOrdenCompletada(ordenId){
+  const orden = ordenes.find(o=>o.id===ordenId);
+  if(!orden) return;
+  if(!puedeCheckOrden(orden)){ toast('Sin permiso para marcar esta tarea','err'); return; }
+  const nuevoEstado = orden.estado === 'completada' ? 'en_curso' : 'completada';
+  orden.estado = nuevoEstado;
+  try {
+    await db.collection('ordenes').doc(ordenId).update({estado: nuevoEstado});
+    renderKanban();
+    renderEstadoEquipo();
+    toast(nuevoEstado === 'completada' ? '✅ Marcada como completada' : '↩ Reabierta', 'ok');
+  } catch(e){ toast('Error al guardar','err'); }
+}
+
 function puedeHacerCheck(targetId){
   // Lucas (director_general) → puede con todos
   // Director → solo sus dependientes
@@ -3075,10 +3108,10 @@ function renderKanban(){
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
       <div class="kc-move">${botones}</div>
-      <div class="orden-acciones">
-        <button onclick="cambiarEstadoOrden('${o.id}', 'recibido')" class="btn-accion btn-recibido">✅ Recibido</button>
-        <button onclick="cambiarEstadoOrden('${o.id}', 'en-curso')" class="btn-accion btn-en-curso">🔄 En curso</button>
-        <button onclick="cambiarEstadoOrden('${o.id}', 'completada')" class="btn-accion btn-listo">✅ Listo</button>
+      <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" class="btn-accion" style="background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'var(--green)':'#fff'};border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;flex:1;">
+          ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
+        <button onclick="cambiarEstadoOrden('${o.id}', 'en-curso')" class="btn-accion btn-en-curso">🔄</button>
         <button onclick="abrirComentarioOrden('${o.id}')" class="btn-accion btn-comentario">💬</button>
       </div>
     </div>`;
