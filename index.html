@@ -1816,7 +1816,10 @@ function abrirPerfil(){
         <input type="password" id="mpgPass" placeholder="Nueva contraseña" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;width:160px;">
       </div>
     </div>
-    <button onclick="guardarPerfilGlobal()" style="margin-top:16px;width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Guardar cambios</button>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="guardarPerfilGlobal()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Guardar cambios</button>
+      <button onclick="cerrarPerfilGlobal();renderCheckPropio();" style="flex:1;padding:12px;background:var(--paper);color:var(--blue);border:1px solid var(--blue);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">✓ Mis tareas</button>
+    </div>
   `;
   m.style.display = 'flex';
 }
@@ -1929,10 +1932,25 @@ function cambiarVistaDrawer(id, btn){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
 }
-function abrirCheckColaborador(empId, nombre){
-  // Solo admin y directores pueden hacer check
+function puedeHacerCheck(targetId){
+  // Lucas (director_general) → puede con todos
+  // Director → solo sus dependientes
+  // Colaborador → solo sus propias tareas
+  if(empActualId === targetId) return true; // siempre puede con las propias
   const yo = colaboradores.find(c=>c.id===empActualId);
-  if(!yo || (yo.jerarquia!=='director_general' && yo.jerarquia!=='director')) return;
+  if(!yo) return false;
+  if(yo.jerarquia === 'director_general') return true;
+  if(yo.jerarquia === 'director'){
+    const target = colaboradores.find(c=>c.id===targetId);
+    if(!target) return false;
+    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
+    return dep.includes(empActualId);
+  }
+  return false;
+}
+
+function abrirCheckColaborador(empId, nombre){
+  if(!puedeHacerCheck(empId)){ toast('No tenés permiso para hacer check de este colaborador', 'error'); return; }
   
   const tareasEmp = ordenes.filter(o=>o.asignadoA===empId && o.estado!=='completada' && o.estado!=='cancelada');
   if(!tareasEmp.length){
@@ -3072,6 +3090,11 @@ async function renderProductividadEmp(){
 }
 
 // ══ KANBAN ══
+function renderCheckPropio(){
+  // El colaborador puede hacer check de sus propias tareas desde el perfil
+  abrirCheckColaborador(empActualId, usuarioLogueado?.nombre || '');
+}
+
 function renderKanban(){
   const estados = ['pendiente','en-curso','listo'];
   const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
