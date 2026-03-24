@@ -1898,13 +1898,14 @@ function renderRedesSociales(){
       const key=(r.marca||'laopinionline')+'-'+(r.plataforma||'').toLowerCase();
       const link=LINKS_REDES[key]||'#';
       const marcaTag=r.marca?r.marca.replace('laopinionline','La Opinión').replace('laopinionplay','Play').replace('laopinioncampo','Campo').replace('laopinion365','365'):'La Opinión';
-      return `<a href="${link}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px;text-decoration:none;">
-      <span style="font-size:20px">${r.icono}</span>
-      <div>
-        <div style="font-size:11px;color:#999;font-weight:600;text-transform:uppercase">${r.plataforma}</div>
-        <div style="font-size:18px;font-weight:700;color:var(--ink)">${r.seguidores}</div>
-      </div>
-    </div>`).join('');
+      return '<a href="'+link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px;text-decoration:none;">'
+        +'<span style="font-size:20px">'+(r.icono||'📊')+'</span>'
+        +'<div>'
+        +'<div style="font-size:9px;color:#bbb;font-weight:700;text-transform:uppercase">'+marcaTag+'</div>'
+        +'<div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase">'+(r.plataforma||'')+'</div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--ink)">'+(r.seguidores||'—')+'</div>'
+        +'</div></a>';
+    }).join('');
   };
   renderCards(defaults);
   if(typeof db!=='undefined'){
