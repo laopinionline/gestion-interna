@@ -1410,6 +1410,8 @@ async function login(){
   usuarioLogueado = usuario;
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
+  // Persistir sesión en localStorage
+  try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
 
   function iniciarSesion(rol){
     rolActual = rol;
