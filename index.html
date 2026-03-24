@@ -444,7 +444,9 @@ header{
     overflow-y:auto;
     animation:slideUp 0.25s ease;
   }
-  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .view{display:none;}
+.view.active{display:block;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
 .modal-global{
   display:none;
