@@ -1810,6 +1810,28 @@ function cambiarVistaMobile(id){
 
 
 
+function abrirOrden(ordenId){
+  const o = ordenes.find(x=>x.id===ordenId);
+  if(!o) return;
+  const c = clientes.find(x=>x.id===o.clienteId);
+  const asig = colaboradores.find(x=>x.id===o.asignadoA);
+  const urgente = o.prioridad==='urgente';
+  const html = '<div>'
+    +'<div style="font-size:17px;font-weight:700;margin-bottom:16px;line-height:1.3;">'+(o.titulo||'Sin título')+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">'
+    +(urgente?'<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>':'')
+    +'<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Cliente</span><span style="font-weight:600;">'+(c?c.nombre:'—')+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Asignado a</span><span style="font-weight:600;">'+(asig?asig.nombre.split(" ")[0]:'—')+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Estado</span><span style="font-weight:600;text-transform:capitalize;">'+(o.estado||'pendiente')+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Vence</span><span style="font-weight:600;">'+(o.fechaVencimiento?fmtD(o.fechaVencimiento):'—')+'</span></div>'
+    +(o.descripcion?'<div style="margin-top:4px;padding:10px;background:var(--paper2);border-radius:8px;font-size:13px;color:#666;">'+o.descripcion+'</div>':'')
+    +'</div>'
+    +(puedeCheckOrden(o)?'<div style="margin-top:20px;"><button onclick="marcarOrdenCompletada(''+o.id+'');cerrarModal('mOrdenDetalle')" style="width:100%;padding:13px;background:'+(o.estado==='completada'?'#e8f5ee':'var(--blue)')+';color:'+(o.estado==='completada'?'#2e7d32':'#fff')+';border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">'+(o.estado==='completada'?'↩ Reabrir orden':'✓ Marcar como completada')+'</button></div>':'')
+    +'</div>';
+  document.getElementById('mOrdenDetalleBody').innerHTML = html;
+  abrirModal('mOrdenDetalle');
+}
+
 function abrirPerfilColaborador(empId){
  cambiarVista('vcolaboradores', document.querySelector('[onclick*="vcolaboradores"]'));
  setTimeout(()=>{
@@ -1915,18 +1937,20 @@ async function marcarOrdenCompletada(ordenId){
 }
 
 function puedeHacerCheck(targetId){
-  // Lucas (director_general) → puede con todos
-  // Director → solo sus dependientes
-  // Colaborador → solo sus propias tareas
-  if(empActualId === targetId) return true; // siempre puede con las propias
+  if(rolActual === 'supervisor') return true; // supervisor puede con todos
+  if(empActualId === targetId) return true;
   const yo = colaboradores.find(c=>c.id===empActualId);
   if(!yo) return false;
   if(yo.jerarquia === 'director_general') return true;
   if(yo.jerarquia === 'director'){
+    // Puede con colaboradores de su equipo
     const target = colaboradores.find(c=>c.id===targetId);
     if(!target) return false;
-    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
-    return dep.includes(empActualId);
+    // Chequear dependeDe del target
+    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : (target.dependeDe ? [target.dependeDe] : []);
+    if(dep.includes(empActualId)) return true;
+    // Fallback: mismo equipo
+    if(target.equipo === yo.equipo) return true;
   }
   return false;
 }
@@ -2261,21 +2285,22 @@ function renderRedesSociales(){
 // ── BLOQUE 5: Estado de Claw ──
 function renderEstadoClaw(){
   const div = document.getElementById('dashEstadoClaw');
-  if(typeof db!=='undefined'){
-    db.collection('claw_estado').doc('ultimo').get().then(doc=>{
-      if(doc.exists){
-        const d=doc.data();
-        const ts = d.timestamp ? (d.timestamp.toDate ? d.timestamp.toDate().toLocaleString('es-AR') : new Date(d.timestamp).toLocaleString('es-AR')) : '';
-        div.innerHTML=`<div style="font-size:14px;color:var(--ink)">Última actividad: ${ts||'—'}</div>${d.detalle?`<div style="font-size:12px;color:#999;margin-top:4px">${d.detalle}</div>`:''}`;
-      } else {
-        div.innerHTML='<div class="no-data">Sin datos aún</div>';
-      }
-    }).catch(()=>{
-      div.innerHTML='<div class="no-data">Sin datos aún</div>';
-    });
-  } else {
-    div.innerHTML='<div class="no-data">Sin datos aún</div>';
-  }
+  if(!div) return;
+  if(typeof db==='undefined'){ div.innerHTML='<div class="no-data">Sin conexión</div>'; return; }
+  db.collection('claw_estado').doc('ultimo').get().then(function(doc){
+    if(!doc.exists){ div.innerHTML='<div class="no-data">Claw enviará su estado cuando esté activo</div>'; return; }
+    var d = doc.data();
+    var ts = d.timestamp ? (d.timestamp.toDate ? d.timestamp.toDate().toLocaleString('es-AR') : '—') : '—';
+    var icono = d.activo ? '🟢' : '🔴';
+    div.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+      +'<span style="font-size:18px;">'+icono+'</span>'
+      +'<span style="font-weight:600;font-size:15px;">'+(d.activo?'Activo':'Inactivo')+'</span>'
+      +'<span style="color:#999;font-size:11px;">· '+ts+'</span></div>'
+      +(d.ultimaTarea?'<div style="color:#666;">📋 '+d.ultimaTarea+'</div>':'')
+      +(d.mensaje?'<div style="color:#666;">💬 '+d.mensaje+'</div>':'')
+      +'</div>';
+  }).catch(function(){ div.innerHTML='<div class="no-data">No se pudo conectar con Claw</div>'; });
 }
 
 // ── BLOQUE 7: Estado del Equipo ──
@@ -3972,6 +3997,15 @@ function aplicarVisibilidad(){
 
 <!-- DRAWER MOBILE SUPERVISOR -->
 <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="cerrarDrawer()"></div>
+<div class="modal-overlay" id="mOrdenDetalle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Detalle de tarea</div>
+      <button class="modal-close" onclick="cerrarModal('mOrdenDetalle')">✕</button>
+    </div>
+    <div class="modal-body" id="mOrdenDetalleBody"></div>
+  </div>
+</div>
 </body>
 </html>
 
