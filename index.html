@@ -1789,88 +1789,9 @@ function cambiarVistaMobile(id){
  if(id==='vProveedores'){ renderProveedores(); }
 }
 
-function abrirPerfil(){
-  if(!usuarioLogueado) return;
-  const m = document.getElementById('modalPerfilGlobal');
-  if(!m) return;
-  const u = usuarioLogueado;
-  const iniciales = (u.nombre||'').split(' ').map(function(p){return p[0];}).join('').substring(0,2).toUpperCase();
-  const avatar = u.fotoUrl
-    ? '<img src="'+u.fotoUrl+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);">'
-    : '<div style="width:72px;height:72px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">'+iniciales+'</div>';
-  
-  var html = '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 20px;">';
-  html += '<label for="inputFotoPerfilModal" style="cursor:pointer;position:relative;">';
-  html += avatar;
-  html += '<div style="position:absolute;bottom:2px;right:2px;background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;display:flex;align-items:center;justify-content:center;">✎</div>';
-  html += '</label>';
-  html += '<input type="file" id="inputFotoPerfilModal" accept="image/*" style="display:none;" onchange="subirFotoPerfilModal(this)">';
-  html += '<div style="text-align:center;">';
-  html += '<div style="font-size:18px;font-weight:700;color:var(--ink)">'+u.nombre+'</div>';
-  html += '<div style="font-size:13px;color:#999;margin-top:4px">'+(u.puesto||'')+'</div>';
-  html += '<div style="font-size:13px;color:#999">'+(u.equipo||'')+'</div>';
-  html += '</div></div>';
-  
-  html += '<div style="border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:0;">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">';
-  html += '<span style="font-size:13px;color:#999;">Teléfono</span>';
-  html += '<span style="font-size:14px;font-weight:600;">'+(u.telefono||'—')+'</span>';
-  html += '</div>';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);">';
-  html += '<span style="font-size:13px;color:#999;">Email</span>';
-  html += '<span style="font-size:14px;font-weight:600;">'+(u.email||'—')+'</span>';
-  html += '</div>';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);">';
-  html += '<span style="font-size:13px;color:#999;">Nueva contraseña</span>';
-  html += '<input type="password" id="mpgPass" placeholder="Mínimo 4 caracteres" style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;width:160px;">';
-  html += '</div>';
-  html += '</div>';
-  
-  html += '<div style="display:flex;gap:10px;margin-top:16px;">';
-  html += '<button onclick="guardarPerfilGlobal()" style="flex:1;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Guardar</button>';
-  html += '<button onclick="cerrarPerfilGlobal();renderCheckPropio();" style="flex:1;padding:13px;background:var(--paper);color:var(--blue);border:1px solid var(--blue);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">✓ Mis tareas</button>';
-  html += '</div>';
-  
-  document.getElementById('mpgBody').innerHTML = html;
-  m.classList.add('abierto');
-}
 
-function cerrarPerfilGlobal(){
-  const m = document.getElementById('modalPerfilGlobal');
-  if(m) m.classList.remove('abierto');
-}
 
-async function subirFotoPerfilModal(input){
-  const file = input.files[0];
-  if(!file || !empActualId) return;
-  toast('Subiendo foto…');
-  try {
-    const ref = storage.ref('fotos-perfil/' + empActualId);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: url });
-    if(usuarioLogueado) usuarioLogueado.fotoUrl = url;
-    const col = colaboradores.find(c => c.id === empActualId);
-    if(col) col.fotoUrl = url;
-    actualizarAvatarColaborador(usuarioLogueado || col);
-    toast('Foto actualizada ✓', 'ok');
-    abrirPerfil(); // refrescar el modal
-  } catch(e){ toast('Error al subir la foto', 'error'); }
-}
 
-async function guardarPerfilGlobal(){
-  if(!empActualId) return;
-  const pass = document.getElementById('mpgPass')?.value;
-  const update = {};
-  if(pass && pass.length >= 4) update.password = pass;
-  if(Object.keys(update).length === 0){ cerrarPerfilGlobal(); return; }
-  try {
-    await db.collection('colaboradores').doc(empActualId).update(update);
-    if(usuarioLogueado && update.password) usuarioLogueado.password = update.password;
-    toast('Perfil actualizado ✓', 'ok');
-    cerrarPerfilGlobal();
-  } catch(e){ toast('Error al guardar', 'error'); }
-}
 
 function abrirPerfilColaborador(empId){
  cambiarVista('vcolaboradores', document.querySelector('[onclick*="vcolaboradores"]'));
@@ -3874,15 +3795,5 @@ function aplicarVisibilidad(){
   </div>
 </div>
 
-<!-- MODAL PERFIL GLOBAL — accesible desde supervisor y colaborador -->
-<div id="modalPerfilGlobal" class="modal-global" style="display:none;" onclick="if(event.target===this)cerrarPerfilGlobal()">
-  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:24px 20px;max-height:90vh;overflow-y:auto;animation:slideUp 0.25s ease;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);">Mi perfil</div>
-      <button onclick="cerrarPerfilGlobal()" style="background:none;border:none;font-size:22px;color:#999;cursor:pointer;padding:4px;">✕</button>
-    </div>
-    <div id="mpgBody"></div>
-  </div>
-</div>
 </body>
 </html>
