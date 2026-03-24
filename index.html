@@ -141,6 +141,35 @@ header{
 .modal-close:hover{background:var(--line);}
 .modal-body{padding:22px 26px;}
 
+/* ── ESTADO DEL EQUIPO ── */
+.equipo-grilla{width:100%;border-collapse:collapse;}
+.equipo-grilla th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#999;padding:8px 12px;text-align:left;border-bottom:2px solid var(--paper2);}
+.equipo-grilla td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--paper2);vertical-align:middle;}
+.equipo-grilla tr:last-child td{border-bottom:none;}
+.equipo-grilla tr.eq-verde td{background:#f0faf4;}
+.equipo-grilla tr.eq-amarillo td{background:#fffbf0;}
+.equipo-grilla tr.eq-rojo td{background:#fff5f5;}
+.eq-nombre{font-weight:600;color:var(--ink);}
+.eq-puesto{font-size:11px;color:#aaa;margin-top:1px;}
+.eq-estado-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.eq-estado-badge.disponible{background:#e8f5ee;color:#1a7a4a;}
+.eq-estado-badge.en-tarea{background:#fff8e1;color:#f57c00;}
+.eq-estado-badge.no-disponible{background:#fdecea;color:#c62828;}
+.eq-num{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;}
+.eq-num.eq-alert{color:var(--accent);font-weight:700;}
+.eq-cumplimiento{display:flex;align-items:center;gap:8px;}
+.eq-progress{flex:1;height:6px;border-radius:3px;background:var(--paper2);overflow:hidden;min-width:60px;}
+.eq-progress-bar{height:100%;border-radius:3px;transition:width 0.4s;}
+.eq-progress-bar.verde{background:#1a7a4a;}
+.eq-progress-bar.amarillo{background:#f57c00;}
+.eq-progress-bar.rojo{background:var(--accent);}
+.eq-pct{font-size:12px;font-family:'DM Mono',monospace;color:#666;min-width:34px;}
+.eq-equipo-sep{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);padding:10px 12px 4px;background:var(--paper2);}
+@media(max-width:600px){
+  .equipo-grilla th:nth-child(4),.equipo-grilla td:nth-child(4),
+  .equipo-grilla th:nth-child(5),.equipo-grilla td:nth-child(5){display:none;}
+}
+
 /* ── DASHBOARD SUPERVISOR ── */
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
 .stat-card{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
@@ -633,6 +662,17 @@ header{
 
       <!-- BLOQUE 6: Tablero métricas grupo -->
       <div id="tableroMetricasGrupoSup" class="tablero-metricas-grupo"></div>
+
+      <!-- BLOQUE 7: Estado del Equipo -->
+      <div class="dash-cols" style="grid-template-columns:1fr" id="bloqueEstadoEquipo">
+        <div class="dash-panel">
+          <div class="dash-panel-actions">
+            <div class="dash-panel-title" style="margin-bottom:0">👥 Estado del Equipo</div>
+            <span id="estadoEquipoLastUpdate" style="font-size:11px;color:#aaa"></span>
+          </div>
+          <div id="dashEstadoEquipo" style="margin-top:14px"></div>
+        </div>
+      </div>
     </div>
 
     <!-- CLIENTES -->
@@ -1723,6 +1763,9 @@ function renderDashboard(){
 
   // ── BLOQUE 5: Estado de Claw ──
   renderEstadoClaw();
+
+  // ── BLOQUE 7: Estado del Equipo ──
+  renderEstadoEquipo();
 }
 
 // ── Helper: filtrar órdenes desde stat-cards del dashboard ──
@@ -1817,6 +1860,124 @@ function renderEstadoClaw(){
   } else {
     div.innerHTML='<div class="no-data">Sin datos aún</div>';
   }
+}
+
+// ── BLOQUE 7: Estado del Equipo ──
+function renderEstadoEquipo(){
+  const div = document.getElementById('dashEstadoEquipo');
+  const bloque = document.getElementById('bloqueEstadoEquipo');
+  if(!div || !bloque) return;
+
+  // Solo visible para supervisor (Lucas) y directores
+  const esDirector = empActualId && colaboradores.find(c=>c.id===empActualId && (c.jerarquia==='director'||c.jerarquia==='director_general'));
+  if(rolActual !== 'supervisor' && !esDirector){ bloque.style.display='none'; return; }
+  bloque.style.display='';
+
+  // Determinar equipos visibles según rol
+  let equiposVisibles = null; // null = todos
+  if(rolActual !== 'supervisor'){
+    const yo = colaboradores.find(c=>c.id===empActualId);
+    if(yo){
+      if(yo.id==='emp07') equiposVisibles = ['Redacción'];
+      else if(yo.id==='emp16') equiposVisibles = ['Digital'];
+      else if(yo.id==='emp02') equiposVisibles = ['Administración','Comercial'];
+      else equiposVisibles = [yo.equipo];
+    }
+  }
+
+  // Filtrar colaboradores relevantes (excluir externos para la grilla)
+  const hoyStr = hoy();
+  const inicioSemana = lunesDeSemana(hoyStr);
+
+  let colab = colaboradores.filter(c => c.jerarquia !== 'externo');
+  if(equiposVisibles) colab = colab.filter(c => equiposVisibles.includes(c.equipo));
+
+  // Calcular métricas por colaborador
+  const filas = colab.map(c => {
+    const ordenesColab = ordenes.filter(o => o.asignadoA === c.id || (o.colaboradoresIds && o.colaboradoresIds.includes(c.id)) || o.colaboradorId === c.id);
+    const pendientes = ordenesColab.filter(o => o.estado==='pendiente').length;
+    const enCurso = ordenesColab.filter(o => o.estado==='en_curso'||o.estado==='en-curso').length;
+    const vencidas = ordenesColab.filter(o => (o.fechaVencimiento||o.fecha) < hoyStr && o.estado!=='completada' && o.estado!=='cancelada').length;
+
+    // Cumplimiento semanal
+    const semana = ordenesColab.filter(o => (o.fechaCreacion||o.fecha) >= inicioSemana && (o.fechaCreacion||o.fecha) <= hoyStr);
+    const totalSem = semana.length;
+    const completadasSem = semana.filter(o => o.estado==='completada').length;
+    const pct = totalSem > 0 ? Math.round((completadasSem/totalSem)*100) : null;
+
+    // Estado del colaborador (leer campo 'estado' si existe, sino inferir)
+    let estadoBadge = c.estado || (enCurso > 0 ? 'en_tarea' : 'disponible');
+    if(estadoBadge==='en_tarea'||estadoBadge==='en-tarea') estadoBadge='en_tarea';
+
+    // Color de fila
+    let colorFila = 'eq-verde';
+    if(vencidas > 0 || (pct !== null && pct < 50)) colorFila = 'eq-rojo';
+    else if(estadoBadge==='en_tarea' || (pct !== null && pct < 80)) colorFila = 'eq-amarillo';
+    else if(estadoBadge==='no_disponible'||estadoBadge==='no-disponible') colorFila = 'eq-rojo';
+
+    const estadoLabel = estadoBadge==='en_tarea' ? '🟡 En tarea' : estadoBadge==='no_disponible'||estadoBadge==='no-disponible' ? '🔴 No disponible' : '🟢 Disponible';
+    const estadoClass = estadoBadge==='en_tarea' ? 'en-tarea' : estadoBadge==='no_disponible'||estadoBadge==='no-disponible' ? 'no-disponible' : 'disponible';
+
+    const pctColor = pct===null ? '' : pct>=80 ? 'verde' : pct>=50 ? 'amarillo' : 'rojo';
+    const pctBar = pct===null
+      ? '<span style="color:#ccc;font-size:11px">sin datos</span>'
+      : `<div class="eq-cumplimiento"><div class="eq-progress"><div class="eq-progress-bar ${pctColor}" style="width:${pct}%"></div></div><span class="eq-pct">${pct}%</span></div>`;
+
+    return { c, pendientes, enCurso, vencidas, pct, colorFila, estadoLabel, estadoClass, pctBar };
+  });
+
+  // Agrupar por equipo
+  const equiposOrden = ['Dirección','Redacción','Digital','Administración','Comercial'];
+  const grupos = {};
+  filas.forEach(f => {
+    const eq = f.c.equipo || 'Otros';
+    if(!grupos[eq]) grupos[eq] = [];
+    grupos[eq].push(f);
+  });
+
+  let html = `<table class="equipo-grilla">
+    <thead><tr>
+      <th>Colaborador</th>
+      <th>Estado</th>
+      <th>Pendientes</th>
+      <th>En curso</th>
+      <th>Vencidas</th>
+      <th>Cumplimiento sem.</th>
+    </tr></thead><tbody>`;
+
+  const eqsPresentes = equiposOrden.filter(e=>grupos[e]).concat(Object.keys(grupos).filter(e=>!equiposOrden.includes(e)));
+  eqsPresentes.forEach(eq => {
+    if(!grupos[eq]) return;
+    // Solo mostrar separador de equipo si hay más de un equipo visible
+    if(eqsPresentes.length > 1){
+      html += `<tr><td colspan="6" class="eq-equipo-sep">${eq}</td></tr>`;
+    }
+    grupos[eq].forEach(f => {
+      html += `<tr class="${f.colorFila}">
+        <td><div class="eq-nombre">${f.c.nombre}</div><div class="eq-puesto">${f.c.puesto||''}</div></td>
+        <td><span class="eq-estado-badge ${f.estadoClass}">${f.estadoLabel}</span></td>
+        <td><span class="eq-num ${f.pendientes>0?'eq-alert':''}">${f.pendientes}</span></td>
+        <td><span class="eq-num">${f.enCurso}</span></td>
+        <td><span class="eq-num ${f.vencidas>0?'eq-alert':''}">${f.vencidas}</span></td>
+        <td>${f.pctBar}</td>
+      </tr>`;
+    });
+  });
+
+  html += '</tbody></table>';
+  div.innerHTML = html;
+
+  const upd = document.getElementById('estadoEquipoLastUpdate');
+  if(upd) upd.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Helper: lunes de la semana de una fecha YYYY-MM-DD
+function lunesDeSemana(fechaStr){
+  const d = new Date(fechaStr+'T00:00:00');
+  const day = d.getDay(); // 0=dom,1=lun...
+  const diff = (day===0) ? -6 : 1-day;
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().slice(0,10);
 }
 
 // ══ CLIENTES ══
