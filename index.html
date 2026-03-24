@@ -3424,8 +3424,8 @@ function guardarPerfil(){
 }
 
 // ══ MODALES ══
-function abrirModal(id){document.getElementById(id).classList.add('active');document.body.style.overflow='hidden';}
-function cerrarModal(id){document.getElementById(id).classList.remove('active');document.body.style.overflow='';}
+function abrirModal(id){document.getElementById(id).classList.add('active');}
+function cerrarModal(id){document.getElementById(id).classList.remove('active');}
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)cerrarModal(m.id);});});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){['mDetalle','mCliente','mOrden','mcolaborador','mReunion','mPerfil'].forEach(cerrarModal);}});
 
