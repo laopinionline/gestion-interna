@@ -1987,29 +1987,37 @@ function abrirPerfilColaboradorDesdeEquipo(empId){
 }
 
 function renderTareasConReuniones(){
-  // Combina órdenes y reuniones en el panel de próximos 7 días
   const hoyStr = hoy();
   const fin = new Date(); fin.setDate(fin.getDate()+7);
   const finStr = fin.toISOString().split('T')[0];
   const div = document.getElementById('dashTareas');
   if(!div) return;
   let items = [];
-  // Órdenes
+  // Órdenes — guardar id para poder clickear
   ordenes.filter(o=>o.estado!=='completada'&&o.estado!=='cancelada'&&(o.fechaVencimiento||o.fechaCreacion)>=hoyStr&&(o.fechaVencimiento||o.fechaCreacion)<=finStr)
-    .forEach(o=>items.push({tipo:'orden',fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo,desc:o.descripcion?.substring(0,60),color:'var(--blue2)'}));
+    .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
   // Reuniones
   reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
-    .forEach(r=>items.push({tipo:'reunion',fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
+    .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
   items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
   if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
-  div.innerHTML = items.map(i=>`<div class="task-today-row">
-    <div style="width:8px;height:8px;border-radius:50%;background:${i.color};flex-shrink:0;margin-top:5px"></div>
-    <div class="task-today-info">
-      <div class="task-today-desc">${i.tipo==='reunion'?'📅 ':''}<strong>${i.fecha}${i.hora?' '+i.hora:''}</strong> — ${i.titulo}</div>
-      ${i.desc?`<div class="task-today-meta">${i.desc}</div>`:''}
-    </div>
-  </div>`).join('');
+  div.innerHTML = items.map(i=>{
+    const onclick = i.tipo==='orden'
+      ? `abrirOrden('${i.id}')`
+      : `cambiarVista('vReuniones',document.querySelector('.nav-tab[onclick*=vReuniones]'))`;
+    const fechaLabel = i.fecha===hoyStr ? '📅 Hoy' : '📅 '+fmtD(i.fecha);
+    return '<div class="task-today-row" onclick="'+onclick+'" style="cursor:pointer;" onmouseover="this.style.background='var(--paper2)'" onmouseout="this.style.background=''">'+
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+i.color+';flex-shrink:0;margin-top:5px"></div>'+
+      '<div class="task-today-info">'+
+        '<div class="task-today-desc">'+(i.tipo==='reunion'?'🗓 ':'')+'<strong>'+i.titulo+'</strong></div>'+
+        '<div class="task-today-meta">'+fechaLabel+(i.hora?' · '+i.hora:'')+'</div>'+
+        (i.desc?'<div class="task-today-meta">'+i.desc+'</div>':'')+
+      '</div>'+
+      '<span style="font-size:11px;color:#bbb;flex-shrink:0;">'+( i.tipo==='orden'?'→':'')+'</span>'+
+    '</div>';
+  }).join('');
 }
+
 
 function renderDashboard(){
   checkInactividad();
