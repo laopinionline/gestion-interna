@@ -96,7 +96,7 @@ header{
 .pill-j-externo{background:#BDBDBD;color:#424242;}
 
 .  .nav-tabs{display:none !important;}
-  .hamburger-btn{display:flex !important;};font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.6px;}
+  #globalHamburger{display:flex !important;align-items:center;};font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.6px;}
 .form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--line);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;transition:border 0.2s;}
 .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(46,109,164,0.1);}
 .form-textarea{resize:vertical;min-height:72px;}
@@ -572,7 +572,8 @@ header{
 
 <!-- ══════════ APP SUPERVISOR ══════════ -->
 <div class="app" id="appSupervisor">
-  <header>
+  <header style="z-index:100;position:relative;">
+    <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú" style="display:none;">☰</button>
     <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
       <span class="user-badge">👤 <span id="svUserName">—</span></span>
@@ -580,7 +581,6 @@ header{
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </header>
-  <button class="hamburger-btn" onclick="abrirDrawer()">☰</button>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="cambiarVista('vDash',this)">📊 Dashboard</button>
     <button class="nav-tab" onclick="cambiarVista('vClientes',this)">👥 Clientes</button>
@@ -852,14 +852,15 @@ header{
 
 <!-- ══════════ APP COLABORADOR ══════════ -->
 <div class="app" id="appcolaborador">
-  <header>
+  <header style="z-index:100;position:relative;">
+    <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú" style="display:none;">☰</button>
     <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
-      <div style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;" title="Toca para cambiar tu foto" onclick="document.getElementById('inputFotoPerfil').click()">
+      <label for="inputFotoPerfil" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;display:block;" title="Toca para cambiar tu foto">
         <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
-        <div style="position:absolute;bottom:0;right:0;background:var(--blue);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;">✎</div>
-      </div>
-      <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
+        <div style="position:absolute;bottom:0;right:0;background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.3);">✎</div>
+      </label>
+      <input type="file" id="inputFotoPerfil" accept="image/*" capture="environment" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
       <span class="user-badge">💻 colaborador</span>
@@ -1069,8 +1070,9 @@ header{
       <div class="modal-title" id="mcolaboradorTitle">Nuevo colaborador</div>
       <button class="modal-close" onclick="cerrarModal('mcolaborador')">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="form-grid">
+    <div class="modal-body" id="mcolaboradorBody">
+      <div id="mcolaboradorTareas"></div>
+      <div id="mcolaboradorForm"><div class="form-grid">
         <div class="form-group"><label class="form-label">Nombre y apellido *</label><input type="text" class="form-input" id="eNombre" placeholder="Ej: Juan García"></div>
         <div class="form-group"><label class="form-label">Puesto / Área *</label><input type="text" class="form-input" id="ePuesto" placeholder="Ej: Área Digital"></div>
         <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="eTel"></div>
@@ -1941,12 +1943,19 @@ function renderRedesSociales(){
     div.innerHTML = redes.map(r=>{
       const key=(r.marca||'laopinionline')+'-'+(r.plataforma||'').toLowerCase();
       const link=LINKS_REDES[key]||'#';
-      const marcaTag=r.marca?r.marca.replace('laopinionline','La Opinión').replace('laopinionplay','Play').replace('laopinioncampo','Campo').replace('laopinion365','365'):'La Opinión';
+      const NOMBRES_CUENTA = {
+        'laopinionline-facebook':'@laopinionline','laopinionline-instagram':'@laopinionline',
+        'laopinionline-tiktok':'@laopinionline','laopinionline-youtube':'@LaOpinionPlay',
+        'laopinionline-x':'@LaOpiniONline','laopinionplay-instagram':'@laopinionplay',
+        'laopinionplay-tiktok':'@laopinionplay','laopinionplay-twitch':'@laopinionplay',
+        'laopinioncampo-instagram':'@laopinioncampo','laopinion365-instagram':'@laopinion365'
+      };
+      const cuentaLabel = NOMBRES_CUENTA[key] || (r.marca||'');
       return '<a href="'+link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px;text-decoration:none;">'
         +'<span style="font-size:20px">'+(r.icono||'📊')+'</span>'
         +'<div>'
-        +'<div style="font-size:9px;color:#bbb;font-weight:700;text-transform:uppercase">'+marcaTag+'</div>'
         +'<div style="font-size:10px;color:#999;font-weight:600;text-transform:uppercase">'+(r.plataforma||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--blue2);font-weight:700;">'+cuentaLabel+'</div>'
         +'<div style="font-size:17px;font-weight:700;color:var(--ink)">'+(r.seguidores||'—')+'</div>'
         +'</div></a>';
     }).join('');
@@ -2556,6 +2565,60 @@ let editandoEmpId = null;
 
 function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
 
+function verTareasColaborador(id){
+  const e = colaboradores.find(c=>c.id===id);
+  if(!e) return;
+  const tareasEmp = ordenes.filter(o=>o.asignadoA===id || (o.copiaA||[]).includes(id));
+  const pendientes = tareasEmp.filter(o=>o.estado==='pendiente');
+  const enCurso = tareasEmp.filter(o=>o.estado==='en_curso');
+  const completadas = tareasEmp.filter(o=>o.estado==='completada');
+  const iniciales = (e.nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+  const avatarHtml = e.fotoUrl
+    ? `<img src="${e.fotoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`
+    : `<div class="avatar-iniciales lg" style="width:52px;height:52px;">${iniciales}</div>`;
+  const renderOrdenes = (lista) => lista.length
+    ? lista.map(o=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);">
+        <div style="font-weight:600;font-size:13px">${o.titulo}</div>
+        <div style="font-size:11px;color:#999;margin-top:3px">${o.descripcion?.substring(0,80)||''}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">📅 ${o.fechaCreacion||''} · ${o.estado}</div>
+      </div>`).join('')
+    : '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin tareas</div>';
+  document.getElementById('mcolaboradorTitle').textContent = e.nombre;
+  // Ocultar form, mostrar tareas
+  const formEl = document.getElementById('mcolaboradorForm');
+  const body = document.getElementById('mcolaboradorTareas');
+  if(formEl) formEl.style.display='none';
+  if(body){
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        ${avatarHtml}
+        <div>
+          <div style="font-weight:700;font-size:16px">${e.nombre}</div>
+          <div style="font-size:12px;color:#999">${e.puesto||''} · ${e.equipo||''}</div>
+          <div style="font-size:12px;color:#999">${e.telefono||''}</div>
+        </div>
+      </div>
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-bottom:6px">🔄 En curso (${enCurso.length})</div>
+      ${renderOrdenes(enCurso)}
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-top:14px;margin-bottom:6px">⏳ Pendientes (${pendientes.length})</div>
+      ${renderOrdenes(pendientes)}
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-top:14px;margin-bottom:6px">✅ Completadas (${completadas.length})</div>
+      ${renderOrdenes(completadas.slice(0,5))}
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn-primary btn-sm" onclick="mostrarFormColaborador()">✏️ Editar perfil</button>
+      </div>
+    `;
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));
+  document.getElementById('mcolaborador')?.classList.add('active');
+}
+
+function mostrarFormColaborador(){
+  document.getElementById('mcolaboradorTareas').innerHTML='';
+  const f = document.getElementById('mcolaboradorForm');
+  if(f) f.style.display='';
+}
+
 function abrirModalcolaborador(id){
   editandoEmpId = id || null;
   const e = id ? colaboradores.find(x=>x.id===id) : null;
@@ -2628,7 +2691,7 @@ function rendercolaboradores(lista){
     const avatarHtml = e.fotoUrl
       ? `<img src="${e.fotoUrl}" class="avatar-sm" alt="${e.nombre}">`
       : `<div class="avatar-iniciales sm">${iniciales}</div>`;
-    return `<div class="client-card activo" onclick="abrirModalcolaborador('${e.id}')">
+    return `<div class="client-card activo" data-empid="${e.id}" onclick="verTareasColaborador('${e.id}')">
       <div class="card-header" style="display:flex;align-items:center;gap:10px;">
         ${avatarHtml}
         <div style="flex:1"><div class="client-name">${e.nombre}</div>
