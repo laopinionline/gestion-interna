@@ -2165,47 +2165,47 @@ function renderGA4Dashboard(){
 
 // ── BLOQUE 4: Redes sociales ──
 function renderRedesSociales(){
-  const REDES_CATALOGO = [
-    {marca:'laopinionline', plataforma:'Facebook',  icono:'📘', cuenta:'@laopinionline',  seguidores:'103K', link:'https://facebook.com/laopinionline'},
-    {marca:'laopinionline', plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionline',  seguidores:'54K',  link:'https://instagram.com/laopinionline'},
-    {marca:'laopinionline', plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionline',  seguidores:'16.5K',link:'https://tiktok.com/@laopinionline'},
-    {marca:'laopinionline', plataforma:'YouTube',    icono:'▶️', cuenta:'@LaOpinionPlay',  seguidores:'976',  link:'https://youtube.com/@LaOpinionPlay'},
-    {marca:'laopinionline', plataforma:'X',          icono:'✖️', cuenta:'@LaOpiniONline',  seguidores:'2.663',link:'https://x.com/LaOpiniONline'},
-    {marca:'laopinionplay', plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionplay',  seguidores:'15.8K',link:'https://instagram.com/laopinionplay'},
-    {marca:'laopinionplay', plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionplay',  seguidores:'1.238',link:'https://tiktok.com/@laopinionplay'},
-    {marca:'laopinionplay', plataforma:'Twitch',     icono:'🟣', cuenta:'@laopinionplay',  seguidores:'1.000',link:'https://twitch.tv/twitchlaopinionplay'},
-    {marca:'laopinioncampo',plataforma:'Instagram',  icono:'🌾', cuenta:'@laopinioncampo', seguidores:'3.725',link:'https://instagram.com/laopinioncampo'},
-    {marca:'laopinion365', plataforma:'Instagram',   icono:'📸', cuenta:'@laopinion365',   seguidores:'—',    link:'https://instagram.com/laopinion365'},
+  const REDES = [
+    {marca:'La Opinión',    plataforma:'Facebook',  icono:'📘', cuenta:'@laopinionline',  seg:'103K', link:'https://facebook.com/laopinionline'},
+    {marca:'La Opinión',    plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionline',  seg:'54K',  link:'https://instagram.com/laopinionline'},
+    {marca:'La Opinión',    plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionline',  seg:'16.5K',link:'https://tiktok.com/@laopinionline'},
+    {marca:'La Opinión',    plataforma:'YouTube',    icono:'▶️', cuenta:'@LaOpinionPlay',  seg:'976',  link:'https://youtube.com/@LaOpinionPlay'},
+    {marca:'La Opinión',    plataforma:'X',          icono:'✖️', cuenta:'@LaOpiniONline',  seg:'2.663',link:'https://x.com/LaOpiniONline'},
+    {marca:'Play',          plataforma:'Instagram',  icono:'📸', cuenta:'@laopinionplay',  seg:'15.8K',link:'https://instagram.com/laopinionplay'},
+    {marca:'Play',          plataforma:'TikTok',     icono:'🎵', cuenta:'@laopinionplay',  seg:'1.238',link:'https://tiktok.com/@laopinionplay'},
+    {marca:'Play',          plataforma:'Twitch',     icono:'🟣', cuenta:'@laopinionplay',  seg:'1.000',link:'https://twitch.tv/twitchlaopinionplay'},
+    {marca:'Campo',         plataforma:'Instagram',  icono:'🌾', cuenta:'@laopinioncampo', seg:'3.725',link:'https://instagram.com/laopinioncampo'},
+    {marca:'365',           plataforma:'Instagram',  icono:'📸', cuenta:'@laopinion365',   seg:'—',    link:'https://instagram.com/laopinion365'},
   ];
   const div = document.getElementById('dashRedesSociales');
   if(!div) return;
-  const renderCards = (redes) => {
-    div.innerHTML = redes.map(r => {
-      return '<a href="'+r.link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:140px;text-decoration:none;">'
-        +'<span style="font-size:22px;flex-shrink:0;">'+r.icono+'</span>'
-        +'<div style="min-width:0;">'
-        +'<div style="font-size:10px;color:#bbb;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">'+r.plataforma+'</div>'
-        +'<div style="font-size:11px;color:var(--blue2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.cuenta+'</div>'
-        +'<div style="font-size:18px;font-weight:700;color:var(--ink);line-height:1.2;">'+r.seguidores+'</div>'
-        +'</div></a>';
-    }).join('');
-  };
-  // Render inmediato con datos hardcodeados
-  renderCards(REDES_CATALOGO);
-  // Actualizar seguidores desde Firestore si hay datos
+
+  const card = (r) =>
+    '<a href="'+r.link+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:130px;text-decoration:none;flex:1;">'
+    +'<span style="font-size:22px;flex-shrink:0;">'+r.icono+'</span>'
+    +'<div style="min-width:0;">'
+    +'<div style="font-size:9px;color:#bbb;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">'+r.marca+' · '+r.plataforma+'</div>'
+    +'<div style="font-size:11px;color:var(--blue2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.cuenta+'</div>'
+    +'<div style="font-size:18px;font-weight:700;color:var(--ink);line-height:1.2;">'+r.seg+'</div>'
+    +'</div></a>';
+
+  div.innerHTML = REDES.map(card).join('');
+
+  // Actualizar seguidores desde Firestore si hay datos frescos
   if(typeof db !== 'undefined'){
     db.collection('metricas_redes').get().then(snap => {
       if(snap.empty) return;
-      const actualizados = [...REDES_CATALOGO];
+      const actualizado = REDES.map(r => Object.assign({}, r));
       snap.forEach(doc => {
         const d = doc.data();
-        const key = (d.marca||'').toLowerCase() + '-' + (d.plataforma||'').toLowerCase();
-        const idx = actualizados.findIndex(r =>
-          (r.marca+'-'+r.plataforma).toLowerCase() === key
+        const key = ((d.marca||'')+(d.plataforma||'')).toLowerCase().replace(/[^a-z]/g,'');
+        const found = actualizado.find(r =>
+          (r.marca+r.plataforma).toLowerCase().replace(/[^a-z]/g,'') === key ||
+          (r.cuenta.replace('@','')+(r.plataforma)).toLowerCase().replace(/[^a-z]/g,'') === key
         );
-        if(idx >= 0 && d.seguidores) actualizados[idx] = {...actualizados[idx], seguidores: d.seguidores};
+        if(found && d.seguidores) found.seg = d.seguidores;
       });
-      renderCards(actualizados);
+      div.innerHTML = actualizado.map(card).join('');
     }).catch(()=>{});
   }
 }
