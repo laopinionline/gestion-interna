@@ -445,6 +445,16 @@ header{
     animation:slideUp 0.25s ease;
   }
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeInBg{from{opacity:0}to{opacity:1}}
+.modal-global{
+  display:none;
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.45);
+  align-items:flex-end;
+  justify-content:center;
+  animation:fadeInBg 0.2s ease;
+}
+.modal-global.abierto{display:flex !important;}
   
   /* Búsqueda y filtros */
   .search-box{min-width:0;width:100%;}
@@ -1822,12 +1832,12 @@ function abrirPerfil(){
   html += '</div>';
   
   document.getElementById('mpgBody').innerHTML = html;
-  m.style.display = 'flex';
+  m.classList.add('abierto');
 }
 
 function cerrarPerfilGlobal(){
   const m = document.getElementById('modalPerfilGlobal');
-  if(m) m.style.display = 'none';
+  if(m) m.classList.remove('abierto');
 }
 
 async function subirFotoPerfilModal(input){
@@ -1975,7 +1985,7 @@ function abrirCheckColaborador(empId, nombre){
     </div>
   `).join('');
   document.getElementById('mchkEmpId').value = empId;
-  m.style.display = 'flex';
+  m.classList.add('abierto');
 }
 
 async function guardarCheckColaborador(){
@@ -1999,7 +2009,7 @@ async function guardarCheckColaborador(){
 
 function cerrarCheckColaborador(){
   const m = document.getElementById('modalCheckColaborador');
-  if(m) m.style.display = 'none';
+  if(m) m.classList.remove('abierto');
 }
 
 function abrirPerfilColaboradorDesdeEquipo(empId){
@@ -3865,7 +3875,7 @@ function aplicarVisibilidad(){
 </div>
 
 <!-- MODAL PERFIL GLOBAL — accesible desde supervisor y colaborador -->
-<div id="modalPerfilGlobal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center;" onclick="if(event.target===this)cerrarPerfilGlobal()">
+<div id="modalPerfilGlobal" class="modal-global" style="display:none;" onclick="if(event.target===this)cerrarPerfilGlobal()">
   <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:24px 20px;max-height:90vh;overflow-y:auto;animation:slideUp 0.25s ease;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);">Mi perfil</div>
