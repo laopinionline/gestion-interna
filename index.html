@@ -1815,11 +1815,10 @@ function abrirOrden(ordenId){
   if(!o) return;
   var c = clientes.find(function(x){return x.id===o.clienteId;});
   var asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
-  var urgente = o.prioridad==='urgente';
   var html = '<div>';
   html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||'Sin título')+'</div>';
   html += '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">';
-  if(urgente) html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
+  if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
   html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Cliente</span><b>'+(c?c.nombre:'—')+'</b></div>';
   html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Asignado a</span><b>'+(asig?asig.nombre.split(' ')[0]:'—')+'</b></div>';
   html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Estado</span><b style="text-transform:capitalize;">'+(o.estado||'pendiente')+'</b></div>';
@@ -1827,13 +1826,15 @@ function abrirOrden(ordenId){
   if(o.descripcion) html += '<div style="padding:10px;background:var(--paper2);border-radius:8px;font-size:13px;color:#666;">'+o.descripcion+'</div>';
   html += '</div>';
   if(puedeCheckOrden(o)){
-    var btnColor = o.estado==='completada' ? '#e8f5ee' : 'var(--blue)';
-    var btnTxt = o.estado==='completada' ? '#2e7d32' : '#fff';
-    var btnLabel = o.estado==='completada' ? '↩ Reabrir' : '✓ Marcar completada';
-    html += '<div style="margin-top:20px;"><button onclick="marcarOrdenCompletada(''+o.id+'');cerrarModal('mOrdenDetalle')" style="width:100%;padding:13px;background:'+btnColor+';color:'+btnTxt+';border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">'+btnLabel+'</button></div>';
+    html += '<div style="margin-top:20px;"><button id="btnCheckOrdenDetalle" data-id="'+o.id+'" data-estado="'+o.estado+'" style="width:100%;padding:13px;background:'+(o.estado==='completada'?'#e8f5ee':'var(--blue)')+';color:'+(o.estado==='completada'?'#2e7d32':'#fff')+';border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">'+(o.estado==='completada'?'↩ Reabrir':'✓ Marcar completada')+'</button></div>';
   }
   html += '</div>';
   document.getElementById('mOrdenDetalleBody').innerHTML = html;
+  var btn = document.getElementById('btnCheckOrdenDetalle');
+  if(btn) btn.addEventListener('click', function(){
+    marcarOrdenCompletada(this.dataset.id);
+    cerrarModal('mOrdenDetalle');
+  });
   abrirModal('mOrdenDetalle');
 }
 
