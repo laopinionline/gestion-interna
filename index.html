@@ -493,6 +493,9 @@ header{
 .kcol-en-curso .kanban-col-header{background:rgba(26,58,92,0.07);color:var(--blue);border-bottom:2px solid rgba(26,58,92,0.2);}
 .kcol-listo .kanban-col-header{background:var(--green-bg);color:var(--green);border-bottom:2px solid rgba(26,122,74,0.2);}
 .kanban-cards{padding:10px;min-height:120px;display:flex;flex-direction:column;gap:8px;}
+.prioridad-urgente{background:#fff0f0;border-left:3px solid #e53935 !important;}
+.prioridad-normal{border-left:3px solid var(--blue) !important;}
+.pill-urgente{background:#fde8e8;color:#c62828;font-weight:700;}
 .kanban-card{background:#fff;border-radius:9px;border:1.5px solid var(--line);padding:13px 14px;cursor:pointer;transition:all 0.18s;position:relative;}
 .kanban-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);border-color:var(--blue2);transform:translateY(-1px);}
 .kanban-card.completada{opacity:0.7;border-color:var(--green);}
@@ -1707,6 +1710,7 @@ function etiquetaJerarquia(j){
 }
 
 function logout(){
+  try { localStorage.removeItem('gestion_session'); } catch(e){}
   rolActual=null; usuarioLogueado=null; empActualId=null; empActualNombre='';
   document.querySelectorAll('.app').forEach(a=>a.classList.remove('active'));
   document.getElementById('loginScreen').style.display='flex';
@@ -3081,11 +3085,25 @@ function renderKanban(){
   const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
   const tareas = ordenes.filter(o => {
     if(!empActualId) return true;
-    // Filtrar por asignadoA (campo principal) o colaboradoresIds
-    const asignado = o.asignadoA === empActualId;
-    const enCopia = (o.copiaA||[]).includes(empActualId);
-    const enIds = (o.colaboradoresIds||[]).includes(empActualId) || o.colaboradorId === empActualId;
-    return asignado || enCopia || enIds;
+    const yo = colaboradores.find(c=>c.id===empActualId);
+    // Director general ve todo
+    if(yo && yo.jerarquia==='director_general') return true;
+    // Director ve las de su equipo
+    if(yo && yo.jerarquia==='director'){
+      if(o.asignadoA === empActualId) return true;
+      const target = colaboradores.find(c=>c.id===o.asignadoA);
+      if(target){
+        const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
+        if(dep.includes(empActualId)) return true;
+      }
+      if((o.colaboradoresIds||[]).includes(empActualId)) return true;
+      return false;
+    }
+    // Colaborador solo ve las suyas
+    return o.asignadoA === empActualId
+      || (o.copiaA||[]).includes(empActualId)
+      || (o.colaboradoresIds||[]).includes(empActualId)
+      || o.colaboradorId === empActualId;
   }).sort((a,b)=>(a.fechaCreacion||a.fecha||'').localeCompare(b.fechaCreacion||b.fecha||''));
 
   const pend = tareas.filter(o=>o.estado==='pendiente');
@@ -3104,23 +3122,28 @@ function renderKanban(){
     const c = clientes.find(x=>x.id===o.clienteId);
     const asigIds2 = o.colaboradoresIds?.length ? o.colaboradoresIds : (o.colaboradorId ? [o.colaboradorId] : []);
     const asig = asigIds2.map(id=>colaboradores.find(x=>x.id===id)).filter(Boolean);
+    const comentCount = (o.comentarios||[]).length;
     const botones = o.estado==='pendiente'
       ? `<button class="kc-btn next-c" onclick="moverTarea('${o.id}','en-curso')">▶ En curso</button>`
       : o.estado==='en-curso'
       ? `<button class="kc-btn prev" onclick="moverTarea('${o.id}','pendiente')">◀ Volver</button>
          <button class="kc-btn next-l" onclick="moverTarea('${o.id}','completada')">✓ Listo</button>`
       : `<button class="kc-btn prev" onclick="moverTarea('${o.id}','en-curso')">↩ Reabrir</button>`;
-    return `<div class="kanban-card ${o.estado==='completada'?'completada':''}">
-      <div class="kc-title">${o.titulo||o.desc||'Sin título'}</div>
+    const comentBtn = `<button onclick="abrirComentariosOrden('${o.id}')" class="kc-btn" style="background:var(--paper2);color:var(--ink);">💬${comentCount>0?' '+comentCount:''}</button>`;
+    const esUrgente = o.prioridad==='urgente';
+    return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
+        <div class="kc-title" style="flex:1;">${o.titulo||o.desc||'Sin título'}</div>
+      </div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
       <div class="kc-move">${botones}</div>
-      <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-        ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" class="btn-accion" style="background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'var(--green)':'#fff'};border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;flex:1;">
+      <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
           ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
-        <button onclick="cambiarEstadoOrden('${o.id}', 'en-curso')" class="btn-accion btn-en-curso">🔄</button>
-        <button onclick="abrirComentarioOrden('${o.id}')" class="btn-accion btn-comentario">💬</button>
+        ${comentBtn}
       </div>
     </div>`;
   }
@@ -3794,6 +3817,21 @@ function aplicarVisibilidad(){
   // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
   cargarDatosFirestore().then(() => {
     console.log('Datos cargados desde Firestore');
+    // Restaurar sesión si existe
+    try {
+      var sess = localStorage.getItem('gestion_session');
+      if(sess){
+        var s = JSON.parse(sess);
+        var u = colaboradores.find(function(c){
+          return c.id===s.id && (c.telLogin||'').replace(/[^0-9]/g,'')===s.tel && c.password===s.pass;
+        });
+        if(u){
+          document.getElementById('loginTel').value = s.tel;
+          document.getElementById('loginPass').value = s.pass;
+          login();
+        }
+      }
+    } catch(e){}
   });
 
   // Mover todos los modales al body para evitar problemas de anidamiento
