@@ -3541,37 +3541,65 @@ const REDES_FALLBACK = [
 function renderTableroMetricas(containerId, datos){
   const el = document.getElementById(containerId);
   if(!el) return;
+  const REDES_TMG = [
+    {marca:'La Opinión', plataforma:'Facebook',  icono:'📘', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-facebook'] || '103K'},
+    {marca:'La Opinión', plataforma:'Instagram', icono:'📸', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-instagram'] || '54K'},
+    {marca:'La Opinión', plataforma:'TikTok',    icono:'🎵', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-tiktok'] || '16.5K'},
+    {marca:'La Opinión', plataforma:'YouTube',   icono:'▶️', cuenta:'@LaOpinionPlay',  seg: datos.redes && datos.redes['laopinionline-youtube'] || '976'},
+    {marca:'La Opinión', plataforma:'X',         icono:'✖️', cuenta:'@LaOpiniONline',  seg: datos.redes && datos.redes['laopinionline-x'] || '2.663'},
+    {marca:'Play',       plataforma:'Instagram', icono:'📸', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-instagram'] || '15.8K'},
+    {marca:'Play',       plataforma:'TikTok',    icono:'🎵', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-tiktok'] || '1.238'},
+    {marca:'Play',       plataforma:'Twitch',    icono:'🟣', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-twitch'] || '1.000'},
+    {marca:'Campo',      plataforma:'Instagram', icono:'🌾', cuenta:'@laopinioncampo', seg: datos.redes && datos.redes['laopinioncampo-instagram'] || '3.725'},
+    {marca:'365',        plataforma:'Instagram', icono:'📸', cuenta:'@laopinion365',   seg: datos.redes && datos.redes['laopinion365-instagram'] || '—'},
+  ];
   let html = '<div class="tmg-title">📊 Métricas del grupo</div><div class="tmg-row">';
-  // GA4
-  html += `<div class="tmg-card"><div class="tmg-card-label">Lecturas esta semana</div><div class="tmg-card-value" id="${containerId}_ga4">${datos.ga4||'cargando...'}</div><div class="tmg-card-sub">pageviews GA4</div></div>`;
-  // Redes
-  (datos.redes||REDES_FALLBACK).forEach(r => {
-    html += `<div class="tmg-card"><div class="tmg-card-label">${r.icono} ${r.red}</div><div style="font-size:10px;color:var(--blue2);font-weight:600;margin-bottom:2px">${r.cuenta||''}</div><div class="tmg-card-value">${r.seguidores}</div></div>`;
+  html += '<div class="tmg-card"><div class="tmg-card-label">Lecturas esta semana</div><div class="tmg-card-value" id="'+containerId+'_ga4">'+(datos.ga4||'—')+'</div><div class="tmg-card-sub">pageviews GA4</div></div>';
+  REDES_TMG.forEach(function(r){
+    html += '<div class="tmg-card">'
+      +'<div class="tmg-card-label">'+r.icono+' '+r.marca+' · '+r.plataforma+'</div>'
+      +'<div style="font-size:10px;color:var(--blue2);font-weight:600;margin-bottom:2px;">'+r.cuenta+'</div>'
+      +'<div class="tmg-card-value">'+r.seg+'</div>'
+      +'</div>';
   });
-  // Notas publicadas
-  html += `<div class="tmg-card"><div class="tmg-card-label">Notas publicadas</div><div class="tmg-card-value" id="${containerId}_notas">${datos.notas||'—'}</div><div class="tmg-card-sub">esta semana</div></div>`;
+  html += '<div class="tmg-card"><div class="tmg-card-label">Notas publicadas</div><div class="tmg-card-value" id="'+containerId+'_notas">'+(datos.notas||'—')+'</div><div class="tmg-card-sub">esta semana</div></div>';
   html += '</div>';
   el.innerHTML = html;
 }
 
-async function cargarMetricasGrupo(){
-  let datos = { ga4:'cargando...', redes:null, notas:'—' };
-  // Render con fallback primero
+
+async async function cargarMetricasGrupo(){
+  let datos = { ga4:'—', redes:null, notas:'—' };
   renderTableroMetricas('tableroMetricasGrupoSup', datos);
   renderTableroMetricas('tableroMetricasGrupoEmp', datos);
-  // Intentar cargar redes desde Firestore
+  // Redes como diccionario {clave: seguidores}
   try {
     const snap = await db.collection('metricas_redes').get();
     if(!snap.empty){
-      const redes = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        redes.push({red: d.red||doc.id, icono: d.icono||'📱', seguidores: d.seguidores||'—'});
+      var dict = {};
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var key = ((d.marca||'')+(d.plataforma||'')).toLowerCase().replace(/[^a-z]/g,'');
+        // También guardar con clave normalizada marca-plataforma
+        var key2 = (d.marca||'').toLowerCase()+'-'+(d.plataforma||'').toLowerCase();
+        if(d.seguidores){ dict[key] = d.seguidores; dict[key2] = d.seguidores; }
       });
-      if(redes.length) datos.redes = redes;
+      datos.redes = dict;
     }
-  } catch(e){ console.log('metricas_redes fallback:', e.message); }
-  // Re-render con datos actualizados
+  } catch(e){}
+  // GA4 desde Firestore
+  try {
+    var docGA4 = await db.collection('claw_ga4').doc('ultimo').get();
+    if(docGA4.exists && docGA4.data().lecturasSemanales){
+      datos.ga4 = Number(docGA4.data().lecturasSemanales).toLocaleString('es-AR');
+    }
+  } catch(e){}
+  // Notas publicadas
+  try {
+    var inicioSem = lunesDeSemana(hoy());
+    var snapOrd = await db.collection('ordenes').where('fechaCreacion','>=',inicioSem).where('estado','==','completada').get();
+    datos.notas = snapOrd.size.toString();
+  } catch(e){}
   renderTableroMetricas('tableroMetricasGrupoSup', datos);
   renderTableroMetricas('tableroMetricasGrupoEmp', datos);
 }
