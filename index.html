@@ -139,6 +139,17 @@ header{
 .eq-progress-bar.rojo{background:var(--accent);}
 .eq-pct{font-size:12px;font-family:'DM Mono',monospace;color:#666;min-width:34px;}
 .eq-equipo-sep{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);padding:10px 12px 4px;background:var(--paper2);}
+.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:10px;font-size:26px;color:#fff;line-height:1;flex-shrink:0;}
+.nav-drawer-overlay{display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.45);}
+.nav-drawer-overlay.open{display:block;}
+.nav-drawer-panel{position:fixed;top:0;left:-280px;width:270px;height:100%;background:#fff;z-index:999;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,0.18);transition:left 0.25s ease;}
+.nav-drawer-panel.open{left:0;}
+.nav-drawer-top{background:var(--blue);padding:20px 18px 14px;display:flex;align-items:center;justify-content:space-between;}
+.nav-drawer-logo{font-family:'Playfair Display',serif;color:#fff;font-size:16px;}
+.nav-drawer-close{background:none;border:none;color:rgba(255,255,255,0.75);font-size:22px;cursor:pointer;padding:4px 8px;}
+.nav-drawer-item{padding:14px 18px;font-size:15px;color:var(--ink);border:none;background:none;text-align:left;width:100%;cursor:pointer;border-left:4px solid transparent;font-weight:500;display:flex;align-items:center;gap:10px;}
+.nav-drawer-item:hover{background:var(--paper);}
+.nav-drawer-item.active{color:var(--blue);border-left-color:var(--blue);background:var(--paper);}
 @media(max-width:600px){
   .equipo-grilla th:nth-child(4),.equipo-grilla td:nth-child(4),
   .equipo-grilla th:nth-child(5),.equipo-grilla td:nth-child(5){display:none;}
@@ -163,8 +174,8 @@ header{
   background:#fff;border-radius:10px;border:1.5px solid var(--line);
   padding:12px 16px;min-width:100px;flex:1;max-width:200px;
 }
-.tablero-metricas-grupo .tmg-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:#999;margin-bottom:4px;}
-.tablero-metricas-grupo .tmg-card-value{font-family:'Playfair Display',serif;font-size:22px;line-height:1;color:var(--blue2);}
+.tablero-metricas-grupo .tmg-card-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.tablero-metricas-grupo .tmg-card-value{font-family:'Playfair Display',serif;font-size:20px;line-height:1;color:var(--blue2);}
 .tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:#aaa;margin-top:2px;}
 
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
@@ -580,17 +591,19 @@ header{
     <button class="nav-tab" id="tabProveedores" style="display:none" onclick="cambiarVista('vProveedores',this)">🏢 Proveedores</button>
   </div>
   <!-- DRAWER MOBILE -->
-  <div class="nav-drawer" id="navDrawer" onclick="if(event.target===this)cerrarDrawer()">
-    <div class="nav-drawer-inner">
-      <div class="nav-drawer-header">📰 La Opinión</div>
-      <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)">📊 Dashboard</button>
-      <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)">👥 Clientes</button>
-      <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vOrdenes',this)">📋 Órdenes</button>
-      <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vcolaboradores',this)">👤 Colaboradores</button>
-      <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)">📅 Reuniones</button>
-      <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)">📈 Productividad</button>
-      <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)">🏢 Proveedores</button>
+  <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="cerrarDrawer()"></div>
+  <div class="nav-drawer-panel" id="navDrawerPanel">
+    <div class="nav-drawer-top">
+      <span class="nav-drawer-logo">La Opinión</span>
+      <button class="nav-drawer-close" onclick="cerrarDrawer()">✕</button>
     </div>
+    <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)"><span>📊</span> Dashboard</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)"><span>👥</span> Clientes</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vOrdenes',this)"><span>📋</span> Órdenes</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vcolaboradores',this)"><span>👤</span> Colaboradores</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)"><span>📅</span> Reuniones</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
+    <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
   </div>
 
   <div class="container">
@@ -842,10 +855,11 @@ header{
   <header>
     <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
-      <label for="inputFotoPerfil" style="cursor:pointer;display:flex;align-items:center;" title="Cambiar foto de perfil">
-        <div id="empAvatarWrap" class="avatar-iniciales lg">??</div>
-      </label>
-      <input type="file" id="inputFotoPerfil" accept="image/*" style="position:absolute;width:60px;height:60px;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
+      <div style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;" title="Toca para cambiar tu foto" onclick="document.getElementById('inputFotoPerfil').click()">
+        <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
+        <div style="position:absolute;bottom:0;right:0;background:var(--blue);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center;pointer-events:none;">✎</div>
+      </div>
+      <input type="file" id="inputFotoPerfil" accept="image/*" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
       <span class="user-badge">💻 colaborador</span>
@@ -1585,10 +1599,10 @@ function cambiarVista(id, btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById(id).classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); }
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ filtrarcolaboradores(); }
+  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
   if(id==='vReuniones'){ filtrarReuniones(); }
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
@@ -1673,18 +1687,18 @@ function abrirPerfilColaborador(empId){
 }
 
 // ── DRAWER MOBILE ──
-function abrirDrawer(){ document.getElementById('navDrawer')?.classList.add('open'); }
-function cerrarDrawer(){ document.getElementById('navDrawer')?.classList.remove('open'); }
+function abrirDrawer(){ document.getElementById('navDrawerOverlay')?.classList.add('open'); document.getElementById('navDrawerPanel')?.classList.add('open'); }
+function cerrarDrawer(){ document.getElementById('navDrawerOverlay')?.classList.remove('open'); document.getElementById('navDrawerPanel')?.classList.remove('open'); }
 function cambiarVistaDrawer(id, btn){
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   cerrarDrawer();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); }
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ filtrarcolaboradores(); }
+  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
   if(id==='vReuniones'){ filtrarReuniones(); }
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
@@ -1696,6 +1710,31 @@ function abrirPerfilColaboradorDesdeEquipo(empId){
     const card = document.querySelector(`[data-empid="${empId}"]`);
     if(card){ card.scrollIntoView({behavior:'smooth',block:'center'}); card.click(); }
   }, 400);
+}
+
+function renderTareasConReuniones(){
+  // Combina órdenes y reuniones en el panel de próximos 7 días
+  const hoyStr = hoy();
+  const fin = new Date(); fin.setDate(fin.getDate()+7);
+  const finStr = fin.toISOString().split('T')[0];
+  const div = document.getElementById('dashTareas');
+  if(!div) return;
+  let items = [];
+  // Órdenes
+  ordenes.filter(o=>o.estado!=='completada'&&o.estado!=='cancelada'&&(o.fechaVencimiento||o.fechaCreacion)>=hoyStr&&(o.fechaVencimiento||o.fechaCreacion)<=finStr)
+    .forEach(o=>items.push({tipo:'orden',fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo,desc:o.descripcion?.substring(0,60),color:'var(--blue2)'}));
+  // Reuniones
+  reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
+    .forEach(r=>items.push({tipo:'reunion',fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
+  items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
+  div.innerHTML = items.map(i=>`<div class="task-today-row">
+    <div style="width:8px;height:8px;border-radius:50%;background:${i.color};flex-shrink:0;margin-top:5px"></div>
+    <div class="task-today-info">
+      <div class="task-today-desc">${i.tipo==='reunion'?'📅 ':''}<strong>${i.fecha}${i.hora?' '+i.hora:''}</strong> — ${i.titulo}</div>
+      ${i.desc?`<div class="task-today-meta">${i.desc}</div>`:''}
+    </div>
+  </div>`).join('');
 }
 
 function renderDashboard(){
@@ -1714,6 +1753,7 @@ function renderDashboard(){
 
   // ── BLOQUE 1: GA4 ──
   renderGA4Dashboard();
+  renderTareasConReuniones();
 
   // Tareas próxima semana
   const divT = document.getElementById('dashTareas');
@@ -1885,11 +1925,15 @@ function renderGA4Dashboard(){
 // ── BLOQUE 4: Redes sociales ──
 function renderRedesSociales(){
   const defaults = [
-    {plataforma:'Facebook',icono:'📘',seguidores:'103K'},
-    {plataforma:'Instagram',icono:'📸',seguidores:'54K'},
-    {plataforma:'TikTok',icono:'🎵',seguidores:'16.5K'},
-    {plataforma:'YouTube',icono:'▶️',seguidores:'976'},
-    {plataforma:'X',icono:'✖️',seguidores:'2.663'}
+    {marca:'laopinionline',plataforma:'Facebook',icono:'📘',seguidores:'103K'},
+    {marca:'laopinionline',plataforma:'Instagram',icono:'📸',seguidores:'54K'},
+    {marca:'laopinionline',plataforma:'TikTok',icono:'🎵',seguidores:'16.5K'},
+    {marca:'laopinionline',plataforma:'YouTube',icono:'▶️',seguidores:'976'},
+    {marca:'laopinionline',plataforma:'X',icono:'✖️',seguidores:'2.663'},
+    {marca:'laopinionplay',plataforma:'Instagram',icono:'📸',seguidores:'15.8K'},
+    {marca:'laopinionplay',plataforma:'TikTok',icono:'🎵',seguidores:'1.238'},
+    {marca:'laopinioncampo',plataforma:'Instagram',icono:'📸',seguidores:'3.725'},
+    {marca:'laopinion365',plataforma:'Instagram',icono:'📸',seguidores:'—'},
   ];
   const div = document.getElementById('dashRedesSociales');
   const LINKS_REDES = {'laopinionline-facebook':'https://facebook.com/laopinionline','laopinionline-instagram':'https://instagram.com/laopinionline','laopinionline-tiktok':'https://tiktok.com/@laopinionline','laopinionline-youtube':'https://youtube.com/@LaOpinionPlay','laopinionline-x':'https://x.com/LaOpiniONline','laopinionplay-instagram':'https://instagram.com/laopinionplay','laopinionplay-tiktok':'https://tiktok.com/@laopinionplay','laopinionplay-twitch':'https://twitch.tv/twitchlaopinionplay','laopinioncampo-instagram':'https://instagram.com/laopinioncampo','laopinion365-instagram':'https://instagram.com/laopinion365'};
