@@ -385,7 +385,33 @@ header{
 .avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
-@media(max-width:600px){.form-grid{grid-template-columns:1fr;}.info-grid{grid-template-columns:1fr;}.dash-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){
+ header{padding:0 12px;height:52px;}
+ .logo{font-size:15px;}
+ .user-badge{font-size:11px;padding:4px 8px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+ .btn-logout{font-size:11px;padding:4px 8px;}
+ .nav-tabs{padding:0 4px;gap:0;}
+ .nav-tab{padding:8px 8px;font-size:11px;white-space:nowrap;flex-shrink:0;}
+ .container{padding:10px 8px;}
+ .form-grid{grid-template-columns:1fr;}
+ .info-grid{grid-template-columns:1fr;}
+ .dash-grid{grid-template-columns:1fr 1fr;}
+ .kanban-board{grid-template-columns:1fr;gap:10px;}
+ .emp-header{padding:14px 12px 12px;border-radius:8px;margin-bottom:10px;}
+ .emp-title{font-size:14px;}
+ .emp-stats{gap:6px;flex-wrap:wrap;}
+ .emp-stat-val{font-size:18px;}
+ .emp-stat-lbl{font-size:10px;}
+ .modal{width:96vw;max-height:90vh;overflow-y:auto;margin:5vh auto;}
+ .stat-card{padding:10px 8px;}
+ .stat-value{font-size:20px;}
+ .meeting-card{padding:10px;}
+ .hero-btn{padding:6px 10px;font-size:12px;}
+ .client-card{padding:12px 14px;}
+ .search-box{min-width:0;width:100%;}
+ .filters-row{flex-wrap:wrap;gap:6px;}
+ .filters-row select{font-size:12px;padding:4px 6px;}
+}
 
 /* ── KANBAN ── */
 .kanban-board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px;}
@@ -1570,6 +1596,7 @@ function cambiarVista(id, btn){
   if(btn) btn.classList.add('active');
   document.getElementById(id).classList.add('active');
   if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); }
+  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
   if(id==='vcolaboradores'){ filtrarcolaboradores(); }
   if(id==='vReuniones'){ filtrarReuniones(); }
