@@ -370,32 +370,106 @@ header{
 .avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
+/* ══ BOTTOM NAV — solo mobile ══ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;border-top:1px solid var(--line);
+  z-index:200;padding:0;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.08);
+}
+.bottom-nav-inner{
+  display:flex;align-items:stretch;
+  height:58px;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;
+  cursor:pointer;padding:6px 4px;
+  color:#999;font-size:10px;font-weight:500;
+  letter-spacing:0.2px;transition:color 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.bn-item .bn-icon{font-size:20px;line-height:1;}
+.bn-item.active{color:var(--blue);}
+.bn-item:active{opacity:0.7;}
+
 @media(max-width:600px){
- header{padding:0 12px;height:52px;}
- .logo{font-size:15px;}
- .user-badge{font-size:11px;padding:4px 8px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
- .btn-logout{font-size:11px;padding:4px 8px;}
- .nav-tabs{display:none !important;}
- .hamburger-btn{display:block !important;}
- .container{padding:10px 8px;}
- .form-grid{grid-template-columns:1fr;}
- .info-grid{grid-template-columns:1fr;}
- .dash-grid{grid-template-columns:1fr 1fr;}
- .kanban-board{grid-template-columns:1fr;gap:10px;}
- .emp-header{padding:14px 12px 12px;border-radius:8px;margin-bottom:10px;}
- .emp-title{font-size:14px;}
- .emp-stats{gap:6px;flex-wrap:wrap;}
- .emp-stat-val{font-size:18px;}
- .emp-stat-lbl{font-size:10px;}
- .modal{width:96vw;max-height:90vh;overflow-y:auto;margin:5vh auto;}
- .stat-card{padding:10px 8px;}
- .stat-value{font-size:20px;}
- .meeting-card{padding:10px;}
- .hero-btn{padding:6px 10px;font-size:12px;}
- .client-card{padding:12px 14px;}
- .search-box{min-width:0;width:100%;}
- .filters-row{flex-wrap:wrap;gap:6px;}
- .filters-row select{font-size:12px;padding:4px 6px;}
+  /* Header */
+  header{padding:0 14px;height:54px;}
+  header .logo img{height:36px;}
+  .nav-tabs{display:none !important;}
+  #globalHamburger{display:none !important;}
+  .user-badge{display:none;}
+  .btn-logout{font-size:12px;padding:5px 10px;}
+  
+  /* Bottom nav visible */
+  .bottom-nav{display:block;}
+  
+  /* Container con padding bottom para la bottom nav */
+  .container{padding:12px 14px 76px;}
+  
+  /* Grillas */
+  .form-grid{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+  .dash-grid{grid-template-columns:1fr 1fr;}
+  .dash-cols{grid-template-columns:1fr;}
+  
+  /* Stat cards más respiradas */
+  .stat-card{padding:14px 12px;border-radius:12px;}
+  .stat-value{font-size:24px;}
+  .stat-label{font-size:11px;}
+  
+  /* Kanban en columna */
+  .kanban-board{grid-template-columns:1fr;gap:10px;}
+  
+  /* Header colaborador */
+  .emp-header{padding:16px 14px;border-radius:10px;margin-bottom:12px;}
+  .emp-title{font-size:15px;}
+  .emp-stats{gap:10px;flex-wrap:wrap;}
+  .emp-stat-val{font-size:22px;}
+  .emp-stat-lbl{font-size:11px;}
+  
+  /* Cards */
+  .client-card{padding:14px 16px;border-radius:12px;}
+  .meeting-card{padding:14px 16px;border-radius:12px;}
+  
+  /* Modales */
+  .modal{
+    width:100%;max-width:100%;
+    border-radius:20px 20px 0 0;
+    position:fixed;bottom:0;left:0;right:0;
+    margin:0;max-height:92vh;
+    overflow-y:auto;
+    animation:slideUp 0.25s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  
+  /* Búsqueda y filtros */
+  .search-box{min-width:0;width:100%;}
+  .filters-row{flex-wrap:wrap;gap:8px;}
+  .filters-row select{font-size:13px;padding:6px 8px;flex:1;min-width:120px;}
+  
+  /* Botones de acción */
+  .hero-btn,.btn-primary,.btn-blue{padding:10px 16px;font-size:13px;border-radius:10px;}
+  
+  /* Touch targets mínimo 44px */
+  .nav-tab,.btn-logout,.btn-primary,.hero-btn{min-height:44px;}
+  
+  /* Redes en mobile */
+  #dashRedesSociales{flex-wrap:wrap;gap:8px;}
+  #dashRedesSociales a{min-width:calc(50% - 4px);flex:1;}
+  
+  /* Métricas del grupo */
+  .tablero-metricas-grupo .tmg-row{gap:8px;}
+  .tablero-metricas-grupo .tmg-card{min-width:calc(50% - 4px);flex:1;padding:10px 12px;}
+  .tablero-metricas-grupo .tmg-card-value{font-size:18px;}
+  .tablero-metricas-grupo .tmg-card-label{font-size:9px;}
+
+  /* Estado equipo — ocultar columnas extras */
+  .equipo-grilla th:nth-child(4),.equipo-grilla td:nth-child(4),
+  .equipo-grilla th:nth-child(5),.equipo-grilla td:nth-child(5){display:none;}
 }
 
 /* ── KANBAN ── */
@@ -591,6 +665,27 @@ header{
     <button class="nav-tab" id="tabProveedores" style="display:none" onclick="cambiarVista('vProveedores',this)">🏢 Proveedores</button>
   </div>
 
+
+  <!-- BOTTOM NAV SUPERVISOR -->
+  <nav class="bottom-nav" id="bottomNavSup">
+    <div class="bottom-nav-inner">
+      <button class="bn-item active" id="bn-dash" onclick="cambiarVistaBN('vDash','bn-dash')">
+        <span class="bn-icon">📊</span>Dashboard
+      </button>
+      <button class="bn-item" id="bn-ordenes" onclick="cambiarVistaBN('vOrdenes','bn-ordenes')">
+        <span class="bn-icon">📋</span>Órdenes
+      </button>
+      <button class="bn-item" id="bn-clientes" onclick="cambiarVistaBN('vClientes','bn-clientes')">
+        <span class="bn-icon">👥</span>Clientes
+      </button>
+      <button class="bn-item" id="bn-reuniones" onclick="cambiarVistaBN('vReuniones','bn-reuniones')">
+        <span class="bn-icon">📅</span>Reuniones
+      </button>
+      <button class="bn-item" id="bn-mas" onclick="abrirDrawer()">
+        <span class="bn-icon">⋯</span>Más
+      </button>
+    </div>
+  </nav>
 
   <div class="container">
 
@@ -868,6 +963,24 @@ header{
         <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
       </div>
     </div>
+    <!-- BOTTOM NAV COLABORADOR -->
+    <nav class="bottom-nav" id="bottomNavEmp">
+      <div class="bottom-nav-inner">
+        <button class="bn-item active" id="bne-tareas" onclick="cambiarVistaEmpBN('vEmpKanban','bne-tareas')">
+          <span class="bn-icon">📋</span>Tareas
+        </button>
+        <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
+          <span class="bn-icon">📅</span>Reuniones
+        </button>
+        <button class="bn-item" id="bne-productividad" onclick="cambiarVistaEmpBN('vEmpProductividad','bne-productividad')">
+          <span class="bn-icon">📈</span>Stats
+        </button>
+        <button class="bn-item" id="bne-perfil" onclick="abrirPerfil()">
+          <span class="bn-icon">👤</span>Mi perfil
+        </button>
+      </div>
+    </nav>
+
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
       <div class="emp-header">
@@ -1693,6 +1806,23 @@ function abrirPerfilColaborador(empId){
 }
 
 // ── DRAWER MOBILE ──
+// ── BOTTOM NAV ──
+function cambiarVistaBN(id, bnId){
+  // Actualizar active en bottom nav
+  document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById(bnId);
+  if(btn) btn.classList.add('active');
+  // Cambiar vista
+  cambiarVista(id, document.querySelector('[onclick*="' + id + '"]'));
+}
+
+function cambiarVistaEmpBN(id, bnId){
+  document.querySelectorAll('#bottomNavEmp .bn-item').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById(bnId);
+  if(btn) btn.classList.add('active');
+  cambiarVistaEmp(id, null);
+}
+
 function abrirDrawer(){
   // Mostrar items según rol
   const esSup = rolActual === 'supervisor';
