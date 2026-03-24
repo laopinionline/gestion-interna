@@ -1781,46 +1781,47 @@ function cambiarVistaMobile(id){
 
 function abrirPerfil(){
   if(!usuarioLogueado) return;
-  // Usar el modal global de perfil
   const m = document.getElementById('modalPerfilGlobal');
   if(!m) return;
   const u = usuarioLogueado;
-  const iniciales = (u.nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
-  const avatarHtml = u.fotoUrl
-    ? `<img src="${u.fotoUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);">`
-    : `<div style="width:72px;height:72px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">${iniciales}</div>`;
-  document.getElementById('mpgBody').innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 20px;">
-      <label for="inputFotoPerfilModal" style="cursor:pointer;position:relative;">
-        ${avatarHtml}
-        <div style="position:absolute;bottom:2px;right:2px;background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;display:flex;align-items:center;justify-content:center;">✎</div>
-      </label>
-      <input type="file" id="inputFotoPerfilModal" accept="image/*" capture="environment" style="display:none;" onchange="subirFotoPerfilModal(this)">
-      <div style="text-align:center;">
-        <div style="font-size:18px;font-weight:700;color:var(--ink)">${u.nombre}</div>
-        <div style="font-size:13px;color:#999;margin-top:4px">${u.puesto||''}</div>
-        <div style="font-size:13px;color:#999">${u.equipo||''}</div>
-      </div>
-    </div>
-    <div style="border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
-        <span style="font-size:13px;color:#999;">Teléfono</span>
-        <span style="font-size:14px;font-weight:600;">${u.telefono||'—'}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);">
-        <span style="font-size:13px;color:#999;">Email</span>
-        <span style="font-size:14px;font-weight:600;">${u.email||'—'}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);">
-        <span style="font-size:13px;color:#999;">Contraseña</span>
-        <input type="password" id="mpgPass" placeholder="Nueva contraseña" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;width:160px;">
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="guardarPerfilGlobal()" style="flex:1;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Guardar cambios</button>
-      <button onclick="cerrarPerfilGlobal();renderCheckPropio();" style="flex:1;padding:12px;background:var(--paper);color:var(--blue);border:1px solid var(--blue);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">✓ Mis tareas</button>
-    </div>
-  `;
+  const iniciales = (u.nombre||'').split(' ').map(function(p){return p[0];}).join('').substring(0,2).toUpperCase();
+  const avatar = u.fotoUrl
+    ? '<img src="'+u.fotoUrl+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--blue);">'
+    : '<div style="width:72px;height:72px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">'+iniciales+'</div>';
+  
+  var html = '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 20px;">';
+  html += '<label for="inputFotoPerfilModal" style="cursor:pointer;position:relative;">';
+  html += avatar;
+  html += '<div style="position:absolute;bottom:2px;right:2px;background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;display:flex;align-items:center;justify-content:center;">✎</div>';
+  html += '</label>';
+  html += '<input type="file" id="inputFotoPerfilModal" accept="image/*" style="display:none;" onchange="subirFotoPerfilModal(this)">';
+  html += '<div style="text-align:center;">';
+  html += '<div style="font-size:18px;font-weight:700;color:var(--ink)">'+u.nombre+'</div>';
+  html += '<div style="font-size:13px;color:#999;margin-top:4px">'+(u.puesto||'')+'</div>';
+  html += '<div style="font-size:13px;color:#999">'+(u.equipo||'')+'</div>';
+  html += '</div></div>';
+  
+  html += '<div style="border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:0;">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;">';
+  html += '<span style="font-size:13px;color:#999;">Teléfono</span>';
+  html += '<span style="font-size:14px;font-weight:600;">'+(u.telefono||'—')+'</span>';
+  html += '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);">';
+  html += '<span style="font-size:13px;color:#999;">Email</span>';
+  html += '<span style="font-size:14px;font-weight:600;">'+(u.email||'—')+'</span>';
+  html += '</div>';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line);">';
+  html += '<span style="font-size:13px;color:#999;">Nueva contraseña</span>';
+  html += '<input type="password" id="mpgPass" placeholder="Mínimo 4 caracteres" style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;width:160px;">';
+  html += '</div>';
+  html += '</div>';
+  
+  html += '<div style="display:flex;gap:10px;margin-top:16px;">';
+  html += '<button onclick="guardarPerfilGlobal()" style="flex:1;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">Guardar</button>';
+  html += '<button onclick="cerrarPerfilGlobal();renderCheckPropio();" style="flex:1;padding:13px;background:var(--paper);color:var(--blue);border:1px solid var(--blue);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">✓ Mis tareas</button>';
+  html += '</div>';
+  
+  document.getElementById('mpgBody').innerHTML = html;
   m.style.display = 'flex';
 }
 
