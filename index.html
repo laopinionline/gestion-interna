@@ -3673,6 +3673,14 @@ function aplicarVisibilidad(){
     console.log('Datos cargados desde Firestore');
   });
 
+  // Mover todos los modales al body para evitar problemas de anidamiento
+  ['mPerfil','mcolaborador','mCliente','mOrden','mReunion','modalCheckColaborador'].forEach(function(id){
+    var m = document.getElementById(id);
+    if(m && m.parentElement !== document.body){
+      document.body.appendChild(m);
+    }
+  });
+
 </script>
 
 <!-- MODAL PERFIL -->
