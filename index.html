@@ -590,21 +590,7 @@ header{
     <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">📈 Productividad</button>
     <button class="nav-tab" id="tabProveedores" style="display:none" onclick="cambiarVista('vProveedores',this)">🏢 Proveedores</button>
   </div>
-  <!-- DRAWER MOBILE -->
-  <div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="cerrarDrawer()"></div>
-  <div class="nav-drawer-panel" id="navDrawerPanel">
-    <div class="nav-drawer-top">
-      <span class="nav-drawer-logo">La Opinión</span>
-      <button class="nav-drawer-close" onclick="cerrarDrawer()">✕</button>
-    </div>
-    <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)"><span>📊</span> Dashboard</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)"><span>👥</span> Clientes</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vOrdenes',this)"><span>📋</span> Órdenes</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vcolaboradores',this)"><span>👤</span> Colaboradores</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)"><span>📅</span> Reuniones</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
-    <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
-  </div>
+
 
   <div class="container">
 
@@ -1707,8 +1693,23 @@ function abrirPerfilColaborador(empId){
 }
 
 // ── DRAWER MOBILE ──
-function abrirDrawer(){ document.getElementById('navDrawerOverlay')?.classList.add('open'); document.getElementById('navDrawerPanel')?.classList.add('open'); }
+function abrirDrawer(){
+  // Mostrar items según rol
+  const esSup = rolActual === 'supervisor';
+  const sup = document.getElementById('navDrawerSup');
+  const emp = document.getElementById('navDrawerEmp');
+  if(sup) sup.style.display = esSup ? '' : 'none';
+  if(emp) emp.style.display = esSup ? 'none' : '';
+  document.getElementById('navDrawerOverlay')?.classList.add('open');
+  document.getElementById('navDrawerPanel')?.classList.add('open');
+}
 function cerrarDrawer(){ document.getElementById('navDrawerOverlay')?.classList.remove('open'); document.getElementById('navDrawerPanel')?.classList.remove('open'); }
+function cambiarVistaEmpDrawer(id, btn){
+  document.querySelectorAll('#navDrawerEmp .nav-drawer-item').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  cerrarDrawer();
+  cambiarVistaEmp(id, null);
+}
 function cambiarVistaDrawer(id, btn){
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
@@ -3547,5 +3548,27 @@ function aplicarVisibilidad(){
   </div>
 </div>
 
+<!-- DRAWER MOBILE SUPERVISOR -->
+<div class="nav-drawer-overlay" id="navDrawerOverlay" onclick="cerrarDrawer()"></div>
+<div class="nav-drawer-panel" id="navDrawerPanel">
+  <div class="nav-drawer-top">
+    <span class="nav-drawer-logo">La Opinión</span>
+    <button class="nav-drawer-close" onclick="cerrarDrawer()">✕</button>
+  </div>
+  <div id="navDrawerSup">
+    <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)"><span>📊</span> Dashboard</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)"><span>👥</span> Clientes</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vOrdenes',this)"><span>📋</span> Órdenes</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vcolaboradores',this)"><span>👤</span> Colaboradores</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)"><span>📅</span> Reuniones</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
+    <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
+  </div>
+  <div id="navDrawerEmp" style="display:none">
+    <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpReuniones',this)"><span>📅</span> Reuniones</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📈</span> Productividad</button>
+  </div>
+</div>
 </body>
 </html>
