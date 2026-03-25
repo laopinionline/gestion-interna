@@ -707,8 +707,8 @@ header{
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
       <div class="dash-grid">
-        <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
-        <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
+        <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes');setTimeout(function(){var s=document.getElementById('filtroClienteEstado');if(s)s.value='activo';filtrarClientes();},200)" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
+        <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes');setTimeout(function(){var s=document.getElementById('filtroClienteEstado');if(s)s.value='pausado';filtrarClientes();},200)" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
         <div class="stat-card red" style="cursor:pointer" onclick="dashFiltrarOrdenes('pendiente')"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
         <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
         <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
@@ -2608,7 +2608,7 @@ function renderOrdenes(lista){
         <div style="display:flex;align-items:center;gap:10px">
           <div class="order-date">📅 ${fmtD(o.fecha)}${o.equipo?` · <span class="pill-equipo pill-${o.equipo.toLowerCase().replace(/[^a-z]/g,'')}" style="font-size:10px;padding:1px 6px">${o.equipo}</span>`:''}</div>
           ${c?`<span class="order-client-tag">📌 ${c.nombre}</span>`:''}
-          ${(()=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);const nombres=ids.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean);return nombres.length?`<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 ${nombres.join(', ')}</span>`:''})()}
+          ${(()=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);const nombres=ids.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?(e.nombre||'').split(' ').slice(0,2).join(' '):''}).filter(Boolean);return nombres.length?`<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 ${nombres.join(', ')}</span>`:''})()}
         </div>
         <span class="osel osel-${o.estado}" style="pointer-events:none">${o.estado==='pendiente'?'⏳ Pendiente':o.estado==='completada'?'✅ Completada':'❌ Cancelada'}</span>
       </div>
@@ -3101,7 +3101,7 @@ function renderKanban(){
       </div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
-      ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
+      ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>(e.nombre||'').split(' ')[0]).join(', ')}</div>`:''}
       <div class="kc-move">${botones}</div>
       <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
         ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
@@ -3194,7 +3194,7 @@ function abrirModalReunion(id){
   document.getElementById('rParticipantes').innerHTML = colaboradores.map(e=>`
     <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 8px;background:#fff;border-radius:20px;border:1px solid var(--line);">
       <input type="checkbox" value="${e.id}" ${participantes.includes(e.id)?'checked':''} style="accent-color:var(--blue);">
-      ${e.nombre.split(' ').slice(0,2).join(' ')}
+      ${(e.nombre||'Sin nombre').split(' ').slice(0,2).join(' ')}
     </label>
   `).join('');
   abrirModal('mReunion');
