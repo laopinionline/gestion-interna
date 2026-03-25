@@ -3316,46 +3316,63 @@ function semanaRango(offset){
 
 function renderProductividad(){
   const {inicio, fin, label} = semanaRango(semanaOffset);
-  document.getElementById('semanaLabel').textContent = semanaOffset===0?`Esta semana (${label})`:label;
+  document.getElementById('semanaLabel').textContent = semanaOffset===0 ? 'Esta semana ('+label+')' : label;
 
   const hoyStr = hoy();
-  const tareasRango = ordenes.filter(o=>o.fecha>=inicio && o.fecha<=fin);
 
-  const cards = colaboradores.filter(e=>e.estado==='activo').map(e=>{
-    const mis = tareasRango.filter(o=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);return ids.includes(e.id);});
-    const comp = mis.filter(o=>o.estado==='completada').length;
-    const pend = mis.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
-    const total = mis.length;
-    const atrasadas = ordenes.filter(o=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);return ids.includes(e.id) && o.fecha<hoyStr && o.estado!=='completada';}).length;
-    const pctComp = total ? Math.round(comp/total*100) : 0;
-    const esAtrasado = atrasadas > 0;
+  // Mostrar todos los colaboradores internos (excluir externos)
+  const internos = colaboradores.filter(function(e){
+    return e.jerarquia !== 'externo' && e.equipo !== 'Externo';
+  });
 
-    return `<div class="prod-card ${esAtrasado?'atrasado':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div class="prod-name">${e.nombre}</div>
-          <div class="prod-puesto">${e.puesto.split('—')[0].trim()}</div>
-        </div>
-        ${esAtrasado?`<span class="atras-badge">${atrasadas} atrasada${atrasadas>1?'s':''}</span>`:''}
-      </div>
-      ${total?`<div style="margin-top:10px">
-        <div class="prod-bar-row">
-          <span class="prod-bar-label">Completadas</span>
-          <div class="prod-bar-wrap"><div class="prod-bar-fill comp" style="width:${pctComp}%"></div></div>
-        </div>
-      </div>`:'<div style="font-size:12px;color:#ccc;margin-top:8px">Sin tareas en este período</div>'}
-      <div class="prod-nums">
-        <div class="prod-num"><div class="prod-num-val ${comp>0?'green':''}">${comp}</div><div class="prod-num-lbl">Hechas</div></div>
-        <div class="prod-num"><div class="prod-num-val">${pend}</div><div class="prod-num-lbl">Pendientes</div></div>
-        <div class="prod-num"><div class="prod-num-val ${atrasadas>0?'red':''}">${atrasadas}</div><div class="prod-num-lbl">Atrasadas</div></div>
-        <div class="prod-num"><div class="prod-num-val">${total}</div><div class="prod-num-lbl">Total sem.</div></div>
-      </div>
-    </div>`;
+  function getFechaOrden(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
+
+  function getIds(o){ return o.colaboradoresIds && o.colaboradoresIds.length ? o.colaboradoresIds : (o.asignadoA ? [o.asignadoA] : (o.colaboradorId ? [o.colaboradorId] : [])); }
+
+  const tareasRango = ordenes.filter(function(o){
+    var f = getFechaOrden(o);
+    return !f || (f >= inicio && f <= fin);
+  });
+
+  const cards = internos.map(function(e){
+    var mis = tareasRango.filter(function(o){ return getIds(o).includes(e.id); });
+    var comp = mis.filter(function(o){ return o.estado==='completada'; }).length;
+    var pend = mis.filter(function(o){ return o.estado==='pendiente'||o.estado==='en-curso'||o.estado==='en_curso'; }).length;
+    var total = mis.length;
+    var atrasadas = ordenes.filter(function(o){
+      var f = getFechaOrden(o);
+      return getIds(o).includes(e.id) && f && f < hoyStr && o.estado!=='completada' && o.estado!=='cancelada';
+    }).length;
+    var pctComp = total ? Math.round(comp/total*100) : 0;
+    var esAtrasado = atrasadas > 0;
+
+    var html = '<div class="prod-card '+(esAtrasado?'atrasado':'')+'">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    html += '<div>';
+    html += '<div class="prod-name">'+e.nombre+'</div>';
+    html += '<div class="prod-puesto">'+(e.puesto||e.equipo||'')+'</div>';
+    html += '</div>';
+    if(esAtrasado) html += '<span class="atras-badge">'+atrasadas+' atrasada'+(atrasadas>1?'s':'')+'</span>';
+    html += '</div>';
+    if(total){
+      html += '<div style="margin-top:10px;">';
+      html += '<div class="prod-bar-row"><span class="prod-bar-label">Completadas</span>';
+      html += '<div class="prod-bar-wrap"><div class="prod-bar-fill comp" style="width:'+pctComp+'%"></div></div></div>';
+      html += '</div>';
+    } else {
+      html += '<div style="font-size:12px;color:#ccc;margin-top:8px">Sin tareas esta semana</div>';
+    }
+    html += '<div class="prod-nums">';
+    html += '<div class="prod-num"><div class="prod-num-val '+(comp>0?'green':'')+'">'+comp+'</div><div class="prod-num-lbl">Hechas</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val">'+pend+'</div><div class="prod-num-lbl">Pendientes</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val '+(atrasadas>0?'red':'')+'">'+atrasadas+'</div><div class="prod-num-lbl">Atrasadas</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val">'+total+'</div><div class="prod-num-lbl">Total</div></div>';
+    html += '</div></div>';
+    return html;
   }).join('');
 
-  document.getElementById('prodGrid').innerHTML = cards || '<div class="no-data">Sin colaboradores activos</div>';
+  document.getElementById('prodGrid').innerHTML = cards || '<div class="no-data">Sin colaboradores</div>';
 }
-
 
 // ══ PERFIL ══
 async function subirFotoEnPerfil(input){
