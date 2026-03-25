@@ -1987,7 +1987,7 @@ function abrirCheckColaborador(empId, nombre){
     </div>
   `).join('');
   document.getElementById('mchkEmpId').value = empId;
-  m.classList.add('abierto');
+  abrirModal('modalCheckColaborador');
 }
 
 async function guardarCheckColaborador(){
@@ -2031,7 +2031,12 @@ function renderTareasConReuniones(){
   if(!div) return;
   let items = [];
   // Órdenes — guardar id para poder clickear
-  ordenes.filter(o=>o.estado!=='completada'&&o.estado!=='cancelada'&&(o.fechaVencimiento||o.fechaCreacion)>=hoyStr&&(o.fechaVencimiento||o.fechaCreacion)<=finStr)
+  ordenes.filter(o=>{
+    if(o.estado==='completada'||o.estado==='cancelada') return false;
+    var f = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
+    if(!f) return true; // sin fecha: mostrar siempre
+    return f >= hoyStr;
+  })
     .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
   // Reuniones
   reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
@@ -2070,7 +2075,9 @@ function renderDashboard(){
   function getFecha(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
 
   const tareasSemana = ordenes.filter(o=>{
-    const f = getFecha(o);
+    if(o.estado==='completada'||o.estado==='cancelada') return false;
+    var f = getFecha(o);
+    if(!f) return true; // sin fecha asignada: contar como pendiente
     return f >= hoyStr && f <= fin7Str;
   });
 
