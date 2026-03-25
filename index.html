@@ -2574,7 +2574,7 @@ function actualizarFiltroOrdenes(){
   if(wrapE) wrapE.innerHTML = colaboradores.map(e=>`
     <label class="colab-check-wrap" data-emp-id="${e.id}" style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);" title="${e.equipo||''}">
       <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> 
-      <span>${e.nombre.split(' ').slice(0,2).join(' ')}</span>
+      <span>${(e.nombre||'Sin nombre').split(' ').slice(0,2).join(' ')}</span>
       ${e.equipo?`<span style="font-size:9px;color:#aaa">(${e.equipo})</span>`:''}
     </label>`).join('');
 }
