@@ -707,8 +707,8 @@ header{
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
       <div class="dash-grid">
-        <div class="stat-card green"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
-        <div class="stat-card gold"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
+        <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
+        <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
         <div class="stat-card red" style="cursor:pointer" onclick="dashFiltrarOrdenes('pendiente')"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
         <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
         <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
