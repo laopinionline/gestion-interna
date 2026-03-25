@@ -2144,18 +2144,25 @@ function renderGA4Dashboard(){
       const div = document.getElementById('dashTop5Notas');
       const listaNotas = data.topNotas || data.top5 || [];
       if(listaNotas.length){
-        div.innerHTML = listaNotas.map((n,i)=>{
+        div.innerHTML = listaNotas.map(function(n,i){
           var url = n.url||n.pagePath||'';
           var fullUrl = url ? (url.startsWith('http') ? url : 'https://www.laopinionline.ar'+url) : '';
           var titulo = n.titulo||n.title||n.pagePath||'Sin título';
           var vistas = Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR');
-          return '<div class="task-today-row" style="'+(fullUrl?'cursor:pointer;':'')+'" '+(fullUrl?'onclick="window.open(''+fullUrl+'','_blank')"':'')+'>'+
+          var rowStyle = fullUrl ? 'cursor:pointer;' : '';
+          var dataUrl = fullUrl ? ' data-url="'+fullUrl+'"' : '';
+          var badge = fullUrl ? '<span style="color:#bbb;font-size:11px;"> ↗</span>' : '';
+          return '<div class="top-nota-row" style="'+rowStyle+'"'+dataUrl+'>'+
             '<div style="font-weight:700;color:var(--blue2);min-width:20px;font-size:15px;">'+(i+1)+'</div>'+
             '<div class="task-today-info">'+
-              '<div class="task-today-desc">'+(fullUrl?'<span style="color:var(--blue2);">'+titulo+'</span>':titulo)+'</div>'+
-              '<div class="task-today-meta">👁 '+vistas+' vistas'+(fullUrl?' · <span style="color:#bbb;font-size:11px;">↗ abrir</span>':'')+'</div>'+
+              '<div class="task-today-desc" style="color:var(--blue2);">'+titulo+badge+'</div>'+
+              '<div class="task-today-meta">👁 '+vistas+' vistas</div>'+
             '</div></div>';
         }).join('');
+        // Agregar event listeners para abrir en nueva pestaña
+        div.querySelectorAll('.top-nota-row[data-url]').forEach(function(el){
+          el.addEventListener('click', function(){ window.open(this.dataset.url, '_blank'); });
+        });;
       }
     })
     .catch(()=>{
