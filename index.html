@@ -2086,6 +2086,10 @@ function renderTareasConReuniones(){
       +'<span style="font-size:14px;color:#ccc;flex-shrink:0;">›</span>'
       +'</div>';
   }).join('');
+  // Event listeners via delegation
+  div.querySelectorAll('[data-oid]').forEach(function(el){
+    el.addEventListener('click', function(){ editarOrden(this.dataset.oid); });
+  });
 }
 
 
@@ -2625,20 +2629,27 @@ function renderOrdenes(lista){
   document.getElementById('ordenCountBadge').textContent=lista.length+' orden'+(lista.length!==1?'es':'');
   const div=document.getElementById('ordenesList');
   if(!lista.length){ div.innerHTML='<div class="empty-state"><div class="ei">📋</div><p>No hay órdenes que coincidan.</p></div>'; return; }
-  div.innerHTML=lista.map(o=>{
-    const c=o.clienteId?clientes.find(x=>x.id===o.clienteId):null;
-    return `<div class="order-item" style="cursor:pointer" onclick="editarOrden('${o.id}')">
-      <div class="order-hdr">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="order-date">📅 ${fmtD(o.fecha)}${o.equipo?` · <span class="pill-equipo pill-${o.equipo.toLowerCase().replace(/[^a-z]/g,'')}" style="font-size:10px;padding:1px 6px">${o.equipo}</span>`:''}</div>
-          ${c?`<span class="order-client-tag">📌 ${c.nombre}</span>`:''}
-          ${(()=>{const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]);const nombres=ids.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?(e.nombre||'').split(' ').slice(0,2).join(' '):''}).filter(Boolean);return nombres.length?`<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 ${nombres.join(', ')}</span>`:''})()}
-        </div>
-        <span class="osel osel-${o.estado}" style="pointer-events:none">${o.estado==='pendiente'?'⏳ Pendiente':o.estado==='completada'?'✅ Completada':'❌ Cancelada'}</span>
-      </div>
-      <div class="order-desc">${o.desc}</div>
-      ${o.notas?`<div class="order-notas">${o.notas}</div>`:''}
-    </div>`;
+  div.innerHTML=lista.map(function(o){
+    const c = o.clienteId ? clientes.find(function(x){return x.id===o.clienteId;}) : null;
+    const asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
+    const fecha = o.fechaVencimiento||o.fechaCreacion||o.fecha||'';
+    const desc = o.titulo||o.descripcion||o.desc||'Sin descripción';
+    const estado = (o.estado||'pendiente');
+    const estadoLabel = estado==='completada'?'✅ Completada':estado==='cancelada'?'❌ Cancelada':'⏳ Pendiente';
+    const asigLabel = asig ? '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 '+(asig.nombre||'').split(' ')[0]+'</span>' : '';
+    const clienteLabel = c ? '<span class="order-client-tag">📌 '+c.nombre+'</span>' : '';
+    const prioLabel = o.prioridad==='urgente' ? '<span style="background:#fde8e8;color:#c62828;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;">⚡ URGENTE</span>' : '';
+    return '<div class="order-item" style="cursor:pointer" onclick="editarOrden(''+o.id+'')">'
+      +'<div class="order-hdr">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+          +'<div class="order-date">📅 '+fmtD(fecha)+'</div>'
+          +prioLabel+clienteLabel+asigLabel
+        +'</div>'
+        +'<span class="osel osel-'+estado+'" style="pointer-events:none;">'+estadoLabel+'</span>'
+      +'</div>'
+      +'<div class="order-desc">'+desc+'</div>'
+      +(o.notas?'<div class="order-notas">'+o.notas+'</div>':'')
+      +'</div>';
   }).join('');
 }
 
@@ -2677,29 +2688,23 @@ function abrirNuevaOrdenEmp(){
 }
 
 function editarOrden(id){
-  const o=ordenes.find(x=>x.id===id); if(!o) return;
+  const o=ordenes.find(function(x){return x.id===id;}); if(!o) return;
   editandoOrdenId=id;
   actualizarFiltroOrdenes();
   document.getElementById('mOrdenTitle').textContent='Editar orden';
-  // Compatibilidad: fecha puede estar en fecha, fechaCreacion o fechaVencimiento
   document.getElementById('soFecha').value = o.fechaVencimiento||o.fechaCreacion||o.fecha||'';
-  // Descripción puede estar en desc o descripcion
-  document.getElementById('soDesc').value = o.descripcion||o.desc||o.titulo||'';
-  document.getElementById('soNotas').value = o.notas||o.comentarios||'';
+  document.getElementById('soDesc').value = o.titulo||o.descripcion||o.desc||'';
+  document.getElementById('soNotas').value = o.notas||'';
   document.getElementById('soEstado').value = o.estado||'pendiente';
   document.getElementById('soCliente').value = o.clienteId||'';
-  // Prioridad
-  const selPrio = document.getElementById('soPrioridad');
-  if(selPrio) selPrio.value = o.prioridad||'normal';
-  // Título
-  const soTitulo = document.getElementById('soTitulo');
-  if(soTitulo) soTitulo.value = o.titulo||o.desc||'';
-  // Marcar checkboxes de colaboradores asignados
+  const selP = document.getElementById('soPrioridad');
+  if(selP) selP.value = o.prioridad||'normal';
+  const soTit = document.getElementById('soTitulo');
+  if(soTit) soTit.value = o.titulo||o.desc||'';
   const asignados = o.colaboradoresIds||(o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[]));
-  document.querySelectorAll('.colab-check').forEach(cb=>{
+  document.querySelectorAll('.colab-check').forEach(function(cb){
     cb.checked = asignados.includes(cb.value);
   });
-  // asignadoA
   const soAsig = document.getElementById('soAsignadoA');
   if(soAsig) soAsig.value = o.asignadoA||'';
   abrirModal('mOrden');
