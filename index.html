@@ -2058,150 +2058,38 @@ function renderTareasConReuniones(){
 
 function renderDashboard(){
   checkInactividad();
+  // Contadores de clientes
   document.getElementById('sActivos').textContent = clientes.filter(c=>c.estado==='activo').length;
   document.getElementById('sPausados').textContent = clientes.filter(c=>c.estado==='pausado').length;
-  const {inicio, fin} = proximaSemanaRango();
-  const tareasSemana = ordenes.filter(o=>o.fecha>=inicio && o.fecha<=fin).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  document.getElementById('sPendientes').textContent = tareasSemana.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
+
+  // Campo de fecha correcto — usar fechaVencimiento o fechaCreacion
+  const hoyStr = hoy();
+  const fin7 = new Date(); fin7.setDate(fin7.getDate()+7);
+  const fin7Str = fin7.toISOString().split('T')[0];
+
+  function getFecha(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
+
+  const tareasSemana = ordenes.filter(o=>{
+    const f = getFecha(o);
+    return f >= hoyStr && f <= fin7Str;
+  });
+
+  document.getElementById('sPendientes').textContent = tareasSemana.filter(o=>o.estado==='pendiente'||o.estado==='en-curso'||o.estado==='en_curso').length;
   document.getElementById('sCompletadas').textContent = tareasSemana.filter(o=>o.estado==='completada').length;
 
-  // Vencidas: tareas con fecha pasada y no completadas/canceladas
-  const hoyStr = hoy();
-  const vencidas = ordenes.filter(o=>o.fecha<hoyStr && o.estado!=='completada' && o.estado!=='cancelada');
+  // Vencidas: fecha pasada y no completadas/canceladas
+  const vencidas = ordenes.filter(o=>{
+    const f = getFecha(o);
+    return f && f < hoyStr && o.estado!=='completada' && o.estado!=='cancelada';
+  });
   document.getElementById('sVencidas').textContent = vencidas.length;
 
-  // ── BLOQUE 1: GA4 ──
+  // GA4 y tareas
   renderGA4Dashboard();
   renderTareasConReuniones();
-
-  // Tareas próxima semana
-  const divT = document.getElementById('dashTareas');
-  if(!tareasSemana.length){ divT.innerHTML='<div class="no-data">No hay tareas para los próximos 7 días</div>'; }
-  else {
-    divT.innerHTML = tareasSemana.map(o=>{
-      const c = o.clienteId ? clientes.find(x=>x.id===o.clienteId) : null;
-      const empIds = o.colaboradoresIds?.length ? o.colaboradoresIds : (o.colaboradorId?[o.colaboradorId]:[]);
-      const empNombres = empIds.map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean).join(', ');
-      const esHoy = o.fecha===inicio;
-      return `<div class="task-today-row">
-        <div class="task-client-dot ${c?'':'no-client'}"></div>
-        <div class="task-today-info">
-          <div class="task-today-desc">${o.desc}</div>
-          <div class="task-today-meta">${esHoy?'📅 Hoy':'📅 '+fmtD(o.fecha)}${empNombres?' · 👤 '+empNombres:''}</div>
-          ${c?`<div class="task-today-client">📌 ${c.nombre}</div>`:'<div class="task-today-meta">Sin cliente</div>'}
-          ${o.notas?`<div class="task-today-meta">${o.notas}</div>`:''}
-        </div>
-        <span class="task-status-pill pill-${o.estado==='completada'?'completada':'pendiente'}">${o.estado}</span>
-      </div>`;
-    }).join('');
-  }
-
-  // Alertas pauta
-  const alertas = clientes.map(c=>({c,a:alertaP(c)})).filter(x=>x.a).sort((a,b)=>a.a.d-b.a.d);
-  const divA = document.getElementById('dashAlertas');
-  if(!alertas.length){ divA.innerHTML='<div class="no-data">✅ Sin vencimientos próximos</div>'; }
-  else {
-    divA.innerHTML = alertas.map(({c,a})=>{
-      const lbl = a.tipo==='vencido'?`Venció hace ${Math.abs(a.d)} día${Math.abs(a.d)!==1?'s':''}`:`Vence en ${a.d} día${a.d!==1?'s':''}`;
-      return `<div class="alert-row" onclick="abrirDetalle('${c.id}')">
-        <div class="al-dot ${a.tipo==='vencido'?'dot-r':'dot-o'}"></div>
-        <div><div class="al-name">${c.nombre}</div><div class="al-info">${c.rubro}</div></div>
-        <div class="al-days ${a.tipo==='vencido'?'days-r':'days-o'}">${lbl}</div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── BLOQUE 3: Reuniones esta semana ──
-  const {inicio: reunInicio, fin: reunFin} = proximaSemanaRango();
-  const reunionesSemana = reuniones.filter(r => {
-    if(r.tipo==='semanal') return true;
-    return r.fecha >= reunInicio && r.fecha <= reunFin;
-  }).sort((a,b)=> String(a.tipo==='semanal'?a.diaSemana:a.fecha).localeCompare(String(b.tipo==='semanal'?b.diaSemana:b.fecha)));
-  const divRS = document.getElementById('dashReunionesSemana');
-  if(divRS){
-    if(!reunionesSemana.length){ divRS.innerHTML='<div class="no-data">Sin reuniones esta semana</div>'; }
-    else {
-      divRS.innerHTML = reunionesSemana.map(r=>{
-        const esHoy = r.tipo==='semanal' ? diaSemanaActual()===parseInt(r.diaSemana) : r.fecha===reunInicio;
-        const fechaLabel = r.tipo==='semanal' ? DIAS[parseInt(r.diaSemana)]+'s' : fmtD(r.fecha);
-        const statusClass = esHoy ? 'ms-hoy' : 'ms-proxima';
-        const statusLabel = esHoy ? 'HOY' : 'Próxima';
-        const total = r.participantes?.length||0;
-        const partNombres = (r.participantes||[]).map(id=>{const e=colaboradores.find(x=>x.id===id);return e?e.nombre.split(' ').slice(0,2).join(' '):''}).filter(Boolean).join(', ');
-        return `<div class="task-today-row" style="cursor:pointer" onclick="cambiarVista('vReuniones',document.querySelectorAll('.nav-tab')[4])">
-          <div class="task-client-dot" style="background:var(--blue)"></div>
-          <div class="task-today-info">
-            <div class="task-today-desc">📆 ${r.titulo}</div>
-            <div class="task-today-meta">${fechaLabel}${r.hora?' · '+r.hora+' hs':''}</div>
-            ${partNombres?`<div class="task-today-meta">👥 ${partNombres}</div>`:(total?`<div class="task-today-meta">👥 ${total} participantes</div>`:'')}
-          </div>
-          <span class="meeting-status ${statusClass}" style="font-size:10px;padding:3px 8px">${statusLabel}</span>
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // ── Reuniones legacy (dashReuniones) ──
-  const divR = document.getElementById('dashReuniones');
-  if(divR){
-    if(!reunionesSemana.length){ divR.innerHTML='<div class="no-data">Sin reuniones programadas</div>'; }
-    else {
-      divR.innerHTML = reunionesSemana.map(r=>{
-        const esHoy = r.tipo==='semanal' ? diaSemanaActual()===parseInt(r.diaSemana) : r.fecha===reunInicio;
-        const fechaLabel = r.tipo==='semanal' ? DIAS[parseInt(r.diaSemana)]+'s' : fmtD(r.fecha);
-        const statusClass = esHoy ? 'ms-hoy' : 'ms-proxima';
-        const statusLabel = esHoy ? 'HOY' : 'Próxima';
-        const total = r.participantes?.length||0;
-        const cumplidos = Object.values(r.cumplimiento||{}).filter(Boolean).length;
-        return `<div class="task-today-row" style="cursor:pointer" onclick="cambiarVista('vReuniones',document.querySelectorAll('.nav-tab')[4])">
-          <div class="task-client-dot" style="background:var(--blue)"></div>
-          <div class="task-today-info">
-            <div class="task-today-desc">📆 ${r.titulo}</div>
-            <div class="task-today-meta">${fechaLabel}${r.hora?' · '+r.hora+' hs':''}</div>
-            ${total?`<div class="task-today-meta">👥 ${total} participantes${cumplidos?' · ✓ '+cumplidos+' confirmaron':''}</div>`:''}
-          </div>
-          <span class="meeting-status ${statusClass}" style="font-size:10px;padding:3px 8px">${statusLabel}</span>
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // Gráfico rubros
-  const rubros={};
-  clientes.forEach(c=>{ rubros[c.rubro]=(rubros[c.rubro]||0)+1; });
-  const sr=Object.entries(rubros).sort((a,b)=>b[1]-a[1]);
-  const maxR=sr.length?sr[0][1]:1;
-  const colors=['#2e6da4','#1a7a4a','#b8860b','#c8392b','#8e44ad','#16a085','#d35400'];
-  const chartEl=document.getElementById('dashChart');
-  chartEl.innerHTML = sr.length ? sr.map(([r,n],i)=>{
-    const pct=Math.round((n/maxR)*100);
-    return `<div class="chart-row"><div class="chart-label" title="${r}">${r}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%;background:${colors[i%colors.length]}">${pct>20?`<span>${n}</span>`:''}</div></div><div class="chart-n">${n}</div></div>`;
-  }).join('') : '<div class="no-data">Sin datos</div>';
-
-  // Tareas por cliente
-  const tpc={};
-  ordenes.forEach(o=>{ if(o.clienteId){ tpc[o.clienteId]=(tpc[o.clienteId]||0)+1; } });
-  const stpc=Object.entries(tpc).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const maxT=stpc.length?stpc[0][1]:1;
-  const tpcEl=document.getElementById('dashTareasPorCliente');
-  tpcEl.innerHTML = stpc.length ? stpc.map(([cid,n],i)=>{
-    const cl=clientes.find(x=>x.id===cid);
-    const nom=cl?cl.nombre:'(eliminado)';
-    const pct=Math.round((n/maxT)*100);
-    return `<div class="chart-row"><div class="chart-label" title="${nom}">${nom}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%;background:${colors[i%colors.length]}">${pct>20?`<span>${n}</span>`:''}</div></div><div class="chart-n">${n}</div></div>`;
-  }).join('') : '<div class="no-data">Sin tareas vinculadas a clientes</div>';
-
-  // ── BLOQUE 4: Métricas de redes sociales ──
-  renderRedesSociales();
-
-  // ── BLOQUE 5: Estado de Claw ──
-  renderEstadoClaw();
-
-  // ── BLOQUE 7: Estado del Equipo ──
-  renderEstadoEquipo();
 }
 
-// ── Helper: filtrar órdenes desde stat-cards del dashboard ──
+
 function dashFiltrarOrdenes(tipo){
   cambiarVista('vOrdenes',document.querySelectorAll('.nav-tab')[2]);
   setTimeout(()=>{
