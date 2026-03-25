@@ -663,7 +663,7 @@ header{
 <div class="app" id="appSupervisor">
   <header style="z-index:100;position:relative;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
-    <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
+    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Ir al inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
       <span class="user-badge">👤 <span id="svUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
@@ -950,7 +950,7 @@ header{
 <div class="app" id="appcolaborador">
   <header style="z-index:100;position:relative;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
-    <div class="logo"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
+    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Ir al inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
       <label for="inputFotoPerfil" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;display:block;" title="Toca para cambiar tu foto">
         <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
@@ -1709,6 +1709,15 @@ function etiquetaJerarquia(j){
     'externo': '🔗 Externo'
   };
   return mapa[j] || '👤 Colaborador';
+}
+
+function irAlHome(){
+  if(rolActual === 'supervisor'){
+    cambiarVistaBN('vDash','bn-dash');
+  } else {
+    cambiarVistaEmpBN('vEmpKanban','bne-tareas');
+  }
+  window.scrollTo(0,0);
 }
 
 function logout(){
