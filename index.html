@@ -2589,22 +2589,51 @@ function actualizarFiltroOrdenes(){
 }
 
 function filtrarOrdenes(){
-  const fFecha=document.getElementById('filtroOrdenFecha').value;
-  const fEst=document.getElementById('filtroOrdenEstado').value;
-  const fCli=document.getElementById('filtroOrdenCliente').value;
-  const fEquipo=document.getElementById('filtroOrdenEquipo')?.value||'';
-  const h=hoy();
-  const inicioSemana=new Date(); inicioSemana.setDate(inicioSemana.getDate()-inicioSemana.getDay());
-  let lista=ordenes.filter(o=>{
-    if(fFecha==='hoy' && o.fecha!==h) return false;
-    if(fFecha==='semana' && new Date(o.fecha+'T00:00:00')<inicioSemana) return false;
-    if(fEst && o.estado!==fEst) return false;
+  const fFecha = document.getElementById('filtroOrdenFecha').value;
+  const fEst = document.getElementById('filtroOrdenEstado').value;
+  const fCli = document.getElementById('filtroOrdenCliente').value;
+  const fEquipo = document.getElementById('filtroOrdenEquipo')?.value||'';
+  const h = hoy();
+  const inicioSemana = lunesDeSemana ? lunesDeSemana(h) : h.substring(0,8)+'01';
+
+  // Helper: obtener la fecha de una orden de cualquier campo posible
+  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+
+  // Helper: normalizar estado (Claw puede mandar 'pending', 'en_curso', etc.)
+  function normEstado(e){
+    if(!e) return 'pendiente';
+    e = e.toLowerCase().replace('-','_');
+    if(e==='pending') return 'pendiente';
+    if(e==='en_curso'||e==='en-curso'||e==='in_progress') return 'en-curso';
+    if(e==='completada'||e==='completed'||e==='done') return 'completada';
+    return e;
+  }
+
+  let lista = ordenes.filter(function(o){
+    const f = getFecha(o);
+    const est = normEstado(o.estado);
+    // Filtro fecha
+    if(fFecha==='hoy' && f!==h) return false;
+    if(fFecha==='semana' && f && f < inicioSemana) return false;
+    // Filtro estado
+    if(fEst && normEstado(fEst)!==est) return false;
+    // Filtro cliente
     if(fCli && o.clienteId!==fCli) return false;
-    if(fEquipo && o.equipo!==fEquipo) return false;
+    // Filtro equipo
+    if(fEquipo){
+      const asig = colaboradores.find(function(c){return c.id===o.asignadoA;});
+      if(!asig || asig.equipo!==fEquipo) return false;
+    }
     return true;
-  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  }).sort(function(a,b){
+    const fa = getFecha(a)||'';
+    const fb = getFecha(b)||'';
+    return fb.localeCompare(fa);
+  });
+
   renderOrdenes(lista);
 }
+
 
 function renderOrdenes(lista){
   document.getElementById('ordenCountBadge').textContent=lista.length+' orden'+(lista.length!==1?'es':'');
