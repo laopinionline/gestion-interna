@@ -1831,7 +1831,7 @@ function abrirOrden(ordenId){
     html += '<button id="btnCheckOrdenDetalle" data-id="'+o.id+'" style="flex:1;padding:12px;background:'+(o.estado==='completada'?'#e8f5ee':'var(--blue)')+';color:'+(o.estado==='completada'?'#2e7d32':'#fff')+';border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">'+(o.estado==='completada'?'↩ Reabrir':'✓ Completar')+'</button>';
   }
   // Botón editar — abre vista de órdenes con esta orden
-  html += '<button onclick="cerrarModal('mOrdenDetalle');cambiarVistaBN('vOrdenes','bn-ordenes')" style="padding:12px 16px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;font-size:13px;cursor:pointer;">✏️ Editar</button>';
+  html += '<button id="btnEditarOrdenDetalle" style="padding:12px 16px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;font-size:13px;cursor:pointer;">✏️ Editar</button>';
   html += '</div>';
   html += '</div>';
   document.getElementById('mOrdenDetalleBody').innerHTML = html;
@@ -1839,6 +1839,11 @@ function abrirOrden(ordenId){
   if(btn) btn.addEventListener('click', function(){
     marcarOrdenCompletada(this.dataset.id);
     cerrarModal('mOrdenDetalle');
+  });
+  var btnEdit = document.getElementById('btnEditarOrdenDetalle');
+  if(btnEdit) btnEdit.addEventListener('click', function(){
+    cerrarModal('mOrdenDetalle');
+    cambiarVistaBN('vOrdenes','bn-ordenes');
   });
   abrirModal('mOrdenDetalle');
 }
