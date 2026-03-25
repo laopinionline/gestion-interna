@@ -3902,6 +3902,23 @@ function aplicarVisibilidad(){
     <div class="modal-body" id="mOrdenDetalleBody"></div>
   </div>
 </div>
+<!-- MODAL CHECK COLABORADOR -->
+<div class="modal-overlay" id="modalCheckColaborador">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="mchkNombre">Check de actividades</div>
+      <button class="modal-close" onclick="cerrarCheckColaborador()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="mchkBody"></div>
+      <input type="hidden" id="mchkEmpId">
+      <div style="margin-top:16px;display:flex;gap:10px;">
+        <button onclick="guardarCheckColaborador()" style="flex:1;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">✓ Guardar check</button>
+        <button onclick="cerrarCheckColaborador()" style="padding:13px 16px;background:var(--paper2);border:none;border-radius:10px;font-size:14px;cursor:pointer;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
 
