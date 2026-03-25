@@ -2639,8 +2639,44 @@ function renderOrdenes(lista){
     const asigLabel = asig ? '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">👤 '+(asig.nombre||'').split(' ')[0]+'</span>' : '';
     const clienteLabel = c ? '<span class="order-client-tag">📌 '+c.nombre+'</span>' : '';
     const prioLabel = o.prioridad==='urgente' ? '<span style="background:#fde8e8;color:#c62828;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;">⚡ URGENTE</span>' : '';
-    return '<div class="order-item" style="cursor:pointer" data-oid="'+o.id+'">'=',inicioSem).where('estado','==','completada').get();
-    datos.notas = snapOrd.size.toString();
+    return '<div class="order-item" style="cursor:pointer" data-oid="'+o.id+'">'
+      +'<div class="order-hdr">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+          +'<div class="order-date">📅 '+fmtD(fecha)+'</div>'
+          +prioLabel+clienteLabel+asigLabel
+        +'</div>'
+        +'<span class="osel osel-'+estado+'" style="pointer-events:none;">'+estadoLabel+'</span>'
+      +'</div>'
+      +'<div class="order-desc">'+desc+'</div>'
+      +(o.notas?'<div class="order-notas">'+o.notas+'</div>':'')
+      +'</div>';
+  }).join('');
+  div.querySelectorAll('[data-oid]').forEach(function(el){
+    el.addEventListener('click', function(){ editarOrden(this.dataset.oid); });
+  });
+}
+
+async function cargarMetricasGrupo(){
+  let datos = { ga4:'—', redes:null, notas:'—' };
+  renderTableroMetricas('tableroMetricasGrupoSup', datos);
+  renderTableroMetricas('tableroMetricasGrupoEmp', datos);
+  try {
+    const snap = await db.collection('metricas_redes').get();
+    if(!snap.empty){
+      var dict = {};
+      snap.forEach(function(doc){
+        var d = doc.data();
+        var key2 = (d.marca||'').toLowerCase()+'-'+(d.plataforma||'').toLowerCase();
+        if(d.seguidores) dict[key2] = d.seguidores;
+      });
+      datos.redes = dict;
+    }
+  } catch(e){}
+  try {
+    var docGA4 = await db.collection('claw_ga4').doc('ultimo').get();
+    if(docGA4.exists && docGA4.data().lecturasSemanales){
+      datos.ga4 = Number(docGA4.data().lecturasSemanales).toLocaleString('es-AR');
+    }
   } catch(e){}
   renderTableroMetricas('tableroMetricasGrupoSup', datos);
   renderTableroMetricas('tableroMetricasGrupoEmp', datos);
