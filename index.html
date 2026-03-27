@@ -2801,11 +2801,11 @@ function verTareasColaborador(id){
     ? `<img src="${e.fotoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`
     : `<div class="avatar-iniciales lg" style="width:52px;height:52px;">${iniciales}</div>`;
   const renderOrdenes = (lista) => lista.length
-    ? lista.map(o=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);">
-        <div style="font-weight:600;font-size:13px">${o.titulo}</div>
-        <div style="font-size:11px;color:#999;margin-top:3px">${o.descripcion?.substring(0,80)||''}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px">📅 ${o.fechaCreacion||''} · ${o.estado}</div>
-      </div>`).join('')
+    ? lista.map(o=>'<div style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;" onclick="cerrarModal(\'mcolaborador\');editarOrden(\''+o.id+'\')">'+
+        '<div style="font-weight:600;font-size:13px">'+(o.titulo||o.descripcion||'Sin título')+' <span style="color:#aaa;">›</span></div>'+
+        '<div style="font-size:11px;color:#999;margin-top:3px">'+((o.descripcion||'').substring(0,80))+'</div>'+
+        '<div style="font-size:11px;color:#aaa;margin-top:2px">📅 '+(o.fechaVencimiento||o.fechaCreacion||'')+' · <span style="text-transform:capitalize">'+(o.estado||'pendiente')+'</span></div>'+
+      '</div>').join('')
     : '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin tareas</div>';
   document.getElementById('mcolaboradorTitle').textContent = e.nombre;
   // Ocultar form, mostrar tareas
