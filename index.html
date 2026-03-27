@@ -663,7 +663,7 @@ header{
 <div class="app" id="appSupervisor">
   <header style="z-index:100;position:relative;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
-    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Ir al inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
+    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
       <span class="user-badge">👤 <span id="svUserName">—</span></span>
       <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
@@ -707,8 +707,8 @@ header{
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
       <div class="dash-grid">
-        <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes');setTimeout(function(){var s=document.getElementById('filtroClienteEstado');if(s)s.value='activo';filtrarClientes();},200)" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
-        <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes');setTimeout(function(){var s=document.getElementById('filtroClienteEstado');if(s)s.value='pausado';filtrarClientes();},200)" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
+        <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
+        <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
         <div class="stat-card red" style="cursor:pointer" onclick="dashFiltrarOrdenes('pendiente')"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
         <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
         <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
@@ -950,7 +950,7 @@ header{
 <div class="app" id="appcolaborador">
   <header style="z-index:100;position:relative;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
-    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Ir al inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
+    <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="header-right">
       <label for="inputFotoPerfil" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;display:block;" title="Toca para cambiar tu foto">
         <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
@@ -1410,6 +1410,7 @@ async function login(){
   usuarioLogueado = usuario;
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
+  try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
   // Persistir sesión en localStorage
   try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
 
@@ -1711,16 +1712,10 @@ function etiquetaJerarquia(j){
   return mapa[j] || '👤 Colaborador';
 }
 
-function irAlHome(){
-  if(rolActual === 'supervisor'){
-    cambiarVistaBN('vDash','bn-dash');
-  } else {
-    cambiarVistaEmpBN('vEmpKanban','bne-tareas');
-  }
-  window.scrollTo(0,0);
-}
+function irAlHome(){ if(rolActual==="supervisor") cambiarVistaBN("vDash","bn-dash"); else cambiarVistaEmpBN("vEmpKanban","bne-tareas"); window.scrollTo(0,0); }
 
 function logout(){
+  try { localStorage.removeItem('gestion_session'); } catch(e){}
   try { localStorage.removeItem('gestion_session'); } catch(e){}
   rolActual=null; usuarioLogueado=null; empActualId=null; empActualNombre='';
   document.querySelectorAll('.app').forEach(a=>a.classList.remove('active'));
@@ -1825,34 +1820,24 @@ function abrirOrden(ordenId){
   var c = clientes.find(function(x){return x.id===o.clienteId;});
   var asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
   var html = '<div>';
-  html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;line-height:1.3;">'+(o.titulo||'Sin título')+'</div>';
-  html += '<div style="display:flex;flex-direction:column;gap:8px;font-size:14px;">';
-  if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;width:fit-content;">⚡ URGENTE</div>';
-  html += '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;"><span style="color:#999;">Asignado a</span><b>'+(asig?asig.nombre:'Sin asignar')+'</b></div>';
-  html += '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;"><span style="color:#999;">Cliente</span><b>'+(c?c.nombre:'Sin cliente')+'</b></div>';
-  html += '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;"><span style="color:#999;">Estado</span><b style="text-transform:capitalize;">'+(o.estado||'pendiente')+'</b></div>';
-  html += '<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;"><span style="color:#999;">Vence</span><b>'+(o.fechaVencimiento?fmtD(o.fechaVencimiento):o.fechaCreacion?fmtD(o.fechaCreacion):'—')+'</b></div>';
-  if(o.descripcion) html += '<div style="padding:10px;background:var(--paper2);border-radius:8px;font-size:13px;color:#555;margin-top:4px;">'+o.descripcion+'</div>';
+  html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||'Sin título')+'</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">';
+  if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
+  html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Cliente</span><b>'+(c?c.nombre:'—')+'</b></div>';
+  html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Asignado a</span><b>'+(asig?asig.nombre.split(' ')[0]:'—')+'</b></div>';
+  html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Estado</span><b style="text-transform:capitalize;">'+(o.estado||'pendiente')+'</b></div>';
+  html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Vence</span><b>'+(o.fechaVencimiento?fmtD(o.fechaVencimiento):'—')+'</b></div>';
+  if(o.descripcion) html += '<div style="padding:10px;background:var(--paper2);border-radius:8px;font-size:13px;color:#666;">'+o.descripcion+'</div>';
   html += '</div>';
-  // Botones de acción
-  html += '<div style="display:flex;gap:8px;margin-top:20px;">';
   if(puedeCheckOrden(o)){
-    html += '<button id="btnCheckOrdenDetalle" data-id="'+o.id+'" style="flex:1;padding:12px;background:'+(o.estado==='completada'?'#e8f5ee':'var(--blue)')+';color:'+(o.estado==='completada'?'#2e7d32':'#fff')+';border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">'+(o.estado==='completada'?'↩ Reabrir':'✓ Completar')+'</button>';
+    html += '<div style="margin-top:20px;"><button id="btnCheckOrdenDetalle" data-id="'+o.id+'" data-estado="'+o.estado+'" style="width:100%;padding:13px;background:'+(o.estado==='completada'?'#e8f5ee':'var(--blue)')+';color:'+(o.estado==='completada'?'#2e7d32':'#fff')+';border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">'+(o.estado==='completada'?'↩ Reabrir':'✓ Marcar completada')+'</button></div>';
   }
-  // Botón editar — abre vista de órdenes con esta orden
-  html += '<button id="btnEditarOrdenDetalle" style="padding:12px 16px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;font-size:13px;cursor:pointer;">✏️ Editar</button>';
-  html += '</div>';
   html += '</div>';
   document.getElementById('mOrdenDetalleBody').innerHTML = html;
   var btn = document.getElementById('btnCheckOrdenDetalle');
   if(btn) btn.addEventListener('click', function(){
     marcarOrdenCompletada(this.dataset.id);
     cerrarModal('mOrdenDetalle');
-  });
-  var btnEdit = document.getElementById('btnEditarOrdenDetalle');
-  if(btnEdit) btnEdit.addEventListener('click', function(){
-    cerrarModal('mOrdenDetalle');
-    cambiarVistaBN('vOrdenes','bn-ordenes');
   });
   abrirModal('mOrdenDetalle');
 }
@@ -2048,51 +2033,36 @@ function renderTareasConReuniones(){
   const finStr = fin.toISOString().split('T')[0];
   const div = document.getElementById('dashTareas');
   if(!div) return;
-  var items = [];
-  ordenes.filter(function(o){
+  let items = [];
+  // Órdenes — guardar id para poder clickear
+  ordenes.filter(o=>{
     if(o.estado==='completada'||o.estado==='cancelada') return false;
-    var f = o.fechaVencimiento||o.fechaCreacion||o.fecha||'';
-    return !f || f >= hoyStr;
-  }).forEach(function(o){
-    var asig = colaboradores.find(function(c){return c.id===o.asignadoA;});
-    var cli = clientes.find(function(c){return c.id===o.clienteId;});
-    items.push({
-      tipo:'orden', id:o.id,
-      fecha: o.fechaVencimiento||o.fechaCreacion||o.fecha||hoyStr,
-      titulo: o.titulo||o.descripcion||'Sin título',
-      asignado: asig ? asig.nombre.split(' ')[0] : '—',
-      cliente: cli ? cli.nombre : '',
-      color:'var(--blue2)'
-    });
-  });
-  reuniones.filter(function(r){return r.fecha>=hoyStr&&r.fecha<=finStr;})
-    .forEach(function(r){
-      items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',asignado:'',cliente:'',color:'#6c757d'});
-    });
-  items.sort(function(a,b){return a.fecha.localeCompare(b.fecha);});
-  if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas para los próximos 7 días</div>'; return; }
-  div.innerHTML = items.map(function(i){
-    var onclick = i.tipo==='orden' ? "abrirOrden('"+i.id+"')" : "cambiarVistaBN('vReuniones','bn-reuniones')";
-    var fechaLabel = i.fecha===hoyStr ? '📅 Hoy' : '📅 '+fmtD(i.fecha);
-    var meta = fechaLabel;
-    if(i.asignado && i.asignado!=='—') meta += ' · 👤 '+i.asignado;
-    if(i.cliente) meta += ' · 📌 '+i.cliente;
-    return '<div class="task-today-row" onclick="'+onclick+'" style="cursor:pointer;">'
-      +'<div style="width:8px;height:8px;border-radius:50%;background:'+i.color+';flex-shrink:0;margin-top:5px;"></div>'
-      +'<div class="task-today-info">'
-        +'<div class="task-today-desc">'+(i.tipo==='reunion'?'🗓 ':'')+'<strong>'+i.titulo+'</strong></div>'
-        +'<div class="task-today-meta">'+meta+'</div>'
-      +'</div>'
-      +'<span style="font-size:14px;color:#ccc;flex-shrink:0;">›</span>'
-      +'</div>';
+    var f = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
+    if(!f) return true; // sin fecha: mostrar siempre
+    return f >= hoyStr;
+  })
+    .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
+  // Reuniones
+  reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
+    .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
+  items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
+  div.innerHTML = items.map(i=>{
+    const onclick = i.tipo==='orden'
+      ? `abrirOrden('${i.id}')`
+      : `cambiarVista('vReuniones',document.querySelector('.nav-tab[onclick*=vReuniones]'))`;
+    const fechaLabel = i.fecha===hoyStr ? '📅 Hoy' : '📅 '+fmtD(i.fecha);
+    return '<div class="task-today-row" onclick="'+onclick+'" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">'+
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+i.color+';flex-shrink:0;margin-top:5px"></div>'+
+      '<div class="task-today-info">'+
+        '<div class="task-today-desc">'+(i.tipo==='reunion'?'🗓 ':'')+'<strong>'+i.titulo+'</strong></div>'+
+        '<div class="task-today-meta">'+fechaLabel+(i.hora?' · '+i.hora:'')+'</div>'+
+        (i.desc?'<div class="task-today-meta">'+i.desc+'</div>':'')+
+      '</div>'+
+      '<span style="font-size:11px;color:#bbb;flex-shrink:0;">'+( i.tipo==='orden'?'→':'')+'</span>'+
+    '</div>';
   }).join('');
-  // Event listeners via delegation
-  div.querySelectorAll('[data-oid]').forEach(function(el){
-    el.addEventListener('click', function(){ editarOrden(this.dataset.oid); });
-  });
 }
-
-
 
 
 function renderDashboard(){
@@ -2157,25 +2127,13 @@ function renderGA4Dashboard(){
       const div = document.getElementById('dashTop5Notas');
       const listaNotas = data.topNotas || data.top5 || [];
       if(listaNotas.length){
-        div.innerHTML = listaNotas.map(function(n,i){
-          var url = n.url||n.pagePath||'';
-          var fullUrl = url ? (url.startsWith('http') ? url : 'https://www.laopinionline.ar'+url) : '';
-          var titulo = n.titulo||n.title||n.pagePath||'Sin título';
-          var vistas = Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR');
-          var rowStyle = fullUrl ? 'cursor:pointer;' : '';
-          var dataUrl = fullUrl ? ' data-url="'+fullUrl+'"' : '';
-          var badge = fullUrl ? '<span style="color:#bbb;font-size:11px;"> ↗</span>' : '';
-          return '<div class="top-nota-row" style="'+rowStyle+'"'+dataUrl+'>'+
-            '<div style="font-weight:700;color:var(--blue2);min-width:20px;font-size:15px;">'+(i+1)+'</div>'+
-            '<div class="task-today-info">'+
-              '<div class="task-today-desc" style="color:var(--blue2);">'+titulo+badge+'</div>'+
-              '<div class="task-today-meta">👁 '+vistas+' vistas</div>'+
-            '</div></div>';
-        }).join('');
-        // Agregar event listeners para abrir en nueva pestaña
-        div.querySelectorAll('.top-nota-row[data-url]').forEach(function(el){
-          el.addEventListener('click', function(){ window.open(this.dataset.url, '_blank'); });
-        });;
+        div.innerHTML = listaNotas.map((n,i)=>`<div class="task-today-row">
+          <div style="font-weight:700;color:var(--blue2);min-width:20px">${i+1}</div>
+          <div class="task-today-info">
+            <div class="task-today-desc">${n.titulo||n.title||'Sin título'}</div>
+            <div class="task-today-meta">👁 ${Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
+          </div>
+        </div>`).join('');
       }
     })
     .catch(()=>{
@@ -2587,7 +2545,7 @@ function actualizarFiltroOrdenes(){
   if(wrapE) wrapE.innerHTML = colaboradores.map(e=>`
     <label class="colab-check-wrap" data-emp-id="${e.id}" style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);" title="${e.equipo||''}">
       <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> 
-      <span>${(e.nombre||'Sin nombre').split(' ').slice(0,2).join(' ')}</span>
+      <span>${(e.nombre||'').split(' ').slice(0,2).join(' ')}</span>
       ${e.equipo?`<span style="font-size:9px;color:#aaa">(${e.equipo})</span>`:''}
     </label>`).join('');
 }
@@ -2599,41 +2557,25 @@ function filtrarOrdenes(){
   var fEquipo = document.getElementById('filtroOrdenEquipo') ? document.getElementById('filtroOrdenEquipo').value : '';
   var h = hoy();
   var inicioSemana = typeof lunesDeSemana === 'function' ? lunesDeSemana(h) : h;
-
   function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
-
   var lista = ordenes.filter(function(o){
     var f = getFecha(o);
-    var est = (o.estado||'pendiente').toLowerCase().replace(/-/g,'_').replace(/\s/g,'_');
+    var est = (o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
     if(fFecha==='hoy' && f && f!==h) return false;
     if(fFecha==='semana' && f && f < inicioSemana) return false;
-    if(fEst){
-      var fEstNorm = fEst.toLowerCase().replace(/-/g,'_');
-      if(fEstNorm !== est) return false;
-    }
+    if(fEst){ var fEstNorm = fEst.toLowerCase().replace(/-/g,'_'); if(fEstNorm !== est) return false; }
     if(fCli && o.clienteId!==fCli) return false;
-    if(fEquipo){
-      var asig = colaboradores.find(function(c){return c.id===o.asignadoA;});
-      if(!asig || asig.equipo!==fEquipo) return false;
-    }
+    if(fEquipo){ var asig=colaboradores.find(function(c){return c.id===o.asignadoA;}); if(!asig||asig.equipo!==fEquipo) return false; }
     return true;
-  }).sort(function(a,b){
-    return (getFecha(b)||'').localeCompare(getFecha(a)||'');
-  });
-
+  }).sort(function(a,b){ return (getFecha(b)||'').localeCompare(getFecha(a)||''); });
   renderOrdenes(lista);
 }
-
-
 function renderOrdenes(lista){
   var badge = document.getElementById('ordenCountBadge');
   if(badge) badge.textContent = lista.length + ' orden' + (lista.length!==1?'es':'');
   var div = document.getElementById('ordenesList');
   if(!div) return;
-  if(!lista.length){
-    div.innerHTML = '<div class="empty-state"><div class="ei">📋</div><p>No hay ordenes que coincidan.</p></div>';
-    return;
-  }
+  if(!lista.length){ div.innerHTML = '<div class="empty-state"><div class="ei">📋</div><p>No hay ordenes que coincidan.</p></div>'; return; }
   var html = '';
   lista.forEach(function(o){
     var c = o.clienteId ? clientes.find(function(x){return x.id===o.clienteId;}) : null;
@@ -2642,15 +2584,13 @@ function renderOrdenes(lista){
     var desc = o.titulo || o.descripcion || o.desc || 'Sin descripcion';
     var estado = o.estado || 'pendiente';
     var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : 'Pendiente';
-    var clienteLabel = c ? '<span class="order-client-tag">' + c.nombre + '</span>' : '';
-    var asigLabel = asig ? '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">' + (asig.nombre||'').split(' ')[0] + '</span>' : '';
-    var urgente = o.prioridad==='urgente' ? 'URGENTE' : '';
     html += '<div class="order-item" data-oid="' + o.id + '" style="cursor:pointer;">';
     html += '<div class="order-hdr">';
     html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
     if(fecha) html += '<div class="order-date">' + fmtD(fecha) + '</div>';
-    if(urgente) html += '<span style="background:#fde8e8;color:#c62828;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;">URGENTE</span>';
-    html += clienteLabel + asigLabel;
+    if(o.prioridad==='urgente') html += '<span style="background:#fde8e8;color:#c62828;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;">URGENTE</span>';
+    if(c) html += '<span class="order-client-tag">' + c.nombre + '</span>';
+    if(asig) html += '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">' + (asig.nombre||'').split(' ')[0] + '</span>';
     html += '</div>';
     html += '<span class="osel osel-' + estado + '">' + estadoLabel + '</span>';
     html += '</div>';
@@ -2662,33 +2602,1001 @@ function renderOrdenes(lista){
     el.addEventListener('click', function(){ editarOrden(this.getAttribute('data-oid')); });
   });
 }
+function abrirNuevaOrden(){
+  editandoOrdenId=null;
+  document.getElementById('mOrdenTitle').textContent='Nueva orden de trabajo';
+  document.getElementById('soFecha').value=hoy();
+  document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
+  document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
+  document.getElementById('btnEliminarOrden').style.display='none';
+  // Limpiar campos nuevos
+  if(document.getElementById('soEquipo')) document.getElementById('soEquipo').value='';
+  if(document.getElementById('soTipo')) document.getElementById('soTipo').innerHTML='<option value="">— Seleccionar tipo —</option>';
+  const secComent = document.getElementById('seccionComentarios');
+  if(secComent) secComent.style.display = 'none';
+  // Limpiar checkboxes colaboradores
+  document.querySelectorAll('.colab-check').forEach(c=>c.checked=false);
+  document.querySelectorAll('.colab-check-wrap').forEach(w=>w.style.display='');
+  abrirModal('mOrden');
+}
+
+
+function abrirNuevaOrdenEmp(){
+  // Abre el modal de nueva orden igual que supervisor, pero preselecciona al colaborador logueado
+  editandoOrdenId=null;
+  document.getElementById('mOrdenTitle').textContent='Nueva tarea';
+  document.getElementById('soFecha').value=hoy();
+  document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
+  document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
+  document.getElementById('btnEliminarOrden').style.display='none';
+  // Pre-marcar el colaborador logueado
+  document.querySelectorAll('.colab-check').forEach(c=>{
+    c.checked = empActualId ? c.value === empActualId : false;
+  });
+  abrirModal('mOrden');
+}
+
+function editarOrden(id){
+  const o=ordenes.find(function(x){return x.id===id;}); if(!o) return;
+  editandoOrdenId=id;
+  actualizarFiltroOrdenes();
+  document.getElementById('mOrdenTitle').textContent='Editar orden';
+  document.getElementById('soFecha').value = o.fechaVencimiento||o.fechaCreacion||o.fecha||'';
+  document.getElementById('soDesc').value = o.titulo||o.descripcion||o.desc||'';
+  document.getElementById('soNotas').value = o.notas||'';
+  document.getElementById('soEstado').value = o.estado||'pendiente';
+  document.getElementById('soCliente').value = o.clienteId||'';
+  const asignados = o.colaboradoresIds||(o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[]));
+  document.querySelectorAll('.colab-check').forEach(function(cb){ cb.checked = asignados.includes(cb.value); });
+  abrirModal('mOrden');
+}
+function guardarOrdenStandalone(){
+  const fecha=document.getElementById('soFecha').value;
+  const desc=document.getElementById('soDesc').value.trim();
+  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
+  const colaboradoresIds = [...document.querySelectorAll('.colab-check:checked')].map(c=>c.value);
+  // Validar jerarquía
+  if(!validarJerarquiaOrden(colaboradoresIds)) return;
+  const equipo = document.getElementById('soEquipo')?.value || '';
+  const tipo = document.getElementById('soTipo')?.value || '';
+  const datos={
+    fecha, desc,
+    equipo, tipo,
+    notas:document.getElementById('soNotas').value.trim(),
+    estado:document.getElementById('soEstado').value,
+    clienteId:document.getElementById('soCliente').value||null,
+    colaboradoresIds,
+    creadoPor: empActualId || 'emp01',
+    creadoPorNombre: empActualNombre || 'Supervisor',
+  };
+  if(editandoOrdenId){
+    const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
+    // Preservar comentarios al editar
+    datos.comentarios = ordenes[i].comentarios || [];
+    ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).set(ordenes[i],{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
+  } else {
+    datos.comentarios = [];
+    const nuevoId=uid();
+    ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
+  }
+  guardarYSincronizar('d_ordenes', ordenes); filtrarOrdenes(); cerrarModal('mOrden');
+}
+
+function eliminarOrden(){
+  if(!confirm('¿Eliminar esta orden?'))return;
+  ordenes=ordenes.filter(x=>x.id!==editandoOrdenId);
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().catch(e=>console.error('Firestore ordenes:',e));}
+  filtrarOrdenes(); cerrarModal('mOrden'); toast('Orden eliminada');
+}
+
+// ══ VISTA COLABORADOR ══
+function rendercolaborador(){
+  // Intentar detectar qué colaborador es por PIN (futuro: login individual)
+  // Por ahora muestra todas las tareas asignadas a cualquier colaborador
+  empActualId = null; // null = muestra todas (rol genérico)
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoyDate=new Date();
+  document.getElementById('empFecha').textContent=`${dias[hoyDate.getDay()]}, ${hoyDate.getDate()} de ${meses[hoyDate.getMonth()]} de ${hoyDate.getFullYear()}`;
+
+  const {inicio: empInicio, fin: empFin} = proximaSemanaRango();
+  const tareasHoy = ordenes.filter(o=>{
+    if(o.fecha < empInicio || o.fecha > empFin) return false;
+    const ids = o.colaboradoresIds?.length ? o.colaboradoresIds : (o.colaboradorId?[o.colaboradorId]:[]);
+    return !empActualId || ids.includes(empActualId);
+  });
+  document.getElementById('empPend').textContent=tareasHoy.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
+  document.getElementById('empComp').textContent=tareasHoy.filter(o=>o.estado==='completada').length;
+  document.getElementById('empTotal').textContent=tareasHoy.length;
+
+  renderKanban();
+  renderEmpReuniones();
+  renderMisRedes();
+
+}
+
+async function renderMisRedes(){
+  const widget = document.getElementById('misRedesWidget');
+  const content = document.getElementById('misRedesContent');
+  if(!widget || !content) return;
+
+  const cfg = REDES_POR_COLABORADOR[empActualId];
+  if(!cfg){ widget.style.display='none'; return; }
+
+  widget.style.display='block';
+  content.innerHTML='<div class="no-data">Cargando...</div>';
+
+  try {
+    let redes;
+    if(cfg === 'all'){
+      const snap = await db.collection('metricas_redes').get();
+      redes = snap.docs.map(d=>({id:d.id,...d.data()}));
+    } else {
+      const promises = cfg.map(r=>db.collection('metricas_redes').where('marca','==',r.marca).where('plataforma','==',r.plataforma).get());
+      const snaps = await Promise.all(promises);
+      redes = cfg.map((r,i)=>{
+        const docs = snaps[i].docs;
+        return docs.length ? {nombre:r.nombre,...docs[0].data()} : {nombre:r.nombre, plataforma:r.plataforma, sinDatos:true};
+      });
+    }
+
+    if(!redes.length){ content.innerHTML='<div class="no-data">No hay redes asignadas</div>'; return; }
+
+    content.innerHTML = redes.map(r=>{
+      const emoji = EMOJI_PLATAFORMA[r.plataforma] || '🌐';
+      const nombre = r.nombre || `${r.marca} ${r.plataforma}`;
+      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;"><span style="font-size:18px">${emoji}</span><span style="font-weight:500">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
+
+      const seguidores = r.seguidores != null ? Number(r.seguidores).toLocaleString('es-AR') : '—';
+      const eng = r.engagement != null ? r.engagement+'%' : '';
+      const notif = r.notificaciones_pendientes || 0;
+      const badge = notif > 0 ? `<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px">${notif}</span>` : '';
+      const fecha = r.fecha_actualizacion ? `<div style="font-size:11px;color:#999;margin-top:2px">Actualizado: ${r.fecha_actualizacion}</div>` : '';
+
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+        <span style="font-size:18px">${emoji}</span>
+        <span style="font-weight:500">${nombre}</span>${badge}
+        <span style="margin-left:auto;font-weight:600;color:var(--blue)">${seguidores}</span>
+        ${eng ? `<span style="font-size:12px;color:var(--green)">eng ${eng}</span>` : ''}
+        ${fecha}
+      </div>`;
+    }).join('');
+
+  } catch(e){
+    console.error('Error renderMisRedes:',e);
+    content.innerHTML='<div class="no-data">Error al cargar redes</div>';
+  }
+}
+
+function toggleClientePopup(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function completarTarea(id){
+  const o=ordenes.find(x=>x.id===id); if(!o)return;
+  o.estado='completada'; gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(e=>console.error('Firestore ordenes:',e));}
+  rendercolaborador(); toast('Tarea completada ✓','ok');
+}
+
+
+// ══ COLABORADORES ══
+let editandoEmpId = null;
+
+function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
+
+function verTareasColaborador(id){
+  const e = colaboradores.find(c=>c.id===id);
+  if(!e) return;
+  const tareasEmp = ordenes.filter(o=>o.asignadoA===id || (o.copiaA||[]).includes(id));
+  const pendientes = tareasEmp.filter(o=>o.estado==='pendiente');
+  const enCurso = tareasEmp.filter(o=>o.estado==='en_curso');
+  const completadas = tareasEmp.filter(o=>o.estado==='completada');
+  const iniciales = (e.nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+  const avatarHtml = e.fotoUrl
+    ? `<img src="${e.fotoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`
+    : `<div class="avatar-iniciales lg" style="width:52px;height:52px;">${iniciales}</div>`;
+  const renderOrdenes = (lista) => lista.length
+    ? lista.map(o=>`<div style="padding:10px 0;border-bottom:1px solid var(--line);">
+        <div style="font-weight:600;font-size:13px">${o.titulo}</div>
+        <div style="font-size:11px;color:#999;margin-top:3px">${o.descripcion?.substring(0,80)||''}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">📅 ${o.fechaCreacion||''} · ${o.estado}</div>
+      </div>`).join('')
+    : '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin tareas</div>';
+  document.getElementById('mcolaboradorTitle').textContent = e.nombre;
+  // Ocultar form, mostrar tareas
+  const formEl = document.getElementById('mcolaboradorForm');
+  const body = document.getElementById('mcolaboradorTareas');
+  if(formEl) formEl.style.display='none';
+  if(body){
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+        ${avatarHtml}
+        <div>
+          <div style="font-weight:700;font-size:16px">${e.nombre}</div>
+          <div style="font-size:12px;color:#999">${e.puesto||''} · ${e.equipo||''}</div>
+          <div style="font-size:12px;color:#999">${e.telefono||''}</div>
+        </div>
+      </div>
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-bottom:6px">🔄 En curso (${enCurso.length})</div>
+      ${renderOrdenes(enCurso)}
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-top:14px;margin-bottom:6px">⏳ Pendientes (${pendientes.length})</div>
+      ${renderOrdenes(pendientes)}
+      <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-top:14px;margin-bottom:6px">✅ Completadas (${completadas.length})</div>
+      ${renderOrdenes(completadas.slice(0,5))}
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn-primary btn-sm" onclick="mostrarFormColaborador()">✏️ Editar perfil</button>
+      </div>
+    `;
+  }
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));
+  document.getElementById('mcolaborador')?.classList.add('active');
+}
+
+function mostrarFormColaborador(){
+  document.getElementById('mcolaboradorTareas').innerHTML='';
+  const f = document.getElementById('mcolaboradorForm');
+  if(f) f.style.display='';
+}
+
+function abrirModalcolaborador(id){
+  editandoEmpId = id || null;
+  const e = id ? colaboradores.find(x=>x.id===id) : null;
+  document.getElementById('mcolaboradorTitle').textContent = e ? 'Editar colaborador' : 'Nuevo colaborador';
+  document.getElementById('eNombre').value = e?.nombre || '';
+  document.getElementById('ePuesto').value = e?.puesto || '';
+  document.getElementById('eTel').value = e?.telefono || '';
+  document.getElementById('eEmail').value = e?.email || '';
+
+  document.getElementById('btnEliminarEmp').style.display = e ? 'block' : 'none';
+  abrirModal('mcolaborador');
+}
+
+function guardarcolaborador(){
+  const nombre = document.getElementById('eNombre').value.trim();
+  const puesto = document.getElementById('ePuesto').value.trim();
+  if(!nombre||!puesto){ toast('Completá nombre y puesto','err'); return; }
+  const datos = { nombre, puesto, equipo: document.getElementById('eEquipo')?.value||'Colaborador', jerarquia: document.getElementById('eJerarquia')?.value||'colaborador', telefono: document.getElementById('eTel').value.trim(), email: document.getElementById('eEmail').value.trim(), estado: 'activo' };
+  if(editandoEmpId){
+    const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
+    colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).set(colaboradores[i],{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
+  } else {
+    const nuevoId=uid();
+    colaboradores.push({id:nuevoId, ...datos});
+    toast('colaborador agregado ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
+  }
+  gLS(); filtrarcolaboradores(); cerrarModal('mcolaborador');
+  // also update orden form colaborador selector
+  actualizarFiltroOrdenes();
+}
+
+function eliminarcolaborador(){
+  if(!confirm('¿Eliminar este colaborador?')) return;
+  colaboradores = colaboradores.filter(x=>x.id!==editandoEmpId);
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().catch(e=>console.error('Firestore colaboradores:',e));}
+  filtrarcolaboradores(); cerrarModal('mcolaborador'); toast('colaborador eliminado');
+}
+
+function filtrarcolaboradores(){
+  const q = (document.getElementById('searchEmp')?.value||'').toLowerCase();
+  const equipo = document.getElementById('filterEquipo')?.value || '';
+  const jerarquia = document.getElementById('filterJerarquia')?.value || '';
+  const lista = colaboradores.filter(e => {
+    if(q && !e.nombre.toLowerCase().includes(q) && !e.puesto.toLowerCase().includes(q)) return false;
+    if(equipo && e.equipo !== equipo) return false;
+    if(jerarquia && e.jerarquia !== jerarquia) return false;
+    return true;
+  });
+  rendercolaboradores(lista);
+}
+
+function rendercolaboradores(lista){
+  const g = document.getElementById('colaboradoresGrid');
+  if(!g) return;
+  const badge = document.getElementById('empCountBadge');
+  if(badge) badge.textContent = lista.length + ' colaborador' + (lista.length!==1?'s':'');
+  if(!lista.length){
+    g.innerHTML = '<div class="empty-state"><div class="ei">👤</div><p>No hay colaboradores cargados todavía.</p></div>';
+    return;
+  }
+  g.innerHTML = lista.map(e => {
+    const tareasAsignadas = ordenes.filter(o => { const ids=o.colaboradoresIds?.length?o.colaboradoresIds:(o.colaboradorId?[o.colaboradorId]:[]); return ids.includes(e.id); });
+    const pendientes = tareasAsignadas.filter(o => o.estado==='pendiente').length;
+    const hoyTareas = tareasAsignadas.filter(o => o.fecha===hoy());
+    const equipoClass = (e.equipo||'').toLowerCase().replace(/[^a-z]/g,'');
+    const iniciales = (e.nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
+    const avatarHtml = e.fotoUrl
+      ? `<img src="${e.fotoUrl}" class="avatar-sm" alt="${e.nombre}">`
+      : `<div class="avatar-iniciales sm">${iniciales}</div>`;
+    return `<div class="client-card activo" data-empid="${e.id}" onclick="verTareasColaborador('${e.id}')">
+      <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+        ${avatarHtml}
+        <div style="flex:1"><div class="client-name">${e.nombre}</div>
+        <span class="pill-jerarquia pill-j-${e.jerarquia||'colaborador'}">${etiquetaJerarquia(e.jerarquia)}</span></div>
+      </div>
+      <div class="client-rubro">${e.puesto}</div>
+      <div style="margin:4px 0">
+        <span class="pill-equipo pill-${equipoClass}">${e.equipo||'—'}</span>
+      </div>
+      <div>
+        ${e.telefono?`<div class="ci-row">📞 ${e.telefono}</div>`:''}
+        ${e.email?`<div class="ci-row">✉ ${e.email}</div>`:''}
+      </div>
+      <div class="card-footer">
+        <div class="orders-count">
+          <strong>${hoyTareas.length}</strong> tarea${hoyTareas.length!==1?'s':''} hoy
+          ${pendientes ? ` · <strong style="color:var(--gold)">${pendientes} pend.</strong>` : ''}
+        </div>
+        <span style="font-size:11px;color:#aaa">${tareasAsignadas.length} total</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// ══ COLABORADOR VISTAS ══
+let empActualNombre = '';
+function cambiarVistaEmp(id, btn){
+  document.querySelectorAll('#appcolaborador .nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#appcolaborador .view').forEach(v=>v.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='vEmpKanban') renderKanban();
+  if(id==='vEmpReuniones') renderEmpReuniones();
+  if(id==='vEmpProductividad') renderProductividadEmp();
+}
+
+// ══ PRODUCTIVIDAD COLABORADOR ══
+async function renderProductividadEmp(){
+  const ct = document.getElementById('empProductividadContent');
+  if(!ct) return;
+  if(!empActualId){
+    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+    return;
+  }
+  try {
+    const snap = await db.collection('colaboradores').doc(empActualId).get();
+    const data = snap.exists ? snap.data() : null;
+    const rep = data && data.reporte_diario ? data.reporte_diario : null;
+    if(!rep){
+      ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+      return;
+    }
+    const bloques = [
+      { titulo:'Ayer', datos:rep.ayer },
+      { titulo:'Últimos 7 días', datos:rep.ultimos_7_dias },
+      { titulo:'Últimos 30 días', datos:rep.ultimos_30_dias }
+    ];
+    const metricas = [
+      { key:'produccion', label:'Producción', icon:'📝' },
+      { key:'lecturas', label:'Lecturas', icon:'👁️' },
+      { key:'tiempo_edicion', label:'Tiempo edición', icon:'⏱️' },
+      { key:'seo_score', label:'SEO Score', icon:'🔍' },
+      { key:'performance', label:'Performance', icon:'⚡' }
+    ];
+    let html = '<div style="margin-bottom:12px;color:var(--ink2);font-size:.85rem">Reporte: '+(rep.fecha||'—')+'</div>';
+    bloques.forEach(b=>{
+      html+='<div style="margin-bottom:24px">';
+      html+='<div style="font-family:Playfair Display,serif;font-size:1.15rem;font-weight:700;color:var(--blue);margin-bottom:10px">'+b.titulo+'</div>';
+      html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">';
+      if(b.datos){
+        metricas.forEach(m=>{
+          const val = b.datos[m.key]!=null ? b.datos[m.key] : '—';
+          html+='<div style="background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:16px;text-align:center">';
+          html+='<div style="font-size:1.3rem;margin-bottom:4px">'+m.icon+'</div>';
+          html+='<div style="font-family:DM Sans,sans-serif;font-size:1.5rem;font-weight:700;color:var(--blue)">'+val+'</div>';
+          html+='<div style="font-family:DM Sans,sans-serif;font-size:.8rem;color:var(--ink2);margin-top:2px">'+m.label+'</div>';
+          html+='</div>';
+        });
+      } else {
+        html+='<div class="no-data" style="grid-column:1/-1">Sin datos para este período</div>';
+      }
+      html+='</div></div>';
+    });
+    ct.innerHTML=html;
+  } catch(e){
+    console.error('Error renderProductividadEmp:',e);
+    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
+  }
+}
+
+// ══ KANBAN ══
+function renderCheckPropio(){
+  // El colaborador puede hacer check de sus propias tareas desde el perfil
+  abrirCheckColaborador(empActualId, usuarioLogueado?.nombre || '');
+}
+
+function renderKanban(){
+  const estados = ['pendiente','en-curso','listo'];
+  const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
+  const tareas = ordenes.filter(o => {
+    if(!empActualId) return true;
+    const yo = colaboradores.find(c=>c.id===empActualId);
+    // Director general ve todo
+    if(yo && yo.jerarquia==='director_general') return true;
+    // Director ve las de su equipo
+    if(yo && yo.jerarquia==='director'){
+      if(o.asignadoA === empActualId) return true;
+      const target = colaboradores.find(c=>c.id===o.asignadoA);
+      if(target){
+        const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
+        if(dep.includes(empActualId)) return true;
+      }
+      if((o.colaboradoresIds||[]).includes(empActualId)) return true;
+      return false;
+    }
+    // Colaborador solo ve las suyas
+    return o.asignadoA === empActualId
+      || (o.copiaA||[]).includes(empActualId)
+      || (o.colaboradoresIds||[]).includes(empActualId)
+      || o.colaboradorId === empActualId;
+  }).sort((a,b)=>(a.fechaCreacion||a.fecha||'').localeCompare(b.fechaCreacion||b.fecha||''));
+
+  const pend = tareas.filter(o=>o.estado==='pendiente');
+  const enCurso = tareas.filter(o=>o.estado==='en-curso');
+  const listo = tareas.filter(o=>o.estado==='completada');
+
+  document.getElementById('empPend').textContent = pend.length;
+  document.getElementById('empEnCurso').textContent = enCurso.length;
+  document.getElementById('empComp').textContent = listo.length;
+  document.getElementById('empTotal').textContent = tareas.length;
+  document.getElementById('kc-pend').textContent = pend.length;
+  document.getElementById('kc-curso').textContent = enCurso.length;
+  document.getElementById('kc-listo').textContent = listo.length;
+
+  function cardHTML(o){
+    const c = clientes.find(x=>x.id===o.clienteId);
+    const asigIds2 = o.colaboradoresIds?.length ? o.colaboradoresIds : (o.colaboradorId ? [o.colaboradorId] : []);
+    const asig = asigIds2.map(id=>colaboradores.find(x=>x.id===id)).filter(Boolean);
+    const comentCount = (o.comentarios||[]).length;
+    const botones = o.estado==='pendiente'
+      ? `<button class="kc-btn next-c" onclick="moverTarea('${o.id}','en-curso')">▶ En curso</button>`
+      : o.estado==='en-curso'
+      ? `<button class="kc-btn prev" onclick="moverTarea('${o.id}','pendiente')">◀ Volver</button>
+         <button class="kc-btn next-l" onclick="moverTarea('${o.id}','completada')">✓ Listo</button>`
+      : `<button class="kc-btn prev" onclick="moverTarea('${o.id}','en-curso')">↩ Reabrir</button>`;
+    const comentBtn = `<button onclick="abrirComentariosOrden('${o.id}')" class="kc-btn" style="background:var(--paper2);color:var(--ink);">💬${comentCount>0?' '+comentCount:''}</button>`;
+    const esUrgente = o.prioridad==='urgente';
+    return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
+        <div class="kc-title" style="flex:1;">${o.titulo||o.desc||'Sin título'}</div>
+      </div>
+      ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
+      <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
+      ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
+      <div class="kc-move">${botones}</div>
+      <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+          ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
+        ${comentBtn}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('kb-pendiente').innerHTML = pend.length ? pend.map(cardHTML).join('') : '<div class="kanban-empty">Sin tareas pendientes</div>';
+  document.getElementById('kb-en-curso').innerHTML = enCurso.length ? enCurso.map(cardHTML).join('') : '<div class="kanban-empty">Nada en curso</div>';
+  document.getElementById('kb-listo').innerHTML = listo.length ? listo.map(cardHTML).join('') : '<div class="kanban-empty">Nada completado</div>';
+}
+
+function cambiarEstadoOrden(id, nuevoEstado){
+  const i = ordenes.findIndex(x=>x.id===id);
+  if(i===-1) return;
+  ordenes[i].estado = nuevoEstado;
+  gLS();
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({estado: nuevoEstado, updatedAt: new Date().toISOString()}).catch(e=>console.warn('Firestore update error:', e));
+  }
+  rendercolaborador();
+  toast('Estado: ' + nuevoEstado, 'ok');
+}
+
+function abrirComentarioOrden(id){
+  const texto = prompt('Escribí tu comentario:');
+  if(!texto) return;
+  const i = ordenes.findIndex(x=>x.id===id);
+  if(i===-1) return;
+  const o = ordenes[i];
+  o.comentarios = [...(o.comentarios||[]), {texto, autor: empActualId, fecha: new Date().toISOString()}];
+  gLS();
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).catch(e=>console.warn('Firestore update error:', e));
+  }
+  toast('Comentario guardado', 'ok');
+}
+
+function moverTarea(id, nuevoEstado){
+  const i = ordenes.findIndex(x=>x.id===id);
+  if(i===-1)return;
+  ordenes[i].estado = nuevoEstado;
+  gLS();
+  renderKanban();
+  toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+}
+
+// ══ REUNIONES ══
+let editandoReunionId = null;
+let semanaOffset = 0;
+
+function diaSemanaActual(){ return new Date().getDay(); }
+
+function statusReunion(r){
+  if(r.tipo==='semanal') return diaSemanaActual()===parseInt(r.diaSemana) ? 'hoy' : 'proxima';
+  const hoyStr = hoy();
+  if(r.fecha === hoyStr) return 'hoy';
+  if(r.fecha > hoyStr) return 'proxima';
+  return 'pasada';
+}
+
+function toggleReunionSemanal(){
+  const tipo = document.getElementById('rTipo')?.value;
+  const wrap = document.getElementById('rFechaWrap');
+  const wrapDia = document.getElementById('rDiaSemanaWrap');
+  if(!wrap||!wrapDia) return;
+  wrap.style.display = tipo==='semanal' ? 'none' : '';
+  wrapDia.style.display = tipo==='semanal' ? '' : 'none';
+}
+
+const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function abrirModalReunion(id){
+  editandoReunionId = id||null;
+  const r = id ? reuniones.find(x=>x.id===id) : null;
+  document.getElementById('mReunionTitle').textContent = r ? 'Editar reunión' : 'Nueva reunión';
+  document.getElementById('rTitulo').value = r?.titulo||'';
+  document.getElementById('rFecha').value = r?.fecha||hoy();
+  document.getElementById('rHora').value = r?.hora||'';
+  document.getElementById('rTipo').value = r?.tipo||'unica';
+  document.getElementById('rDiaSemana').value = r?.diaSemana||'1';
+  toggleReunionSemanal();
+  document.getElementById('rDesc').value = r?.desc||'';
+  document.getElementById('rTemario').value = r?.temario||'';
+  document.getElementById('btnEliminarReunion').style.display = r?'block':'none';
+  // Render participantes checkboxes
+  const participantes = r?.participantes||[];
+  document.getElementById('rParticipantes').innerHTML = colaboradores.map(e=>`
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 8px;background:#fff;border-radius:20px;border:1px solid var(--line);">
+      <input type="checkbox" value="${e.id}" ${participantes.includes(e.id)?'checked':''} style="accent-color:var(--blue);">
+      ${(e.nombre||'').split(' ').slice(0,2).join(' ')}
+    </label>
+  `).join('');
+  abrirModal('mReunion');
+}
+
+function guardarReunion(){
+  const titulo = document.getElementById('rTitulo').value.trim();
+  const fecha = document.getElementById('rFecha').value;
+  const tipo2 = document.getElementById('rTipo').value;
+  if(!titulo||(tipo2==='unica'&&!fecha)){ toast('Completá título y fecha','err'); return; }
+  const participantes = [...document.querySelectorAll('#rParticipantes input:checked')].map(i=>i.value);
+  const tipo = document.getElementById('rTipo').value;
+  const datos = {
+    titulo, fecha: tipo==='semanal' ? '' : fecha,
+    tipo,
+    diaSemana: tipo==='semanal' ? document.getElementById('rDiaSemana').value : null,
+    hora: document.getElementById('rHora').value,
+    desc: document.getElementById('rDesc').value.trim(),
+    temario: document.getElementById('rTemario').value.trim(),
+    participantes,
+    cumplimiento: editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.cumplimiento||{}) : {}
+  };
+  if(editandoReunionId){
+    const i = reuniones.findIndex(x=>x.id===editandoReunionId);
+    reuniones[i] = {...reuniones[i], ...datos};
+    toast('Reunión actualizada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).set(reuniones[i],{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
+  } else {
+    const nuevoId=uid();
+    reuniones.push({id:nuevoId, ...datos});
+    toast('Reunión creada ✓','ok');
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
+  }
+  gLS(); cerrarModal('mReunion'); filtrarReuniones(); renderEmpReuniones();
+}
+
+function eliminarReunion(){
+  if(!confirm('¿Eliminar esta reunión?'))return;
+  reuniones = reuniones.filter(x=>x.id!==editandoReunionId);
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().catch(e=>console.error('Firestore reuniones:',e));}
+  cerrarModal('mReunion'); filtrarReuniones(); toast('Reunión eliminada');
+}
+
+function filtrarReuniones(){
+  const filtro = document.getElementById('filtroReunionEstado')?.value||'';
+  let listaR = [...reuniones].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  // Filtrar por participante — colaboradores solo ven sus reuniones
+  if(rolActual !== 'supervisor'){
+    listaR = listaR.filter(r => {
+      const parts = r.participantes || r.participantes_internos || [];
+      return parts.includes(empActualId);
+    });
+  }
+  if(filtro) listaR = listaR.filter(r=>statusReunion(r)===filtro);
+  document.getElementById('reunionCountBadge').textContent = listaR.length;
+  const cont = document.getElementById('reunionesList');
+  if(!listaR.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px;font-size:15px">No hay reuniones</div>'; return; }
+  cont.innerHTML = listaR.map(r=>renderReunionCard(r, true)).join('');
+}
+
+function renderReunionCard(r, esSupervisor){
+  const status = statusReunion(r);
+  // Normalizar participantes — puede venir como array, string JSON, o undefined
+  let participantes = r.participantes;
+  if (!Array.isArray(participantes)) {
+    try { participantes = JSON.parse(participantes || '[]'); } catch { participantes = []; }
+  }
+  r.participantes = participantes;
+  const total = participantes.length;
+  const cumplidos = Object.values(r.cumplimiento||{}).filter(Boolean).length;
+  const pct = total ? Math.round(cumplidos/total*100) : 0;
+  const statusLabel = {hoy:'HOY',proxima:'Próxima',pasada:'Realizada'}[status];
+  const statusClass = {hoy:'ms-hoy',proxima:'ms-proxima',pasada:'ms-pasada'}[status];
+
+  const chips = participantes.map(pid=>{
+    const emp = colaboradores.find(e=>e.id===pid);
+    if(!emp)return'';
+    const done = r.cumplimiento?.[pid];
+    const nombre = emp.nombre.split(' ').slice(0,2).join(' ');
+    if(esSupervisor){
+      return `<div class="participant-chip ${done?'done':''}">
+        <span class="${done?'✓':''}" style="font-size:11px">${done?'✓':'·'}</span>
+        ${nombre}
+      </div>`;
+    } else {
+      return `<div class="participant-chip ${done?'done':''}" onclick="toggleCumplimiento('${r.id}','${pid}')" style="cursor:pointer" title="Click para marcar como realizada">
+        <span style="font-size:13px">${done?'✅':'⬜'}</span>
+        ${nombre}
+      </div>`;
+    }
+  }).join('');
+
+  const editBtn = esSupervisor ? `<button class="hero-btn" onclick="abrirModalReunion('${r.id}')" style="font-size:11px">Editar</button>` : '';
+
+  return `<div class="meeting-card">
+    <div class="meeting-header">
+      <div>
+        <div class="meeting-title">${r.titulo}</div>
+        <div class="meeting-datetime">📅 ${r.tipo==='semanal'?DIAS[r.diaSemana]+'s':fmtD(r.fecha)}${r.hora?' — '+r.hora+' hs':''}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="meeting-status ${statusClass}">${statusLabel}</span>
+        ${editBtn}
+      </div>
+    </div>
+    ${r.desc?`<div class="meeting-desc">${r.desc}</div>`:''}
+    ${r.temario?`<div class="meeting-temario"><div class="meeting-temario-title">📋 Agenda</div><div class="meeting-temario-body">${r.temario}</div></div>`:''}
+    ${total?`<div style="margin-top:10px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#aaa;margin-bottom:8px">Participantes</div>
+      <div class="meeting-participants">${chips}</div>
+      <div class="meeting-progress">
+        <div class="meeting-prog-bar"><div class="meeting-prog-fill" style="width:${pct}%"></div></div>
+        <span class="meeting-prog-text">${cumplidos}/${total} confirmaron</span>
+      </div>
+    </div>`:''}
+  </div>`;
+}
+
+function toggleCumplimiento(reunionId, empId){
+  const r = reuniones.find(x=>x.id===reunionId);
+  if(!r)return;
+  if(!r.cumplimiento)r.cumplimiento={};
+  r.cumplimiento[empId] = !r.cumplimiento[empId];
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(e=>console.error('Firestore reuniones:',e));}
+  renderEmpReuniones();
+  toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
+}
+
+function renderEmpReuniones(){
+  const lista = [...reuniones].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const cont = document.getElementById('empReunionesList');
+  if(!lista.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px">No hay reuniones agendadas</div>'; return; }
+  cont.innerHTML = '<div style="margin-bottom:12px;font-family:Playfair Display,serif;font-size:20px;color:var(--ink)">Reuniones</div>' + lista.map(r=>renderReunionCard(r,false)).join('');
+}
+
+// ══ PRODUCTIVIDAD ══
+function semanaRango(offset){
+  const hoyDate = new Date();
+  const dia = hoyDate.getDay(); // 0=dom
+  const lunes = new Date(hoyDate);
+  lunes.setDate(hoyDate.getDate() - (dia===0?6:dia-1) + offset*7);
+  const domingo = new Date(lunes);
+  domingo.setDate(lunes.getDate()+6);
+  return {
+    inicio: lunes.toISOString().split('T')[0],
+    fin: domingo.toISOString().split('T')[0],
+    label: `${lunes.getDate()}/${lunes.getMonth()+1} — ${domingo.getDate()}/${domingo.getMonth()+1}/${domingo.getFullYear()}`
+  };
+}
+
+function renderProductividad(){
+  const {inicio, fin, label} = semanaRango(semanaOffset);
+  document.getElementById('semanaLabel').textContent = semanaOffset===0 ? 'Esta semana ('+label+')' : label;
+  const hoyStr = hoy();
+  const internos = colaboradores.filter(function(e){ return e.jerarquia !== 'externo' && e.equipo !== 'Externo'; });
+  function getFechaO(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
+  function getIds(o){ return o.colaboradoresIds && o.colaboradoresIds.length ? o.colaboradoresIds : (o.asignadoA ? [o.asignadoA] : (o.colaboradorId ? [o.colaboradorId] : [])); }
+  const tareasRango = ordenes.filter(function(o){ var f=getFechaO(o); return !f||(f>=inicio&&f<=fin); });
+  const cards = internos.map(function(e){
+    var mis = tareasRango.filter(function(o){ return getIds(o).includes(e.id); });
+    var comp = mis.filter(function(o){ return o.estado==='completada'; }).length;
+    var pend = mis.filter(function(o){ return o.estado==='pendiente'||o.estado==='en-curso'||o.estado==='en_curso'; }).length;
+    var total = mis.length;
+    var atrasadas = ordenes.filter(function(o){ var f=getFechaO(o); return getIds(o).includes(e.id)&&f&&f<hoyStr&&o.estado!=='completada'&&o.estado!=='cancelada'; }).length;
+    var pctComp = total ? Math.round(comp/total*100) : 0;
+    var html = '<div class="prod-card '+(atrasadas>0?'atrasado':'')+'">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    html += '<div><div class="prod-name">'+(e.nombre||'Sin nombre')+'</div><div class="prod-puesto">'+(e.puesto||e.equipo||'')+'</div></div>';
+    if(atrasadas>0) html += '<span class="atras-badge">'+atrasadas+' atrasada'+(atrasadas>1?'s':'')+'</span>';
+    html += '</div>';
+    if(total){ html += '<div style="margin-top:10px;"><div class="prod-bar-row"><span class="prod-bar-label">Completadas</span><div class="prod-bar-wrap"><div class="prod-bar-fill comp" style="width:'+pctComp+'%"></div></div></div></div>'; }
+    else { html += '<div style="font-size:12px;color:#ccc;margin-top:8px">Sin tareas esta semana</div>'; }
+    html += '<div class="prod-nums">';
+    html += '<div class="prod-num"><div class="prod-num-val '+(comp>0?'green':'')+'">'+comp+'</div><div class="prod-num-lbl">Hechas</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val">'+pend+'</div><div class="prod-num-lbl">Pendientes</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val '+(atrasadas>0?'red':'')+'">'+atrasadas+'</div><div class="prod-num-lbl">Atrasadas</div></div>';
+    html += '<div class="prod-num"><div class="prod-num-val">'+total+'</div><div class="prod-num-lbl">Total</div></div>';
+    html += '</div></div>';
+    return html;
+  }).join('');
+  document.getElementById('prodGrid').innerHTML = cards || '<div class="no-data">Sin colaboradores</div>';
+}
+
+
+// ══ PERFIL ══
+async function subirFotoEnPerfil(input){
+  const file = input.files[0];
+  if(!file || !empActualId) return;
+  toast('Subiendo foto…');
+  try {
+    const ref = storage.ref('fotos-perfil/' + empActualId);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: url });
+    if(usuarioLogueado) usuarioLogueado.fotoUrl = url;
+    const col = colaboradores.find(c => c.id === empActualId);
+    if(col) col.fotoUrl = url;
+    // Actualizar el avatar en el modal y en el header
+    actualizarAvatarColaborador(usuarioLogueado || col);
+    // Refrescar el avatar en el modal de perfil
+    const av = document.getElementById('perfilAvatar');
+    if(av && url){
+      av.innerHTML = '';
+      av.style.background = 'none';
+      av.style.padding = '0';
+      av.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+    }
+    toast('Foto actualizada ✓', 'ok');
+  } catch(e){ toast('Error al subir foto', 'error'); console.error(e); }
+}
+
+function abrirPerfil(){
+  // Si por alguna razón no hay usuario logueado, buscar por empActualId
+  if(!usuarioLogueado && empActualId){
+    usuarioLogueado = colaboradores.find(c=>c.id===empActualId) || null;
+  }
+  if(!usuarioLogueado){ toast('Error: sesión no encontrada','err'); return; }
+  const u = usuarioLogueado;
+  const inicial = u.nombre.charAt(0).toUpperCase();
+  document.getElementById('perfilAvatar').textContent = inicial;
+  document.getElementById('perfilNombre').textContent = u.nombre;
+  document.getElementById('perfilPuesto').textContent = u.puesto;
+  // Mostrar foto o iniciales en el avatar
+  const av = document.getElementById('perfilAvatar');
+  if(av){
+    if(u.fotoUrl){
+      av.innerHTML = '<img src="'+u.fotoUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+      av.style.background = 'none';
+      av.style.padding = '0';
+    } else {
+      const ini = u.nombre.charAt(0).toUpperCase();
+      av.innerHTML = ini;
+      av.style.background = '';
+      av.style.padding = '';
+    }
+  }
+  document.getElementById('pNombre').value = u.nombre;
+  document.getElementById('pTelefono').value = u.telefono||'';
+  document.getElementById('pEmail').value = u.email||'';
+  document.getElementById('pFechaNac').value = u.fechaNacimiento||'';
+  document.getElementById('pPassActual').value = '';
+  document.getElementById('pPassNueva').value = '';
+  document.getElementById('pPassConfirm').value = '';
+  abrirModal('mPerfil');
+}
+
+function guardarPerfil(){
+  const u = usuarioLogueado;
+  const nombre = document.getElementById('pNombre').value.trim();
+  const telefono = document.getElementById('pTelefono').value.trim();
+  const email = document.getElementById('pEmail').value.trim();
+  const passActual = document.getElementById('pPassActual').value;
+  const passNueva = document.getElementById('pPassNueva').value;
+  const passConfirm = document.getElementById('pPassConfirm').value;
+
+  if(!nombre){ toast('El nombre no puede estar vacío','err'); return; }
+
+  // Cambio de contraseña (opcional)
+  if(passNueva || passActual){
+    if(passActual !== u.password){ toast('La contraseña actual es incorrecta','err'); return; }
+    if(passNueva.length < 4){ toast('La nueva contraseña debe tener al menos 4 caracteres','err'); return; }
+    if(passNueva !== passConfirm){ toast('Las contraseñas no coinciden','err'); return; }
+    u.password = passNueva;
+  }
+
+  // Actualizar datos
+  const telLimpio = telefono.replace(/[^0-9]/g,'');
+  u.nombre = nombre;
+  u.telefono = telefono;
+  u.telLogin = telLimpio;
+  u.email = email;
+  const fechaNac = document.getElementById('pFechaNac').value;
+  u.fechaNacimiento = fechaNac;
+
+  // Sincronizar en el array de colaboradores
+  const i = colaboradores.findIndex(c=>c.id===u.id);
+  if(i>=0) colaboradores[i] = {...colaboradores[i], ...u};
+  usuarioLogueado = u;
+
+  // Actualizar nombre en header
+  const primerNombre = nombre.split(' ')[0];
+  if(document.getElementById('svUserName')) document.getElementById('svUserName').textContent = primerNombre;
+  if(document.getElementById('empUserName')) document.getElementById('empUserName').textContent = primerNombre;
+
+  // Sincronizar email (y nombre/teléfono) en Firestore para Google Sign-In futuro
+  if(typeof db !== 'undefined' && u.id){
+    const updateData = { nombre, telefono, email, fechaNacimiento: fechaNac };
+    if(passNueva) updateData.password = passNueva;
+    db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
+      .catch(err => console.warn('Firestore update error:', err));
+
+  }
+
+  try { gLS(); } catch(e) {}
+  cerrarModal('mPerfil');
+  toast('Perfil actualizado ✓', 'ok');
+}
+
+// ══ MODALES ══
+function abrirModal(id){document.getElementById(id).classList.add('active');}
+function cerrarModal(id){document.getElementById(id).classList.remove('active');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)cerrarModal(m.id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['mDetalle','mCliente','mOrden','mcolaborador','mReunion','mPerfil'].forEach(cerrarModal);}});
+
+// ══ ONBOARDING ══
+var onbUsuario = null;
+
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  if(params.get('onboarding') !== 'true') return;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('onboardingScreen').style.display = '';
+})();
+
+function verificarTelefono(){
+  var tel = document.getElementById('onbTel').value.trim().replace(/[^0-9]/g,'');
+  var err = document.getElementById('onbError');
+  err.textContent = '';
+  if(!tel){ err.textContent = 'Ingresá tu número de teléfono'; return; }
+  // Buscar en colaboradores (localStorage o datos por defecto)
+  var match = colaboradores.find(function(c){
+    var telGuardado = (c.telLogin||c.telefono||'').replace(/[^0-9]/g,'');
+    return telGuardado === tel;
+  });
+  if(!match){ err.textContent = 'No encontramos ese número en el sistema. Consultá a tu supervisor.'; return; }
+  onbUsuario = match;
+  document.getElementById('onbStep1').style.display = 'none';
+  document.getElementById('onbStep2').style.display = '';
+  document.getElementById('onbNombreConfirm').textContent = '¡Hola, ' + match.nombre.split(' ')[0] + '! Elegí tu contraseña.';
+  document.getElementById('onbPass1').focus();
+}
+
+function activarCuenta(){
+  var p1 = document.getElementById('onbPass1').value;
+  var p2 = document.getElementById('onbPass2').value;
+  var err = document.getElementById('onbError');
+  err.textContent = '';
+  if(!onbUsuario){ err.textContent = 'Error: reiniciá el proceso'; return; }
+  if(p1.length < 4){ err.textContent = 'La contraseña debe tener al menos 4 caracteres'; return; }
+  if(p1 !== p2){ err.textContent = 'Las contraseñas no coinciden'; return; }
+  // Guardar la nueva contraseña en localStorage
+  var idx = colaboradores.findIndex(function(c){ return c.id === onbUsuario.id; });
+  if(idx === -1){ err.textContent = 'Error: usuario no encontrado'; return; }
+  colaboradores[idx].password = p1;
+  guardarYSincronizar('d_colaboradores', colaboradores);
+  err.textContent = '';
+  var ok = document.getElementById('onbSuccess');
+  ok.style.display = 'block';
+  ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
+  document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
+  setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
+}
+
+// ══════════ TABLERO MÉTRICAS GRUPO ══════════
+const REDES_FALLBACK = [
+  {red:'Facebook',cuenta:'@laopinionline',icono:'📘',seguidores:'103K'},
+  {red:'Instagram',cuenta:'@laopinionline',icono:'📷',seguidores:'54K'},
+  {red:'TikTok',cuenta:'@laopinionline',icono:'🎵',seguidores:'16.5K'},
+  {red:'YouTube',cuenta:'@LaOpinionPlay',icono:'▶️',seguidores:'976'},
+  {red:'X',cuenta:'@LaOpiniONline',icono:'𝕏',seguidores:'2.663'},
+  {red:'Instagram',cuenta:'@laopinionplay',icono:'📷',seguidores:'15.8K'},
+  {red:'Instagram',cuenta:'@laopinioncampo',icono:'📷',seguidores:'3.725'},
+  {red:'Instagram',cuenta:'@laopinion365',icono:'📷',seguidores:'—'},
+];
+
+function renderTableroMetricas(containerId, datos){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const REDES_TMG = [
+    {marca:'La Opinión', plataforma:'Facebook',  icono:'📘', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-facebook'] || '103K'},
+    {marca:'La Opinión', plataforma:'Instagram', icono:'📸', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-instagram'] || '54K'},
+    {marca:'La Opinión', plataforma:'TikTok',    icono:'🎵', cuenta:'@laopinionline',  seg: datos.redes && datos.redes['laopinionline-tiktok'] || '16.5K'},
+    {marca:'La Opinión', plataforma:'YouTube',   icono:'▶️', cuenta:'@LaOpinionPlay',  seg: datos.redes && datos.redes['laopinionline-youtube'] || '976'},
+    {marca:'La Opinión', plataforma:'X',         icono:'✖️', cuenta:'@LaOpiniONline',  seg: datos.redes && datos.redes['laopinionline-x'] || '2.663'},
+    {marca:'Play',       plataforma:'Instagram', icono:'📸', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-instagram'] || '15.8K'},
+    {marca:'Play',       plataforma:'TikTok',    icono:'🎵', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-tiktok'] || '1.238'},
+    {marca:'Play',       plataforma:'Twitch',    icono:'🟣', cuenta:'@laopinionplay',  seg: datos.redes && datos.redes['laopinionplay-twitch'] || '1.000'},
+    {marca:'Campo',      plataforma:'Instagram', icono:'🌾', cuenta:'@laopinioncampo', seg: datos.redes && datos.redes['laopinioncampo-instagram'] || '3.725'},
+    {marca:'365',        plataforma:'Instagram', icono:'📸', cuenta:'@laopinion365',   seg: datos.redes && datos.redes['laopinion365-instagram'] || '—'},
+  ];
+  let html = '<div class="tmg-title">📊 Métricas del grupo</div><div class="tmg-row">';
+  html += '<div class="tmg-card"><div class="tmg-card-label">Lecturas esta semana</div><div class="tmg-card-value" id="'+containerId+'_ga4">'+(datos.ga4||'—')+'</div><div class="tmg-card-sub">pageviews GA4</div></div>';
+  REDES_TMG.forEach(function(r){
+    html += '<div class="tmg-card">'
+      +'<div class="tmg-card-label">'+r.icono+' '+r.marca+' · '+r.plataforma+'</div>'
+      +'<div style="font-size:10px;color:var(--blue2);font-weight:600;margin-bottom:2px;">'+r.cuenta+'</div>'
+      +'<div class="tmg-card-value">'+r.seg+'</div>'
+      +'</div>';
+  });
+  html += '<div class="tmg-card"><div class="tmg-card-label">Notas publicadas</div><div class="tmg-card-value" id="'+containerId+'_notas">'+(datos.notas||'—')+'</div><div class="tmg-card-sub">esta semana</div></div>';
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 
 async function cargarMetricasGrupo(){
-  var datos = { ga4:'--', redes:null, notas:'--' };
+  let datos = { ga4:'—', redes:null, notas:'—' };
   renderTableroMetricas('tableroMetricasGrupoSup', datos);
   renderTableroMetricas('tableroMetricasGrupoEmp', datos);
+  // Redes como diccionario {clave: seguidores}
   try {
-    var snap = await db.collection('metricas_redes').get();
+    const snap = await db.collection('metricas_redes').get();
     if(!snap.empty){
       var dict = {};
       snap.forEach(function(doc){
-        var d2 = doc.data();
-        var key2 = (d2.marca||'').toLowerCase()+'-'+(d2.plataforma||'').toLowerCase();
-        if(d2.seguidores) dict[key2] = d2.seguidores;
+        var d = doc.data();
+        var key = ((d.marca||'')+(d.plataforma||'')).toLowerCase().replace(/[^a-z]/g,'');
+        // También guardar con clave normalizada marca-plataforma
+        var key2 = (d.marca||'').toLowerCase()+'-'+(d.plataforma||'').toLowerCase();
+        if(d.seguidores){ dict[key] = d.seguidores; dict[key2] = d.seguidores; }
       });
       datos.redes = dict;
     }
   } catch(e){}
+  // GA4 desde Firestore
   try {
     var docGA4 = await db.collection('claw_ga4').doc('ultimo').get();
     if(docGA4.exists && docGA4.data().lecturasSemanales){
       datos.ga4 = Number(docGA4.data().lecturasSemanales).toLocaleString('es-AR');
     }
   } catch(e){}
+  // Notas publicadas
+  try {
+    var inicioSem = lunesDeSemana(hoy());
+    var snapOrd = await db.collection('ordenes').where('fechaCreacion','>=',inicioSem).where('estado','==','completada').get();
+    datos.notas = snapOrd.size.toString();
+  } catch(e){}
   renderTableroMetricas('tableroMetricasGrupoSup', datos);
   renderTableroMetricas('tableroMetricasGrupoEmp', datos);
 }
-
 
 // ══════════ VISIBILIDAD POR JERARQUÍA ══════════
 // ══ PROVEEDORES ══
