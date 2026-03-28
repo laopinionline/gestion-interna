@@ -2486,7 +2486,7 @@ function guardarCliente(){
     comisionPct: Number(document.getElementById('fComisionPct')?.value) || 0,
     comisionEmp: document.getElementById('fComisionEmp')?.value || '',
   } : {};
-  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),logoUrl:window._logoClienteBase64||(editandoClienteId?(clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||''):''),...datosConfidenciales};
+  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
