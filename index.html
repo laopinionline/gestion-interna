@@ -3098,6 +3098,7 @@ function rendercolaboradores(lista){
         ${e.telefono?`<div class="ci-row">📞 ${e.telefono}</div>`:''}
         ${e.email?`<div class="ci-row">✉ ${e.email}</div>`:''}
       </div>
+      ${(e.equipo==='Digital'||e.equipo==='Contenidos'||e.equipo==='Contenidos Digitales') ? `<a href="https://placas-lo-frontend.vercel.app" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;text-decoration:none;margin-bottom:8px;width:fit-content;" onclick="event.stopPropagation()">✦ Hacedor de Placas IG</a>` : ''}
       <div class="card-footer">
         <div class="orders-count">
           <strong>${hoyTareas.length}</strong> tarea${hoyTareas.length!==1?'s':''} hoy
