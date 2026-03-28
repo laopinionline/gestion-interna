@@ -1474,7 +1474,7 @@ async function actualizarAvatarHeader(usuario){
   }
 }
 
-function login(){
+async function login(){
   const telInput = document.getElementById('loginTel').value.trim().replace(/[^0-9]/g,'');
   const pass = document.getElementById('loginPass').value.trim();
   const err = document.getElementById('loginError');
