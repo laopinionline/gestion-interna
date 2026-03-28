@@ -3849,56 +3849,58 @@ function aplicarVisibilidad(){
 
 <!-- MODAL PERFIL -->
 <div class="modal-overlay" id="mPerfil">
-  <div class="modal">
+  <div class="modal" style="max-width:520px;">
     <div class="modal-header">
       <div class="modal-title">Mi perfil</div>
       <button class="modal-close" onclick="cerrarModal('mPerfil')">✕</button>
     </div>
-    <div class="modal-body">
-      <label for="inputFotoPerfilModal" style="cursor:pointer;display:block;position:relative;width:80px;height:80px;margin:0 auto 8px;">
-        <div class="perfil-avatar" id="perfilAvatar" style="width:80px;height:80px;font-size:28px;margin:0;">?</div>
-        <div style="position:absolute;bottom:0;right:0;background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;display:flex;align-items:center;justify-content:center;">✎</div>
-      </label>
-      <input type="file" id="inputFotoPerfilModal" accept="image/*" style="display:none;" onchange="subirFotoEnPerfil(this)"><button type="button" onclick="document.getElementById('inputFotoPerfilModal').click()" style="margin-top:6px;font-size:12px;color:var(--blue);background:none;border:1px solid var(--blue);border-radius:6px;padding:4px 12px;cursor:pointer;">📷 Cambiar foto</button>
-      <div class="perfil-nombre" id="perfilNombre">—</div>
-      <div class="perfil-puesto" id="perfilPuesto">—</div>
-
-      <div class="perfil-section">Datos de contacto</div>
-      <div class="form-grid">
-        <div class="form-group form-full">
-          <label class="form-label">Nombre completo</label>
-          <input class="form-input" id="pNombre" placeholder="Tu nombre">
+    <div class="modal-body" style="padding:0;">
+      <!-- Avatar + nombre -->
+      <div style="background:linear-gradient(135deg,var(--blue) 0%,#1a4a7a 100%);padding:32px 24px 24px;text-align:center;border-radius:0;">
+        <div style="position:relative;display:inline-block;margin-bottom:12px;">
+          <div class="perfil-avatar" id="perfilAvatar" style="width:90px;height:90px;font-size:32px;margin:0;border:3px solid rgba(255,255,255,0.3);">?</div>
+          <button type="button" onclick="document.getElementById('inputFotoPerfilModal').click()" style="position:absolute;bottom:0;right:0;background:#fff;color:var(--blue);border:none;border-radius:50%;width:26px;height:26px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);" title="Cambiar foto">✎</button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Teléfono (para login)</label>
-          <input class="form-input" id="pTelefono" placeholder="2477 xxxxxx" type="tel">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input class="form-input" id="pEmail" placeholder="tu@email.com" type="email">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fecha de nacimiento</label>
-          <input type="date" class="form-input" id="pFechaNac">
-        </div>
+        <input type="file" id="inputFotoPerfilModal" accept="image/*" style="display:none;" onchange="subirFotoEnPerfil(this)">
+        <div style="color:#fff;font-family:'Playfair Display',serif;font-size:20px;font-weight:700;" id="perfilNombre">—</div>
+        <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-top:3px;" id="perfilPuesto">—</div>
       </div>
-
-      <div class="perfil-section">Cambiar contraseña</div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Contraseña actual</label>
-          <input type="password" class="form-input" id="pPassActual" placeholder="••••••">
+      <!-- Formulario -->
+      <div style="padding:24px;">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--line);">Datos de contacto</div>
+        <div class="form-grid" style="gap:12px;">
+          <div class="form-group form-full">
+            <label class="form-label">Nombre completo</label>
+            <input class="form-input" id="pNombre" placeholder="Tu nombre">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input class="form-input" id="pTelefono" placeholder="2477 xxxxxx" type="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="pEmail" placeholder="tu@email.com" type="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de nacimiento</label>
+            <input type="date" class="form-input" id="pFechaNac">
+          </div>
         </div>
-        <div class="form-group"></div>
-        <div class="form-group">
-          <label class="form-label">Nueva contraseña</label>
-          <input type="password" class="form-input" id="pPassNueva" placeholder="••••••">
+        <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;margin:20px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);">Cambiar contraseña</div>
+        <div class="form-grid" style="gap:12px;">
+          <div class="form-group form-full">
+            <label class="form-label">Contraseña actual</label>
+            <input type="password" class="form-input" id="pPassActual" placeholder="••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nueva contraseña</label>
+            <input type="password" class="form-input" id="pPassNueva" placeholder="••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmar contraseña</label>
+            <input type="password" class="form-input" id="pPassConfirm" placeholder="••••••">
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Confirmar contraseña</label>
-          <input type="password" class="form-input" id="pPassConfirm" placeholder="••••••">
-        </div>
-      </div>
 
       <div class="form-actions">
         <button class="btn-cancel" onclick="cerrarModal('mPerfil')">Cancelar</button>
