@@ -2427,6 +2427,12 @@ function abrirModalCliente(id){
   document.getElementById('fPautaI').value=c?.pautaInicio||'';
   document.getElementById('fPautaV').value=c?.pautaVence||'';
   document.getElementById('fNotas').value=c?.notas||'';
+  // Campos confidenciales
+  if(document.getElementById('fMontoPauta')) document.getElementById('fMontoPauta').value=c?.montoPauta||'';
+  if(document.getElementById('fPeriodicidad')) document.getElementById('fPeriodicidad').value=c?.periodicidad||'mensual';
+  if(document.getElementById('fTieneComision')){ document.getElementById('fTieneComision').value=c?.tieneComision||'no'; toggleComision(); }
+  if(document.getElementById('fComisionPct')) document.getElementById('fComisionPct').value=c?.comisionPct||'';
+  if(document.getElementById('fComisionEmp')) document.getElementById('fComisionEmp').value=c?.comisionEmp||'';
   document.getElementById('btnEliminarCliente').style.display=c?'block':'none';
   mostrarCamposConfidenciales();
   abrirModal('mCliente');
@@ -2436,7 +2442,15 @@ function guardarCliente(){
   const nombre=document.getElementById('fNombre').value.trim();
   const rubro=document.getElementById('fRubro').value.trim();
   if(!nombre||!rubro){ toast('Completá nombre y rubro','err'); return; }
-  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim()};
+  const puedeVerConfidencial = empActualId === 'emp01' || empActualId === 'emp02';
+  const datosConfidenciales = puedeVerConfidencial ? {
+    montoPauta: Number(document.getElementById('fMontoPauta')?.value) || 0,
+    periodicidad: document.getElementById('fPeriodicidad')?.value || 'mensual',
+    tieneComision: document.getElementById('fTieneComision')?.value || 'no',
+    comisionPct: Number(document.getElementById('fComisionPct')?.value) || 0,
+    comisionEmp: document.getElementById('fComisionEmp')?.value || '',
+  } : {};
+  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
