@@ -2720,9 +2720,17 @@ function filtrarOrdenes(){
   var h = hoy();
   var inicioSemana = typeof lunesDeSemana === 'function' ? lunesDeSemana(h) : h;
   function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  var yoFilt = colaboradores.find(function(c){ return c.id===empActualId; });
+  var esDGFilt = empActualId==='emp01' || (yoFilt && yoFilt.jerarquia==='director_general');
+  var esAdminFilt = empActualId==='emp02';
   var lista = ordenes.filter(function(o){
     var f = getFecha(o);
     var est = (o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
+    // Director solo ve las órdenes de su equipo
+    if(!esDGFilt && !esAdminFilt && yoFilt && yoFilt.jerarquia==='director'){
+      var asigDir = colaboradores.find(function(c){ return c.id===o.asignadoA; });
+      if(!asigDir || asigDir.equipo !== yoFilt.equipo) return false;
+    }
     if(fFecha==='hoy' && f && f!==h) return false;
     if(fFecha==='semana' && f && f < inicioSemana) return false;
     if(fEst){ var fEstNorm = fEst.toLowerCase().replace(/-/g,'_'); if(fEstNorm !== est) return false; }
@@ -3050,6 +3058,15 @@ function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
 function verTareasColaborador(id){
   const e = colaboradores.find(c=>c.id===id);
   if(!e) return;
+  // Control de acceso: solo emp01, emp02, y el director del equipo de e
+  const yo = colaboradores.find(function(c){ return c.id===empActualId; });
+  const esDG = empActualId==='emp01' || (yo && yo.jerarquia==='director_general');
+  const esAdmin = empActualId==='emp02';
+  const esDirectorDelEquipo = yo && yo.jerarquia==='director' && yo.equipo===e.equipo;
+  if(!esDG && !esAdmin && !esDirectorDelEquipo && empActualId!==id){
+    toast('No tenés permiso para ver las tareas de este colaborador','err');
+    return;
+  }
   const tareasEmp = ordenes.filter(o=>o.asignadoA===id || (o.copiaA||[]).includes(id));
   const pendientes = tareasEmp.filter(o=>o.estado==='pendiente');
   const enCurso = tareasEmp.filter(o=>o.estado==='en_curso');
@@ -3146,8 +3163,13 @@ function filtrarcolaboradores(){
   const q = (document.getElementById('searchEmp')?.value||'').toLowerCase();
   const equipo = document.getElementById('filterEquipo')?.value || '';
   const jerarquia = document.getElementById('filterJerarquia')?.value || '';
+  const yo = colaboradores.find(function(c){ return c.id===empActualId; });
+  const esDG = empActualId==='emp01' || (yo && yo.jerarquia==='director_general');
+  const esAdmin = empActualId==='emp02';
   const lista = colaboradores.filter(e => {
-    if(q && !e.nombre.toLowerCase().includes(q) && !e.puesto.toLowerCase().includes(q)) return false;
+    // Director solo ve su equipo; director general y admin ven todos
+    if(!esDG && !esAdmin && yo && yo.jerarquia==='director' && e.equipo !== yo.equipo) return false;
+    if(q && !e.nombre.toLowerCase().includes(q) && !(e.puesto||'').toLowerCase().includes(q)) return false;
     if(equipo && e.equipo !== equipo) return false;
     if(jerarquia && e.jerarquia !== jerarquia) return false;
     return true;
