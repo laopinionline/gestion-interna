@@ -1059,6 +1059,34 @@ header{
         <div class="form-group"><label class="form-label">Vencimiento de pauta</label><input type="date" class="form-input" id="fPautaV"></div>
         <div class="form-section">Notas</div>
         <div class="form-group form-full"><label class="form-label">Notas</label><textarea class="form-textarea" id="fNotas"></textarea></div>
+        <!-- CAMPOS CONFIDENCIALES — solo emp01 y emp02 -->
+        <div class="form-section campos-confidenciales" id="seccionConfidencial" style="display:none;">💰 Datos económicos (confidencial)</div>
+        <div class="campos-confidenciales" id="camposConfidenciales" style="display:none;">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Monto mensual de pauta ($)</label><input type="number" class="form-input" id="fMontoPauta" placeholder="0"></div>
+            <div class="form-group"><label class="form-label">Periodicidad</label>
+              <select class="form-select" id="fPeriodicidad">
+                <option value="mensual">Mensual</option>
+                <option value="trimestral">Trimestral</option>
+                <option value="semestral">Semestral</option>
+                <option value="anual">Anual</option>
+                <option value="unica">Única vez</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">¿Tiene comisión?</label>
+              <select class="form-select" id="fTieneComision" onchange="toggleComision()">
+                <option value="no">No</option>
+                <option value="si">Sí</option>
+              </select>
+            </div>
+            <div class="form-group" id="grupoComisionPct" style="display:none;"><label class="form-label">Porcentaje de comisión (%)</label><input type="number" class="form-input" id="fComisionPct" placeholder="0" min="0" max="100"></div>
+            <div class="form-group form-full" id="grupoComisionEmp" style="display:none;"><label class="form-label">Comisión asignada a</label>
+              <select class="form-select" id="fComisionEmp">
+                <option value="">— Seleccionar colaborador —</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="form-actions">
         <button class="btn-danger" id="btnEliminarCliente" style="display:none" onclick="eliminarCliente()">🗑 Eliminar</button>
@@ -2400,6 +2428,7 @@ function abrirModalCliente(id){
   document.getElementById('fPautaV').value=c?.pautaVence||'';
   document.getElementById('fNotas').value=c?.notas||'';
   document.getElementById('btnEliminarCliente').style.display=c?'block':'none';
+  mostrarCamposConfidenciales();
   abrirModal('mCliente');
 }
 
@@ -2768,6 +2797,32 @@ async function renderMisRedes(){
   } catch(e){
     console.error('Error renderMisRedes:',e);
     content.innerHTML='<div class="no-data">Error al cargar redes</div>';
+  }
+}
+
+function toggleComision(){
+  const tiene = document.getElementById('fTieneComision').value === 'si';
+  document.getElementById('grupoComisionPct').style.display = tiene ? '' : 'none';
+  document.getElementById('grupoComisionEmp').style.display = tiene ? '' : 'none';
+}
+
+function mostrarCamposConfidenciales(){
+  const puedeVer = empActualId === 'emp01' || empActualId === 'emp02';
+  const sec = document.getElementById('seccionConfidencial');
+  const campos = document.getElementById('camposConfidenciales');
+  if(sec) sec.style.display = puedeVer ? '' : 'none';
+  if(campos) campos.style.display = puedeVer ? '' : 'none';
+  // Poblar selector de colaboradores para comisión
+  if(puedeVer){
+    const sel = document.getElementById('fComisionEmp');
+    if(sel && sel.options.length <= 1){
+      colaboradores.forEach(function(e){
+        const opt = document.createElement('option');
+        opt.value = e.id;
+        opt.textContent = e.nombre;
+        sel.appendChild(opt);
+      });
+    }
   }
 }
 
