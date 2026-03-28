@@ -3444,12 +3444,23 @@ async function subirFotoEnPerfil(input){
   const file = input.files[0];
   if(!file) return;
   if(!empActualId){ toast('Error: sesión no encontrada','err'); return; }
-  toast('Subiendo foto…');
+  toast('Procesando foto…');
   try {
-    // Convertir a base64 para guardar en Firestore (sin Firebase Storage)
-    const reader = new FileReader();
-    reader.onload = async function(e){
-      const base64 = e.target.result;
+    // Comprimir imagen con canvas antes de guardar
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = async function(){
+      URL.revokeObjectURL(objectUrl);
+      // Canvas para comprimir
+      const canvas = document.createElement('canvas');
+      const MAX = 200;
+      let w = img.width, h = img.height;
+      if(w > h){ if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; } }
+      else { if(h > MAX){ w = Math.round(w*MAX/h); h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const base64 = canvas.toDataURL('image/jpeg', 0.7);
+      // Guardar en Firestore (imagen pequeña ~10-30KB)
       try {
         await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: base64 });
         if(usuarioLogueado) usuarioLogueado.fotoUrl = base64;
@@ -3462,15 +3473,18 @@ async function subirFotoEnPerfil(input){
           av.style.background = 'none';
           av.style.padding = '0';
         }
+        // Actualizar avatar en el header
+        actualizarAvatarColaborador(usuarioLogueado || col);
         toast('Foto actualizada ✓', 'ok');
       } catch(err){
         console.error('Error guardando foto:', err);
-        toast('Error al guardar foto: ' + err.message, 'err');
+        toast('Error al guardar: ' + err.message, 'err');
       }
     };
-    reader.readAsDataURL(file);
+    img.onerror = function(){ toast('Error al leer la imagen', 'err'); };
+    img.src = objectUrl;
   } catch(e){
-    console.error('Error subiendo foto:', e);
+    console.error('Error:', e);
     toast('Error: ' + e.message, 'err');
   }
 }
