@@ -2427,7 +2427,7 @@ function renderClientes(lista){
     if(al) banner=al.tipo==='vencido'?`<div class="pauta-alert-b">🔴 Pauta vencida hace ${Math.abs(al.d)} día${Math.abs(al.d)!==1?'s':''}</div>`:`<div class="pauta-warn-b">⚠️ Vence en ${al.d} día${al.d!==1?'s':''}</div>`;
     return `<div class="client-card ${c.estado}" onclick="abrirDetalle('${c.id}')">
       ${banner}
-      <div class="card-header"><div class="client-name">${c.nombre}</div><span class="status-badge badge-${c.estado}">${c.estado}</span></div>
+      <div class="card-header"><div class="client-name" style="display:flex;align-items:center;">${c.logoUrl?'<img src="'+c.logoUrl+'" style="width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0;margin-right:6px;vertical-align:middle;">':''}${c.nombre}</div><span class="status-badge badge-${c.estado}">${c.estado}</span></div>
       <div class="client-rubro">${c.rubro}</div>
       <div>
         ${c.telefono?`<div class="ci-row">📞 ${c.telefono}</div>`:''}
@@ -2486,7 +2486,7 @@ function guardarCliente(){
     comisionPct: Number(document.getElementById('fComisionPct')?.value) || 0,
     comisionEmp: document.getElementById('fComisionEmp')?.value || '',
   } : {};
-  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),...datosConfidenciales};
+  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),logoUrl:window._logoClienteBase64||(editandoClienteId?(clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||''):''),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
