@@ -691,8 +691,8 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
     <div class="header-right">
-      <span class="user-badge">👤 <span id="svUserName">—</span></span>
-      <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
+      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </header>
@@ -976,7 +976,7 @@ header{
       </label>
       <input type="file" id="inputFotoPerfil" accept="image/*" capture="environment" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
-      <button class="btn-logout" onclick="abrirPerfil()">Mi perfil</button>
+      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <span class="user-badge">💻 colaborador</span>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
@@ -3476,6 +3476,9 @@ async function subirFotoEnPerfil(input){
         // Actualizar avatar en el header
         actualizarAvatarColaborador(usuarioLogueado || col);
         toast('Foto actualizada ✓', 'ok');
+        // Actualizar avatar en header
+        var wrapH = document.getElementById('svAvatarWrap');
+        if(wrapH) wrapH.innerHTML = '<img src="'+base64+'" style="width:100%;height:100%;object-fit:cover;">';
       } catch(err){
         console.error('Error guardando foto:', err);
         toast('Error al guardar: ' + err.message, 'err');
