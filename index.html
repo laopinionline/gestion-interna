@@ -1064,7 +1064,16 @@ header{
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group form-full"><label class="form-label">Nombre *</label><input type="text" class="form-input" id="fNombre" placeholder="Ej: Farmacia Central"></div>
+        <div class="form-group form-full" style="display:flex;align-items:center;gap:16px;">
+          <div style="position:relative;flex-shrink:0;">
+            <div id="fLogoPreview" onclick="document.getElementById('inputLogoCliente').click()" style="width:64px;height:64px;border-radius:10px;background:#eee;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:24px;" title="Subir logo">🏢</div>
+            <input type="file" id="inputLogoCliente" accept="image/*" style="display:none;" onchange="previsualizarLogoCliente(this)">
+          </div>
+          <div style="flex:1;">
+            <label class="form-label">Nombre *</label>
+            <input type="text" class="form-input" id="fNombre" placeholder="Ej: Farmacia Central">
+          </div>
+        </div>
         <div class="form-group"><label class="form-label">Rubro *</label><input type="text" class="form-input" id="fRubro" placeholder="Ej: Salud, Comercio..."></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-select" id="fEstado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select>
@@ -2438,6 +2447,13 @@ function abrirModalCliente(id){
   editandoClienteId=id||null;
   const c=id?clientes.find(x=>x.id===id):null;
   document.getElementById('mClienteTitle').textContent=c?'Editar cliente':'Nuevo cliente';
+  // Logo del cliente
+  window._logoClienteBase64 = null;
+  var prevLogo = document.getElementById('fLogoPreview');
+  if(prevLogo){
+    if(c && c.logoUrl){ prevLogo.innerHTML = '<img src="'+c.logoUrl+'" style="width:100%;height:100%;object-fit:cover;">'; }
+    else { prevLogo.innerHTML = '🏢'; }
+  }
   document.getElementById('fNombre').value=c?.nombre||'';
   document.getElementById('fRubro').value=c?.rubro||'';
   document.getElementById('fEstado').value=c?.estado||'activo';
@@ -2832,6 +2848,30 @@ async function renderMisRedes(){
     console.error('Error renderMisRedes:',e);
     content.innerHTML='<div class="no-data">Error al cargar redes</div>';
   }
+}
+
+function previsualizarLogoCliente(input){
+  const file = input.files[0];
+  if(!file) return;
+  const img = new Image();
+  const objectUrl = URL.createObjectURL(file);
+  img.onload = function(){
+    URL.revokeObjectURL(objectUrl);
+    const canvas = document.createElement('canvas');
+    const MAX = 200;
+    let w = img.width, h = img.height;
+    if(w > h){ if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; } }
+    else { if(h > MAX){ w = Math.round(w*MAX/h); h = MAX; } }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+    // Preview inmediato
+    const prev = document.getElementById('fLogoPreview');
+    if(prev) prev.innerHTML = '<img src="'+base64+'" style="width:100%;height:100%;object-fit:cover;">';
+    // Guardar en variable temporal
+    window._logoClienteBase64 = base64;
+  };
+  img.src = objectUrl;
 }
 
 function toggleComision(){
