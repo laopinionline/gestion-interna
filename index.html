@@ -1466,6 +1466,7 @@ async function login(){
     if(rolActual==='supervisor'){
       document.getElementById('appSupervisor').classList.add('active');
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
+      actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
     } else {
       document.getElementById('appcolaborador').classList.add('active');
@@ -3564,6 +3565,7 @@ function guardarPerfil(){
   const primerNombre = nombre.split(' ')[0];
   if(document.getElementById('svUserName')) document.getElementById('svUserName').textContent = primerNombre;
   if(document.getElementById('empUserName')) document.getElementById('empUserName').textContent = primerNombre;
+  actualizarAvatarHeader(usuarioLogueado);
 
   // Sincronizar email (y nombre/teléfono) en Firestore para Google Sign-In futuro
   if(typeof db !== 'undefined' && u.id){
