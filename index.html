@@ -3354,28 +3354,37 @@ function renderProductividad(){
 // ══ PERFIL ══
 async function subirFotoEnPerfil(input){
   const file = input.files[0];
-  if(!file || !empActualId) return;
+  if(!file) return;
+  if(!empActualId){ toast('Error: sesión no encontrada','err'); return; }
   toast('Subiendo foto…');
   try {
-    const ref = storage.ref('fotos-perfil/' + empActualId);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: url });
-    if(usuarioLogueado) usuarioLogueado.fotoUrl = url;
-    const col = colaboradores.find(c => c.id === empActualId);
-    if(col) col.fotoUrl = url;
-    // Actualizar el avatar en el modal y en el header
-    actualizarAvatarColaborador(usuarioLogueado || col);
-    // Refrescar el avatar en el modal de perfil
-    const av = document.getElementById('perfilAvatar');
-    if(av && url){
-      av.innerHTML = '';
-      av.style.background = 'none';
-      av.style.padding = '0';
-      av.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
-    }
-    toast('Foto actualizada ✓', 'ok');
-  } catch(e){ toast('Error al subir foto', 'error'); console.error(e); }
+    // Convertir a base64 para guardar en Firestore (sin Firebase Storage)
+    const reader = new FileReader();
+    reader.onload = async function(e){
+      const base64 = e.target.result;
+      try {
+        await db.collection('colaboradores').doc(empActualId).update({ fotoUrl: base64 });
+        if(usuarioLogueado) usuarioLogueado.fotoUrl = base64;
+        const col = colaboradores.find(c => c.id === empActualId);
+        if(col) col.fotoUrl = base64;
+        // Actualizar avatar en el modal
+        const av = document.getElementById('perfilAvatar');
+        if(av){
+          av.innerHTML = '<img src="'+base64+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+          av.style.background = 'none';
+          av.style.padding = '0';
+        }
+        toast('Foto actualizada ✓', 'ok');
+      } catch(err){
+        console.error('Error guardando foto:', err);
+        toast('Error al guardar foto: ' + err.message, 'err');
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch(e){
+    console.error('Error subiendo foto:', e);
+    toast('Error: ' + e.message, 'err');
+  }
 }
 
 function abrirPerfil(){
