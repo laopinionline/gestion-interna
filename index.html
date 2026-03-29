@@ -2626,6 +2626,7 @@ function renderClientes(lista){
       ${banner}
       <div class="card-header"><div class="client-name" style="display:flex;align-items:center;">${c.logoUrl?'<img src="'+c.logoUrl+'" style="width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0;margin-right:6px;vertical-align:middle;">':''}${c.nombre}</div><span class="status-badge badge-${c.estado}">${c.estado}</span></div>
       <div class="client-rubro">${c.rubro}</div>
+      ${c.grupoEmpresarial?`<div style="font-size:11px;color:var(--blue2);font-weight:600;margin-top:2px;">📎 ${c.grupoEmpresarial}</div>`:''}
       <div>
         ${c.telefono?`<div class="ci-row">📞 ${c.telefono}</div>`:''}
         ${c.email?`<div class="ci-row">✉ ${c.email}</div>`:''}
