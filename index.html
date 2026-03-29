@@ -1259,7 +1259,14 @@ header{
         <div class="form-section campos-confidenciales" id="seccionConfidencial" style="display:none;">💰 Datos económicos (confidencial)</div>
         <div class="campos-confidenciales" id="camposConfidenciales" style="display:none;">
           <div class="form-grid">
-            <div class="form-group"><label class="form-label">Monto mensual de pauta ($)</label><input type="number" class="form-input" id="fMontoPauta" placeholder="0"></div>
+            <div class="form-group"><label class="form-label">Monto mensual de pauta ($)</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="number" class="form-input" id="fMontoPauta" placeholder="0" style="flex:1;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--ink2);white-space:nowrap;cursor:pointer;">
+                <input type="checkbox" id="fEsCanje" style="width:16px;height:16px;accent-color:var(--blue);cursor:pointer;">
+                Canje
+              </label>
+            </div></div>
             <div class="form-group"><label class="form-label">Periodicidad</label>
               <select class="form-select" id="fPeriodicidad">
                 <option value="mensual">Mensual</option>
@@ -2616,7 +2623,7 @@ function renderClientes(lista){
         ${c.email?`<div class="ci-row">✉ ${c.email}</div>`:''}
         ${c.pautaVence?`<div class="ci-row">📅 Vence: ${fmtD(c.pautaVence)}</div>`:''}
       </div>
-      ${(empActualId==="emp01"||empActualId==="emp02")&&c.montoPauta?`<div style="background:#e8f5ee;border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;"><span style="font-weight:700;color:#2e7d32;">$${Number(c.montoPauta).toLocaleString("es-AR")}/mes</span><span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
+      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:#e8f5ee;border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:#2e7d32;">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
       <div class="card-footer">
         <div class="orders-count"><strong>${ords.length}</strong> orden${ords.length!==1?'es':''}${pend?` · <strong style="color:var(--gold)">${pend} pend.</strong>`:''}</div>
         ${c.pauta?`<span class="pauta-tag">📢 Pauta</span>`:''}
@@ -2647,6 +2654,7 @@ function abrirModalCliente(id){
   document.getElementById('fNotas').value=c?.notas||'';
   // Campos confidenciales
   if(document.getElementById('fMontoPauta')) document.getElementById('fMontoPauta').value=c?.montoPauta||'';
+  if(document.getElementById('fEsCanje')) document.getElementById('fEsCanje').checked=c?.esCanje||false;
   if(document.getElementById('fPeriodicidad')) document.getElementById('fPeriodicidad').value=c?.periodicidad||'mensual';
   if(document.getElementById('fTieneComision')){ document.getElementById('fTieneComision').value=c?.tieneComision||'no'; toggleComision(); }
   if(document.getElementById('fComisionPct')) document.getElementById('fComisionPct').value=c?.comisionPct||'';
