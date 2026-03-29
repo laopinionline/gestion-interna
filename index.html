@@ -1247,6 +1247,14 @@ header{
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-select" id="fEstado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select>
         </div>
+        <div class="form-group"><label class="form-label">Grupo empresarial</label>
+          <div style="display:flex;gap:6px;">
+            <select class="form-select" id="fGrupoSelect" onchange="onGrupoSelect(this)" style="flex:1;">
+              <option value="">— Sin grupo —</option>
+            </select>
+            <input type="text" class="form-input" id="fGrupoNuevo" placeholder="Nuevo grupo..." style="flex:1;display:none;">
+          </div>
+        </div>
         <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="fTel"></div>
         <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="fEmail"></div>
         <div class="form-section">Pauta publicitaria</div>
@@ -2661,6 +2669,7 @@ function abrirModalCliente(id){
   if(document.getElementById('fComisionEmp')) document.getElementById('fComisionEmp').value=c?.comisionEmp||'';
   document.getElementById('btnEliminarCliente').style.display=c?'block':'none';
   mostrarCamposConfidenciales();
+  poblarGrupos(c?.grupoEmpresarial||'');
   abrirModal('mCliente');
 }
 
@@ -2677,7 +2686,10 @@ function guardarCliente(){
     comisionEmp: document.getElementById('fComisionEmp')?.value || '',
     esCanje: document.getElementById('fEsCanje')?.checked || false,
   } : {};
-  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
+  var grupoSel = document.getElementById('fGrupoSelect')?.value;
+  var grupoNuevo = document.getElementById('fGrupoNuevo')?.value.trim();
+  var grupoEmpresarial = grupoSel === '__nuevo__' ? grupoNuevo : (grupoSel || '');
+  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
@@ -3117,6 +3129,49 @@ async function ejecutarAsistente(){
   }
   btn.textContent = 'Generar ✦';
   btn.disabled = false;
+}
+
+function onGrupoSelect(sel){
+  var inp = document.getElementById('fGrupoNuevo');
+  if(sel.value === '__nuevo__'){
+    inp.style.display = '';
+    inp.focus();
+  } else {
+    inp.style.display = 'none';
+    inp.value = '';
+  }
+}
+
+function poblarGrupos(grupoActual){
+  // Obtener grupos únicos de los clientes existentes
+  var grupos = [];
+  clientes.forEach(function(c){
+    if(c.grupoEmpresarial && !grupos.includes(c.grupoEmpresarial)){
+      grupos.push(c.grupoEmpresarial);
+    }
+  });
+  grupos.sort();
+  var sel = document.getElementById('fGrupoSelect');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Sin grupo —</option>';
+  grupos.forEach(function(g){
+    var opt = document.createElement('option');
+    opt.value = g;
+    opt.textContent = g;
+    if(g === grupoActual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Opción para crear nuevo
+  var optNew = document.createElement('option');
+  optNew.value = '__nuevo__';
+  optNew.textContent = '+ Nuevo grupo...';
+  sel.appendChild(optNew);
+  // Si el grupo actual no está en la lista, mostrarlo en el input
+  if(grupoActual && !grupos.includes(grupoActual)){
+    sel.value = '__nuevo__';
+    var inp = document.getElementById('fGrupoNuevo');
+    if(inp){ inp.style.display = ''; inp.value = grupoActual; }
+  }
 }
 
 function toggleComision(){
