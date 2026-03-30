@@ -3414,12 +3414,29 @@ function mostrarFormColaborador(emp){
 function abrirModalcolaborador(id){
   editandoEmpId = id || null;
   const e = id ? colaboradores.find(x=>x.id===id) : null;
-  document.getElementById('mcolaboradorTitle').textContent = e ? 'Editar colaborador' : 'Nuevo colaborador';
-  document.getElementById('eNombre').value = e?.nombre || '';
-  document.getElementById('ePuesto').value = e?.puesto || '';
-  document.getElementById('eTel').value = e?.telefono || '';
-  document.getElementById('eEmail').value = e?.email || '';
-
+  document.getElementById('mcolaboradorTitle').textContent = e ? e.nombre : 'Nuevo colaborador';
+  // Campos básicos
+  if(document.getElementById('eNombre')) document.getElementById('eNombre').value = e?.nombre||'';
+  if(document.getElementById('ePuesto')) document.getElementById('ePuesto').value = e?.puesto||'';
+  if(document.getElementById('eEquipo')) document.getElementById('eEquipo').value = e?.equipo||'';
+  if(document.getElementById('eJerarquia')) document.getElementById('eJerarquia').value = e?.jerarquia||'colaborador';
+  if(document.getElementById('eTel')) document.getElementById('eTel').value = e?.telefono||'';
+  if(document.getElementById('eEmail')) document.getElementById('eEmail').value = e?.email||'';
+  if(document.getElementById('eFechaNac')) document.getElementById('eFechaNac').value = e?.fechaNac||'';
+  if(document.getElementById('eTelegram')) document.getElementById('eTelegram').value = e?.telegram||'';
+  if(document.getElementById('eNotas')) document.getElementById('eNotas').value = e?.notas||'';
+  // Poblar selector Depende de
+  const selReporta = document.getElementById('eReportaA');
+  if(selReporta){
+    selReporta.innerHTML = '<option value="">— Autónomo —</option>';
+    colaboradores.filter(function(c){ return c.id !== (id||''); }).forEach(function(c){
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.nombre + (c.equipo?' ('+c.equipo+')':'');
+      selReporta.appendChild(opt);
+    });
+    if(e?.reportaA) selReporta.value = e.reportaA;
+  }
   document.getElementById('btnEliminarEmp').style.display = e ? 'block' : 'none';
   abrirModal('mcolaborador');
 }
