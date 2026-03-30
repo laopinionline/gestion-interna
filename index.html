@@ -1481,11 +1481,42 @@ header{
     <div class="modal-body" id="mcolaboradorBody">
       <div id="mcolaboradorTareas"></div>
       <div id="mcolaboradorForm"><div class="form-grid">
-        <div class="form-group"><label class="form-label">Nombre y apellido *</label><input type="text" class="form-input" id="eNombre" placeholder="Ej: Juan García"></div>
-        <div class="form-group"><label class="form-label">Puesto / Área *</label><input type="text" class="form-input" id="ePuesto" placeholder="Ej: Área Digital"></div>
-        <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="eTel"></div>
-        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="eEmail"></div>
-        
+        <div class="form-group form-full"><label class="form-label">Nombre y apellido *</label><input type="text" class="form-input" id="eNombre" placeholder="Ej: Juan García"></div>
+        <div class="form-group"><label class="form-label">Puesto / Cargo *</label><input type="text" class="form-input" id="ePuesto" placeholder="Ej: Periodista, Editor..."></div>
+        <div class="form-group"><label class="form-label">Equipo / Área</label>
+          <select class="form-select" id="eEquipo">
+            <option value="">— Sin equipo —</option>
+            <option value="Dirección">Dirección</option>
+            <option value="Redacción">Redacción</option>
+            <option value="Digital">Digital</option>
+            <option value="Comercial">Comercial</option>
+            <option value="Administración">Administración</option>
+            <option value="Externo">Externo</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Jerarquía</label>
+          <select class="form-select" id="eJerarquia">
+            <option value="colaborador">Colaborador</option>
+            <option value="director">Director de área</option>
+            <option value="director_general">Director General</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Depende de</label>
+          <select class="form-select" id="eReportaA">
+            <option value="">— Autónomo —</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Estado</label>
+          <select class="form-select" id="eEstado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="eTel" placeholder="2477 xxxxxx"></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="eEmail" placeholder="correo@ejemplo.com"></div>
+        <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" class="form-input" id="eFechaNac"></div>
+        <div class="form-group"><label class="form-label">Telegram</label><input type="text" class="form-input" id="eTelegram" placeholder="@usuario"></div>
+        <div class="form-group form-full"><label class="form-label">Notas internas</label><textarea class="form-input form-textarea" id="eNotas" placeholder="Observaciones, horarios, etc."></textarea></div>
       </div>
       <div class="form-actions">
         <button class="btn-danger" id="btnEliminarEmp" style="display:none" onclick="eliminarcolaborador()">🗑 Eliminar</button>
@@ -3345,7 +3376,7 @@ function verTareasColaborador(id){
       <div style="font-weight:700;font-size:12px;text-transform:uppercase;color:#999;margin-top:14px;margin-bottom:6px">✅ Completadas (${completadas.length})</div>
       ${renderOrdenes(completadas.slice(0,5))}
       <div style="margin-top:16px;text-align:right">
-        <button class="btn-primary btn-sm" onclick="mostrarFormColaborador()">✏️ Editar perfil</button>
+        <button class="btn-primary btn-sm" onclick="mostrarFormColaborador(colaboradores.find(function(c){return c.id===editandoEmpId;}))">✏️ Editar perfil</button>
       </div>
     `;
   }
@@ -3353,10 +3384,35 @@ function verTareasColaborador(id){
   document.getElementById('mcolaborador')?.classList.add('active');
 }
 
-function mostrarFormColaborador(){
+function mostrarFormColaborador(emp){
   document.getElementById('mcolaboradorTareas').innerHTML='';
   const f = document.getElementById('mcolaboradorForm');
   if(f) f.style.display='';
+  // Poblar selector "Depende de" con todos los colaboradores
+  const selReporta = document.getElementById('eReportaA');
+  if(selReporta){
+    selReporta.innerHTML = '<option value="">— Autónomo —</option>';
+    colaboradores.filter(function(c){ return c.id !== (emp?.id||''); }).forEach(function(c){
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.nombre + (c.equipo?' ('+c.equipo+')':'');
+      if(emp && emp.reportaA === c.id) opt.selected = true;
+      selReporta.appendChild(opt);
+    });
+  }
+  // Cargar datos del colaborador si viene uno
+  if(emp){
+    if(document.getElementById('eNombre')) document.getElementById('eNombre').value = emp.nombre||'';
+    if(document.getElementById('ePuesto')) document.getElementById('ePuesto').value = emp.puesto||'';
+    if(document.getElementById('eEquipo')) document.getElementById('eEquipo').value = emp.equipo||'';
+    if(document.getElementById('eJerarquia')) document.getElementById('eJerarquia').value = emp.jerarquia||'colaborador';
+    if(document.getElementById('eEstado')) document.getElementById('eEstado').value = emp.estado||'activo';
+    if(document.getElementById('eTel')) document.getElementById('eTel').value = emp.telefono||'';
+    if(document.getElementById('eEmail')) document.getElementById('eEmail').value = emp.email||'';
+    if(document.getElementById('eFechaNac')) document.getElementById('eFechaNac').value = emp.fechaNac||'';
+    if(document.getElementById('eTelegram')) document.getElementById('eTelegram').value = emp.telegram||'';
+    if(document.getElementById('eNotas')) document.getElementById('eNotas').value = emp.notas||'';
+  }
 }
 
 function abrirModalcolaborador(id){
@@ -3376,7 +3432,18 @@ function guardarcolaborador(){
   const nombre = document.getElementById('eNombre').value.trim();
   const puesto = document.getElementById('ePuesto').value.trim();
   if(!nombre||!puesto){ toast('Completá nombre y puesto','err'); return; }
-  const datos = { nombre, puesto, equipo: document.getElementById('eEquipo')?.value||'Colaborador', jerarquia: document.getElementById('eJerarquia')?.value||'colaborador', telefono: document.getElementById('eTel').value.trim(), email: document.getElementById('eEmail').value.trim(), estado: 'activo' };
+  const datos = {
+    nombre, puesto,
+    equipo: document.getElementById('eEquipo')?.value||'',
+    jerarquia: document.getElementById('eJerarquia')?.value||'colaborador',
+    reportaA: document.getElementById('eReportaA')?.value||'',
+    estado: document.getElementById('eEstado')?.value||'activo',
+    telefono: document.getElementById('eTel')?.value.trim()||'',
+    email: document.getElementById('eEmail')?.value.trim()||'',
+    fechaNac: document.getElementById('eFechaNac')?.value||'',
+    telegram: document.getElementById('eTelegram')?.value.trim()||'',
+    notas: document.getElementById('eNotas')?.value.trim()||'',
+  };
   if(editandoEmpId){
     const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
     colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
