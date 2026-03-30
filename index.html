@@ -3414,6 +3414,16 @@ function mostrarFormColaborador(emp){
 function abrirModalcolaborador(id){
   editandoEmpId = id || null;
   const e = id ? colaboradores.find(x=>x.id===id) : null;
+  // Si tiene id, refrescar desde Firestore para tener reportaA actualizado
+  if(id && typeof db !== 'undefined' && db){
+    db.collection('colaboradores').doc(id).get().then(function(doc){
+      if(doc.exists){
+        var fresh = doc.data();
+        var selR = document.getElementById('eReportaA');
+        if(selR && fresh.reportaA) selR.value = fresh.reportaA;
+      }
+    });
+  }
   document.getElementById('mcolaboradorTitle').textContent = e ? e.nombre : 'Nuevo colaborador';
   // Campos básicos
   if(document.getElementById('eNombre')) document.getElementById('eNombre').value = e?.nombre||'';
@@ -3445,11 +3455,12 @@ function guardarcolaborador(){
   const nombre = document.getElementById('eNombre').value.trim();
   const puesto = document.getElementById('ePuesto').value.trim();
   if(!nombre||!puesto){ toast('Completá nombre y puesto','err'); return; }
+  var reportaAVal = document.getElementById('eReportaA')?.value||'';
   const datos = {
     nombre, puesto,
     equipo: document.getElementById('eEquipo')?.value||'',
     jerarquia: document.getElementById('eJerarquia')?.value||'colaborador',
-    reportaA: document.getElementById('eReportaA')?.value||'',
+    reportaA: reportaAVal,
     estado: 'activo',
     telefono: document.getElementById('eTel')?.value.trim()||'',
     email: document.getElementById('eEmail')?.value.trim()||'',
