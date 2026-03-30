@@ -381,6 +381,31 @@ header{
 .d-info-item{font-size:12px;color:rgba(255,255,255,0.82);display:flex;align-items:center;gap:5px;}
 .hero-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 14px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
 .hero-btn:hover{background:rgba(255,255,255,0.28);}
+/* ══ CHIPS COLABORADORES EN MODAL ORDEN ══ */
+.colabs-grupos{display:flex;flex-direction:column;gap:10px;}
+.colab-grupo-label{font-size:10px;font-weight:700;color:#aaa;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;}
+.colab-grupo-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.colab-check-wrap{
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;cursor:pointer;
+  padding:4px 10px;
+  background:#fff;
+  border-radius:20px;
+  border:1.5px solid var(--line);
+  transition:all 0.15s;
+  user-select:none;
+}
+.colab-check-wrap:hover{border-color:var(--blue2);background:#f0f4fa;}
+.colab-check-wrap:has(input:checked){
+  background:var(--blue);
+  border-color:var(--blue);
+  color:#fff;
+}
+.colab-check-wrap input[type=checkbox]{
+  accent-color:#fff;
+  width:13px;height:13px;
+  cursor:pointer;
+}
 /* ══ HERRAMIENTAS DE TRABAJO ══ */
 .herramientas-widget{background:#fff;border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
 .herramientas-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;}
@@ -2825,12 +2850,34 @@ function actualizarFiltroOrdenes(){
   selC.innerHTML='<option value="">— Sin cliente —</option>'+clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
   // Poblar checkboxes de colaboradores en el modal de orden
   const wrapE = document.getElementById('socolaboradoresWrap');
-  if(wrapE) wrapE.innerHTML = colaboradores.map(e=>`
-    <label class="colab-check-wrap" data-emp-id="${e.id}" style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:5px 10px;background:#fff;border-radius:20px;border:1.5px solid var(--line);" title="${e.equipo||''}">
-      <input type="checkbox" value="${e.id}" class="colab-check" style="accent-color:var(--blue);"> 
-      <span>${(e.nombre||'').split(' ').slice(0,2).join(' ')}</span>
-      ${e.equipo?`<span style="font-size:9px;color:#aaa">(${e.equipo})</span>`:''}
-    </label>`).join('');
+  if(wrapE){
+    // Agrupar por equipo
+    var equipos = {};
+    colaboradores.forEach(function(e){
+      var eq = e.equipo || 'Sin equipo';
+      if(!equipos[eq]) equipos[eq] = [];
+      equipos[eq].push(e);
+    });
+    var ordenEquipos = ['Dirección','Redacción','Digital','Comercial','Administración','Externo','Sin equipo'];
+    var html = '<div class="colabs-grupos">';
+    ordenEquipos.forEach(function(eq){
+      if(!equipos[eq] || equipos[eq].length === 0) return;
+      html += '<div>';
+      html += '<div class="colab-grupo-label">' + eq + '</div>';
+      html += '<div class="colab-grupo-chips">';
+      equipos[eq].forEach(function(e){
+        var nombre = (e.nombre||'').split(' ').slice(0,2).join(' ');
+        html += '<label class="colab-check-wrap" data-emp-id="'+e.id+'">' +
+          '<input type="checkbox" value="'+e.id+'" class="colab-check">' +
+          '<span>'+nombre+'</span>' +
+          '</label>';
+      });
+      html += '</div></div>';
+    });
+    html += '</div>';
+    wrapE.innerHTML = html;
+    wrapE.style.cssText = 'margin-top:4px;background:var(--paper);border-radius:10px;padding:14px;border:1.5px solid var(--line);';
+  }
 }
 
 function filtrarOrdenes(){
