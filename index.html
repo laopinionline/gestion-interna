@@ -3334,6 +3334,7 @@ function verTareasColaborador(id){
     toast('No tenés permiso para ver las tareas de este colaborador','err');
     return;
   }
+  editandoEmpId = id; // setear para que Editar perfil funcione
   const tareasEmp = ordenes.filter(o=>o.asignadoA===id || (o.copiaA||[]).includes(id));
   const pendientes = tareasEmp.filter(o=>o.estado==='pendiente');
   const enCurso = tareasEmp.filter(o=>o.estado==='en_curso');
