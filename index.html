@@ -382,29 +382,59 @@ header{
 .hero-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 14px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
 .hero-btn:hover{background:rgba(255,255,255,0.28);}
 /* ══ CHIPS COLABORADORES EN MODAL ORDEN ══ */
-.colabs-grupos{display:flex;flex-direction:column;gap:10px;}
-.colab-grupo-label{font-size:10px;font-weight:700;color:#aaa;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;}
+.colabs-grupos{display:flex;flex-direction:column;gap:14px;}
+.colab-grupo-section{
+  background:#fff;
+  border-radius:10px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+}
+.colab-grupo-label{
+  font-size:10px;font-weight:700;color:var(--blue);
+  letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.colab-grupo-label::after{
+  content:'';flex:1;height:1px;background:var(--line);
+}
 .colab-grupo-chips{display:flex;flex-wrap:wrap;gap:6px;}
 .colab-check-wrap{
-  display:flex;align-items:center;gap:5px;
-  font-size:12px;cursor:pointer;
-  padding:4px 10px;
-  background:#fff;
-  border-radius:20px;
-  border:1.5px solid var(--line);
+  display:flex;align-items:center;gap:0;
+  font-size:12px;font-weight:500;cursor:pointer;
+  padding:0;
+  background:transparent;
+  border-radius:8px;
+  border:none;
   transition:all 0.15s;
   user-select:none;
 }
-.colab-check-wrap:hover{border-color:var(--blue2);background:#f0f4fa;}
-.colab-check-wrap:has(input:checked){
+.colab-check-wrap input[type=checkbox]{
+  display:none;
+}
+.colab-chip-inner{
+  padding:5px 12px;
+  background:var(--paper);
+  border-radius:8px;
+  border:1.5px solid var(--line);
+  font-size:12px;font-weight:500;
+  color:var(--ink2);
+  transition:all 0.15s;
+  display:flex;align-items:center;gap:5px;
+}
+.colab-check-wrap:hover .colab-chip-inner{
+  border-color:var(--blue2);
+  background:#eef3fa;
+  color:var(--blue);
+}
+.colab-check-wrap:has(input:checked) .colab-chip-inner{
   background:var(--blue);
   border-color:var(--blue);
   color:#fff;
+  box-shadow:0 2px 8px rgba(26,58,92,0.25);
 }
-.colab-check-wrap input[type=checkbox]{
-  accent-color:#fff;
-  width:13px;height:13px;
-  cursor:pointer;
+.colab-check-wrap:has(input:checked) .colab-chip-inner::before{
+  content:'✓ ';font-weight:700;
 }
 /* ══ HERRAMIENTAS DE TRABAJO ══ */
 .herramientas-widget{background:#fff;border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
@@ -2862,14 +2892,14 @@ function actualizarFiltroOrdenes(){
     var html = '<div class="colabs-grupos">';
     ordenEquipos.forEach(function(eq){
       if(!equipos[eq] || equipos[eq].length === 0) return;
-      html += '<div>';
+      html += '<div class="colab-grupo-section">';
       html += '<div class="colab-grupo-label">' + eq + '</div>';
       html += '<div class="colab-grupo-chips">';
       equipos[eq].forEach(function(e){
         var nombre = (e.nombre||'').split(' ').slice(0,2).join(' ');
         html += '<label class="colab-check-wrap" data-emp-id="'+e.id+'">' +
           '<input type="checkbox" value="'+e.id+'" class="colab-check">' +
-          '<span>'+nombre+'</span>' +
+          '<span class="colab-chip-inner">'+nombre+'</span>' +
           '</label>';
       });
       html += '</div></div>';
