@@ -965,7 +965,7 @@ header{
         <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="searchInput" placeholder="Buscar..." oninput="filtrarClientes()"></div>
         <select class="filter-sel" id="filtroEstado" onchange="filtrarClientes()">
           <option value="">Todos los estados</option>
-          <option value="activo">Activo</option>
+          <option value="activo" selected>Activo</option>
           <option value="pausado">Pausado</option>
           <option value="inactivo">Inactivo</option>
         </select>
@@ -2608,7 +2608,7 @@ function filtrarClientes(){
   const lista=clientes.filter(c=>{
     return(!q||c.nombre.toLowerCase().includes(q)||c.rubro.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
       &&(!est||c.estado===est)&&(!rub||c.rubro===rub);
-  });
+  }).sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
   renderClientes(lista);
 }
 
