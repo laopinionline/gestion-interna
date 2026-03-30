@@ -3391,9 +3391,10 @@ function mostrarFormColaborador(emp){
       var opt = document.createElement('option');
       opt.value = c.id;
       opt.textContent = c.nombre + (c.equipo?' ('+c.equipo+')':'');
-      if(emp && emp.reportaA === c.id) opt.selected = true;
       selReporta.appendChild(opt);
     });
+    // Forzar el valor después de poblar
+    if(emp && emp.reportaA) selReporta.value = emp.reportaA;
   }
   // Cargar datos del colaborador si viene uno
   if(emp){
