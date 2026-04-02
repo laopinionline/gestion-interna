@@ -3373,7 +3373,7 @@ function verTareasColaborador(id){
       ${renderOrdenes(completadas.slice(0,5))}
       <div style="margin-top:16px;text-align:right">
         ${(e.equipo==='Digital'||e.equipo==='Contenidos'||e.equipo==='Redacción') ? '<a href="https://placas-lo-frontend.vercel.app" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;text-decoration:none;margin-right:8px;" onclick="event.stopPropagation()">✦ Placas IG</a>' : ''}
-        <button class="btn-primary btn-sm" onclick="abrirModalcolaborador(editandoEmpId)">✏️ Editar perfil</button>
+        <button class="btn-primary btn-sm" onclick="mostrarFormColaborador()">✏️ Editar perfil</button>
       </div>
     `;
   }
