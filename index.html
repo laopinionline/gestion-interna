@@ -1176,9 +1176,9 @@ header{
       </label>
       <input type="file" id="inputFotoPerfil" accept="image/*" capture="environment" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px;font-size:20px;line-height:1;" title="Mensajes">
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;" title="Mensajes">
         💬
-        <span id="badgeMensajes" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;"></span>
+        <span id="badgeMensajes" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
       </button>
       <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <span class="user-badge">💻 colaborador</span>
