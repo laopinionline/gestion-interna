@@ -882,6 +882,10 @@ header{
     </div>
     <div class="header-right">
       <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
+        💬
+        <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
+      </button>
       <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
