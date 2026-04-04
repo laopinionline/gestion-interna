@@ -1096,12 +1096,12 @@ header{
   padding-top:8px;
   min-height:calc(100vh - 52px);
 }
-/* Nav del supervisor — ocultar en desktop que ya tiene sidebar */
-#appSupervisor .nav-tabs-container {
-  display:none;
+/* Nav del supervisor — en desktop ya tenemos sidebar, ocultar nav del header */
+@media(min-width:769px){
+  #appSupervisor .nav-tabs { display:none !important; }
 }
 @media(max-width:768px){
-  #appSupervisor .nav-tabs-container { display:flex; }
+  #appSupervisor .nav-tabs { display:flex !important; }
   #appSupervisor .container { margin-left:0 !important; padding-top:0; }
   #dashSidebar { display:none !important; }
 }
