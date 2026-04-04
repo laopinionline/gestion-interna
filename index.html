@@ -4531,6 +4531,293 @@ function aplicarVisibilidad(){
     }
   });
 
+
+
+// ═══ COMENTARIOS TAREA ═══
+function abrirHerramienta(tipo){
+  var modal = document.getElementById('modalHerramienta');
+  var iframe = document.getElementById('iframeHerramienta');
+  var titulo = document.getElementById('modalHerramientaTitulo');
+  modal.style.display = 'flex';
+  if(tipo === 'placas'){
+    titulo.textContent = '✦ Hacedor de Placas IG';
+    iframe.src = 'https://placas-lo-frontend.vercel.app';
+    iframe.onload = function(){
+      try {
+        setTimeout(function(){
+          var doc = iframe.contentDocument || iframe.contentWindow.document;
+          var input = doc.querySelector('input[type="password"], input[placeholder*="ontraseña"]');
+          var btn = doc.querySelector('button');
+          if(input && btn){ input.value = 'Laopi555'; btn.click(); }
+        }, 800);
+      } catch(e){}
+    };
+  } else if(tipo === 'recortes'){
+    titulo.textContent = '✂ Recortes Streaming';
+    iframe.src = 'https://leafy-pegasus-f69b59.netlify.app';
+    iframe.onload = null;
+  }
+}
+function cerrarHerramienta(){
+  var modal = document.getElementById('modalHerramienta');
+  var iframe = document.getElementById('iframeHerramienta');
+  modal.style.display = 'none';
+  iframe.src = '';
+  iframe.onload = null;
+}
+
+
+var _comentOrdenId = null;
+
+function abrirComentariosOrden(ordenId){
+  _comentOrdenId = ordenId;
+  const orden = ordenes.find(o=>o.id===ordenId);
+  if(!orden) return;
+  // Mover modal al body para evitar problemas de z-index con contenedores padre
+  const modal = document.getElementById('modalComentariosTarea');
+  if(modal && modal.parentElement !== document.body) document.body.appendChild(modal);
+
+  document.getElementById('comentTareaTitulo').textContent = orden.titulo || orden.descripcion || 'Tarea';
+
+  // Registro de completado
+  const infoEl = document.getElementById('comentCompletadoInfo');
+  const textoEl = document.getElementById('comentCompletadoTexto');
+  if(orden.estado === 'completada' && orden.completadoPorNombre){
+    const fecha = orden.completadoAt ? new Date(orden.completadoAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    textoEl.textContent = 'Completada por ' + orden.completadoPorNombre + (fecha ? ' · ' + fecha : '');
+    infoEl.style.display = '';
+  } else {
+    infoEl.style.display = 'none';
+  }
+
+  // Poblar selector de colaboradores del área
+  const yo = colaboradores.find(c=>c.id===empActualId);
+  const mismaArea = colaboradores.filter(c => c.id !== empActualId && c.equipo === (yo?.equipo||'') && c.estado !== 'inactivo');
+  const sel = document.getElementById('comentMencionarEmp');
+  sel.innerHTML = '<option value="">👤 Mencionar colaborador...</option>';
+  mismaArea.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.nombre.split(' ').slice(0,2).join(' ');
+    sel.appendChild(opt);
+  });
+
+  // Mostrar comentarios existentes
+  renderHiloComentarios(orden.comentarios || []);
+
+  document.getElementById('comentInputTexto').value = '';
+  const modal = document.getElementById('modalComentariosTarea');
+  modal.style.display = 'flex';
+}
+
+function renderHiloComentarios(comentarios){
+  const hilo = document.getElementById('comentHilo');
+  if(!comentarios.length){ hilo.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;">Sin comentarios aún</div>'; return; }
+  hilo.innerHTML = comentarios.map(c => {
+    const esYo = c.autorId === empActualId;
+    const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    const mencion = c.mencionNombre ? '<span style="color:var(--blue2,#1565c0);font-weight:600;">@'+c.mencionNombre.split(' ')[0]+'</span> ' : '';
+    return '<div style="background:'+(esYo?'#f0f4ff':'#f7f7f7')+';border-radius:10px;padding:10px 12px;">'
+      + '<div style="font-size:11px;color:#999;margin-bottom:4px;">'+(esYo?'Vos':c.autorNombre||'?')+' · '+fecha+'</div>'
+      + '<div style="font-size:14px;">'+mencion+(c.texto||'')+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function enviarComentarioTarea(){
+  const texto = document.getElementById('comentInputTexto').value.trim();
+  if(!texto){ toast('Escribí algo primero','err'); return; }
+  const mencionId = document.getElementById('comentMencionarEmp').value;
+  const mencionEmp = mencionId ? colaboradores.find(c=>c.id===mencionId) : null;
+
+  const comentario = {
+    autorId: empActualId,
+    autorNombre: empActualNombre,
+    texto: texto,
+    fecha: new Date().toISOString(),
+    mencionId: mencionId || null,
+    mencionNombre: mencionEmp ? mencionEmp.nombre : null
+  };
+
+  const orden = ordenes.find(o=>o.id===_comentOrdenId);
+  if(!orden) return;
+  if(!orden.comentarios) orden.comentarios = [];
+  orden.comentarios.push(comentario);
+
+  db.collection('ordenes').doc(_comentOrdenId).update({
+    comentarios: orden.comentarios
+  }).then(()=>{
+    renderHiloComentarios(orden.comentarios);
+    document.getElementById('comentInputTexto').value = '';
+    document.getElementById('comentMencionarEmp').value = '';
+    renderKanban();
+    toast('Comentario enviado','ok');
+  }).catch(()=>toast('Error al guardar','err'));
+}
+
+function cerrarComentariosTarea(){
+  document.getElementById('modalComentariosTarea').style.display = 'none';
+  _comentOrdenId = null;
+}
+
+
+// ═══ MENSAJERO ═══
+var _chatConId = null;
+var _chatListener = null;
+var _mensajesNoLeidos = 0;
+
+function abrirMensajero(){
+  const panel = document.getElementById('mensajeroPanel');
+  const overlay = document.getElementById('mensajeroOverlay');
+  panel.style.display = 'flex';
+  overlay.style.display = 'block';
+  document.body.appendChild(panel);
+  document.body.appendChild(overlay);
+  renderContactos();
+  volverLista();
+}
+
+function cerrarMensajero(){
+  document.getElementById('mensajeroPanel').style.display = 'none';
+  document.getElementById('mensajeroOverlay').style.display = 'none';
+  if(_chatListener){ _chatListener(); _chatListener = null; }
+}
+
+function renderContactos(){
+  const cont = document.getElementById('mensajeroContactos');
+  const yo = colaboradores.find(c=>c.id===empActualId);
+  const lista = colaboradores.filter(c=>c.id!==empActualId && c.estado!=='inactivo')
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  
+  cont.innerHTML = lista.map(c => {
+    const convId = [empActualId, c.id].sort().join('_');
+    const iniciales = c.nombre.split(' ').map(p=>p[0]).slice(0,2).join('');
+    const avatarHtml = c.fotoUrl
+      ? '<img src="'+c.fotoUrl+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="'+iniciales+'">'
+      : '<div style="width:38px;height:38px;border-radius:50%;background:var(--blue2,#1565c0);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">'+iniciales+'</div>';
+    return '<div onclick="abrirChat(\''+c.id+'\',\''+convId+'\')" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;display:flex;align-items:center;gap:10px;transition:background 0.15s;" onmouseover="this.style.background=\'#f8f8f8\'" onmouseout="this.style.background=\'\'">'+
+      avatarHtml+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.nombre.split(' ').slice(0,2).join(' ')+'</div>'+
+        '<div style="font-size:11px;color:#999;">'+c.equipo+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function abrirChat(destId, convId){
+  _chatConId = convId;
+  const dest = colaboradores.find(c=>c.id===destId);
+  document.getElementById('chatNombre').textContent = dest ? dest.nombre.split(' ').slice(0,2).join(' ') : '—';
+  document.getElementById('chatEquipo').textContent = dest ? dest.equipo : '';
+  document.getElementById('mensajeroLista').style.display = 'none';
+  document.getElementById('mensajeroChat').style.display = 'flex';
+  document.getElementById('chatInput').focus();
+  cargarMensajes(convId, destId);
+}
+
+function volverLista(){
+  if(_chatListener){ _chatListener(); _chatListener = null; }
+  _chatConId = null;
+  document.getElementById('mensajeroLista').style.display = 'flex';
+  document.getElementById('mensajeroChat').style.display = 'none';
+}
+
+function cargarMensajes(convId, destId){
+  const hilo = document.getElementById('chatHilo');
+  hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Cargando...</div>';
+  
+  if(typeof db === 'undefined') { hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Sin conexión</div>'; return; }
+  
+  // Marcar como leídos
+  db.collection('mensajes').doc(convId).collection('msgs')
+    .where('para', '==', empActualId)
+    .where('leido', '==', false)
+    .get().then(snap => {
+      snap.forEach(doc => doc.ref.update({leido: true}));
+      actualizarBadge();
+    });
+
+  // Listener en tiempo real
+  if(_chatListener) _chatListener();
+  _chatListener = db.collection('mensajes').doc(convId).collection('msgs')
+    .orderBy('fecha', 'asc')
+    .onSnapshot(snap => {
+      const msgs = snap.docs.map(d=>d.data());
+      renderHiloChat(msgs);
+    });
+}
+
+function renderHiloChat(msgs){
+  const hilo = document.getElementById('chatHilo');
+  if(!msgs.length){ hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Empezá la conversación 👋</div>'; return; }
+  
+  hilo.innerHTML = msgs.map(m => {
+    const esYo = m.de === empActualId;
+    const fecha = m.fecha ? new Date(m.fecha.seconds ? m.fecha.seconds*1000 : m.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div style="display:flex;justify-content:'+(esYo?'flex-end':'flex-start')+';">'+
+      '<div style="max-width:75%;background:'+(esYo?'var(--blue,#1a3a5c)':'#f0f0f0')+';color:'+(esYo?'#fff':'#333')+';border-radius:'+(esYo?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:8px 12px;font-size:14px;">'+
+        '<div>'+m.texto+'</div>'+
+        '<div style="font-size:10px;opacity:0.6;text-align:right;margin-top:2px;">'+fecha+(esYo&&m.leido?' ✓✓':esYo?' ✓':'')+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  hilo.scrollTop = hilo.scrollHeight;
+}
+
+function enviarMensaje(){
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if(!texto || !_chatConId) return;
+  
+  const destId = _chatConId.split('_').find(id=>id!==empActualId);
+  const msg = {
+    de: empActualId,
+    deNombre: empActualNombre,
+    para: destId,
+    texto: texto,
+    fecha: new Date(),
+    leido: false
+  };
+  
+  input.value = '';
+  if(typeof db !== 'undefined'){
+    db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(e=>console.warn(e));
+    // Actualizar metadata de la conversación
+    db.collection('mensajes').doc(_chatConId).set({
+      participantes: [empActualId, destId],
+      ultimoMensaje: texto,
+      ultimaFecha: new Date(),
+      noLeidoPor: destId
+    }, {merge:true});
+  }
+}
+
+function actualizarBadge(){
+  if(typeof db === 'undefined' || !empActualId) return;
+  db.collection('mensajes')
+    .where('noLeidoPor', '==', empActualId)
+    .get().then(snap => {
+      const count = snap.size;
+      ['badgeMensajes','badgeMensajesSup'].forEach(id => {
+        const badge = document.getElementById(id);
+        if(!badge) return;
+        if(count > 0){
+          badge.style.display = 'flex';
+          badge.textContent = count > 9 ? '9+' : count;
+        } else {
+          badge.style.display = 'none';
+        }
+      });
+    }).catch(()=>{});
+}
+
+// Revisar badge cada 30 segundos
+setTimeout(function checkBadge(){
+  actualizarBadge();
+  setTimeout(checkBadge, 30000);
+}, 3000);
+
 </script>
 
 <!-- MODAL PERFIL -->
@@ -4697,134 +4984,7 @@ function aplicarVisibilidad(){
   <iframe id="iframeHerramienta" src="" style="flex:1;width:100%;border:none;" allow="clipboard-write"></iframe>
 </div>
 
-<script>
-function abrirHerramienta(tipo){
-  var modal = document.getElementById('modalHerramienta');
-  var iframe = document.getElementById('iframeHerramienta');
-  var titulo = document.getElementById('modalHerramientaTitulo');
-  modal.style.display = 'flex';
-  if(tipo === 'placas'){
-    titulo.textContent = '✦ Hacedor de Placas IG';
-    iframe.src = 'https://placas-lo-frontend.vercel.app';
-    iframe.onload = function(){
-      try {
-        setTimeout(function(){
-          var doc = iframe.contentDocument || iframe.contentWindow.document;
-          var input = doc.querySelector('input[type="password"], input[placeholder*="ontraseña"]');
-          var btn = doc.querySelector('button');
-          if(input && btn){ input.value = 'Laopi555'; btn.click(); }
-        }, 800);
-      } catch(e){}
-    };
-  } else if(tipo === 'recortes'){
-    titulo.textContent = '✂ Recortes Streaming';
-    iframe.src = 'https://leafy-pegasus-f69b59.netlify.app';
-    iframe.onload = null;
-  }
-}
-function cerrarHerramienta(){
-  var modal = document.getElementById('modalHerramienta');
-  var iframe = document.getElementById('iframeHerramienta');
-  modal.style.display = 'none';
-  iframe.src = '';
-  iframe.onload = null;
-}
 
-
-var _comentOrdenId = null;
-
-function abrirComentariosOrden(ordenId){
-  _comentOrdenId = ordenId;
-  const orden = ordenes.find(o=>o.id===ordenId);
-  if(!orden) return;
-  // Mover modal al body para evitar problemas de z-index con contenedores padre
-  const modal = document.getElementById('modalComentariosTarea');
-  if(modal && modal.parentElement !== document.body) document.body.appendChild(modal);
-
-  document.getElementById('comentTareaTitulo').textContent = orden.titulo || orden.descripcion || 'Tarea';
-
-  // Registro de completado
-  const infoEl = document.getElementById('comentCompletadoInfo');
-  const textoEl = document.getElementById('comentCompletadoTexto');
-  if(orden.estado === 'completada' && orden.completadoPorNombre){
-    const fecha = orden.completadoAt ? new Date(orden.completadoAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-    textoEl.textContent = 'Completada por ' + orden.completadoPorNombre + (fecha ? ' · ' + fecha : '');
-    infoEl.style.display = '';
-  } else {
-    infoEl.style.display = 'none';
-  }
-
-  // Poblar selector de colaboradores del área
-  const yo = colaboradores.find(c=>c.id===empActualId);
-  const mismaArea = colaboradores.filter(c => c.id !== empActualId && c.equipo === (yo?.equipo||'') && c.estado !== 'inactivo');
-  const sel = document.getElementById('comentMencionarEmp');
-  sel.innerHTML = '<option value="">👤 Mencionar colaborador...</option>';
-  mismaArea.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.nombre.split(' ').slice(0,2).join(' ');
-    sel.appendChild(opt);
-  });
-
-  // Mostrar comentarios existentes
-  renderHiloComentarios(orden.comentarios || []);
-
-  document.getElementById('comentInputTexto').value = '';
-  const modal = document.getElementById('modalComentariosTarea');
-  modal.style.display = 'flex';
-}
-
-function renderHiloComentarios(comentarios){
-  const hilo = document.getElementById('comentHilo');
-  if(!comentarios.length){ hilo.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;">Sin comentarios aún</div>'; return; }
-  hilo.innerHTML = comentarios.map(c => {
-    const esYo = c.autorId === empActualId;
-    const fecha = c.fecha ? new Date(c.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
-    const mencion = c.mencionNombre ? '<span style="color:var(--blue2,#1565c0);font-weight:600;">@'+c.mencionNombre.split(' ')[0]+'</span> ' : '';
-    return '<div style="background:'+(esYo?'#f0f4ff':'#f7f7f7')+';border-radius:10px;padding:10px 12px;">'
-      + '<div style="font-size:11px;color:#999;margin-bottom:4px;">'+(esYo?'Vos':c.autorNombre||'?')+' · '+fecha+'</div>'
-      + '<div style="font-size:14px;">'+mencion+(c.texto||'')+'</div>'
-      + '</div>';
-  }).join('');
-}
-
-function enviarComentarioTarea(){
-  const texto = document.getElementById('comentInputTexto').value.trim();
-  if(!texto){ toast('Escribí algo primero','err'); return; }
-  const mencionId = document.getElementById('comentMencionarEmp').value;
-  const mencionEmp = mencionId ? colaboradores.find(c=>c.id===mencionId) : null;
-
-  const comentario = {
-    autorId: empActualId,
-    autorNombre: empActualNombre,
-    texto: texto,
-    fecha: new Date().toISOString(),
-    mencionId: mencionId || null,
-    mencionNombre: mencionEmp ? mencionEmp.nombre : null
-  };
-
-  const orden = ordenes.find(o=>o.id===_comentOrdenId);
-  if(!orden) return;
-  if(!orden.comentarios) orden.comentarios = [];
-  orden.comentarios.push(comentario);
-
-  db.collection('ordenes').doc(_comentOrdenId).update({
-    comentarios: orden.comentarios
-  }).then(()=>{
-    renderHiloComentarios(orden.comentarios);
-    document.getElementById('comentInputTexto').value = '';
-    document.getElementById('comentMencionarEmp').value = '';
-    renderKanban();
-    toast('Comentario enviado','ok');
-  }).catch(()=>toast('Error al guardar','err'));
-}
-
-function cerrarComentariosTarea(){
-  document.getElementById('modalComentariosTarea').style.display = 'none';
-  _comentOrdenId = null;
-}
-
-</script>
 
 <!-- MODAL COMENTARIOS TAREA -->
 <div id="modalComentariosTarea" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:99998;align-items:flex-end;justify-content:center;">
@@ -4892,163 +5052,7 @@ function cerrarComentariosTarea(){
 <!-- Overlay mensajero -->
 <div id="mensajeroOverlay" onclick="cerrarMensajero()" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:99996;"></div>
 
-<script>
-var _chatConId = null;
-var _chatListener = null;
-var _mensajesNoLeidos = 0;
 
-function abrirMensajero(){
-  const panel = document.getElementById('mensajeroPanel');
-  const overlay = document.getElementById('mensajeroOverlay');
-  panel.style.display = 'flex';
-  overlay.style.display = 'block';
-  document.body.appendChild(panel);
-  document.body.appendChild(overlay);
-  renderContactos();
-  volverLista();
-}
-
-function cerrarMensajero(){
-  document.getElementById('mensajeroPanel').style.display = 'none';
-  document.getElementById('mensajeroOverlay').style.display = 'none';
-  if(_chatListener){ _chatListener(); _chatListener = null; }
-}
-
-function renderContactos(){
-  const cont = document.getElementById('mensajeroContactos');
-  const yo = colaboradores.find(c=>c.id===empActualId);
-  const lista = colaboradores.filter(c=>c.id!==empActualId && c.estado!=='inactivo')
-    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
-  
-  cont.innerHTML = lista.map(c => {
-    const convId = [empActualId, c.id].sort().join('_');
-    const iniciales = c.nombre.split(' ').map(p=>p[0]).slice(0,2).join('');
-    const avatarHtml = c.fotoUrl
-      ? '<img src="'+c.fotoUrl+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="'+iniciales+'">'
-      : '<div style="width:38px;height:38px;border-radius:50%;background:var(--blue2,#1565c0);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">'+iniciales+'</div>';
-    return '<div onclick="abrirChat(\''+c.id+'\',\''+convId+'\')" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;display:flex;align-items:center;gap:10px;transition:background 0.15s;" onmouseover="this.style.background=\'#f8f8f8\'" onmouseout="this.style.background=\'\'">'+
-      avatarHtml+
-      '<div style="flex:1;min-width:0;">'+
-        '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.nombre.split(' ').slice(0,2).join(' ')+'</div>'+
-        '<div style="font-size:11px;color:#999;">'+c.equipo+'</div>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-}
-
-function abrirChat(destId, convId){
-  _chatConId = convId;
-  const dest = colaboradores.find(c=>c.id===destId);
-  document.getElementById('chatNombre').textContent = dest ? dest.nombre.split(' ').slice(0,2).join(' ') : '—';
-  document.getElementById('chatEquipo').textContent = dest ? dest.equipo : '';
-  document.getElementById('mensajeroLista').style.display = 'none';
-  document.getElementById('mensajeroChat').style.display = 'flex';
-  document.getElementById('chatInput').focus();
-  cargarMensajes(convId, destId);
-}
-
-function volverLista(){
-  if(_chatListener){ _chatListener(); _chatListener = null; }
-  _chatConId = null;
-  document.getElementById('mensajeroLista').style.display = 'flex';
-  document.getElementById('mensajeroChat').style.display = 'none';
-}
-
-function cargarMensajes(convId, destId){
-  const hilo = document.getElementById('chatHilo');
-  hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Cargando...</div>';
-  
-  if(typeof db === 'undefined') { hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Sin conexión</div>'; return; }
-  
-  // Marcar como leídos
-  db.collection('mensajes').doc(convId).collection('msgs')
-    .where('para', '==', empActualId)
-    .where('leido', '==', false)
-    .get().then(snap => {
-      snap.forEach(doc => doc.ref.update({leido: true}));
-      actualizarBadge();
-    });
-
-  // Listener en tiempo real
-  if(_chatListener) _chatListener();
-  _chatListener = db.collection('mensajes').doc(convId).collection('msgs')
-    .orderBy('fecha', 'asc')
-    .onSnapshot(snap => {
-      const msgs = snap.docs.map(d=>d.data());
-      renderHiloChat(msgs);
-    });
-}
-
-function renderHiloChat(msgs){
-  const hilo = document.getElementById('chatHilo');
-  if(!msgs.length){ hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Empezá la conversación 👋</div>'; return; }
-  
-  hilo.innerHTML = msgs.map(m => {
-    const esYo = m.de === empActualId;
-    const fecha = m.fecha ? new Date(m.fecha.seconds ? m.fecha.seconds*1000 : m.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
-    return '<div style="display:flex;justify-content:'+(esYo?'flex-end':'flex-start')+';">'+
-      '<div style="max-width:75%;background:'+(esYo?'var(--blue,#1a3a5c)':'#f0f0f0')+';color:'+(esYo?'#fff':'#333')+';border-radius:'+(esYo?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:8px 12px;font-size:14px;">'+
-        '<div>'+m.texto+'</div>'+
-        '<div style="font-size:10px;opacity:0.6;text-align:right;margin-top:2px;">'+fecha+(esYo&&m.leido?' ✓✓':esYo?' ✓':'')+'</div>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-  hilo.scrollTop = hilo.scrollHeight;
-}
-
-function enviarMensaje(){
-  const input = document.getElementById('chatInput');
-  const texto = input.value.trim();
-  if(!texto || !_chatConId) return;
-  
-  const destId = _chatConId.split('_').find(id=>id!==empActualId);
-  const msg = {
-    de: empActualId,
-    deNombre: empActualNombre,
-    para: destId,
-    texto: texto,
-    fecha: new Date(),
-    leido: false
-  };
-  
-  input.value = '';
-  if(typeof db !== 'undefined'){
-    db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(e=>console.warn(e));
-    // Actualizar metadata de la conversación
-    db.collection('mensajes').doc(_chatConId).set({
-      participantes: [empActualId, destId],
-      ultimoMensaje: texto,
-      ultimaFecha: new Date(),
-      noLeidoPor: destId
-    }, {merge:true});
-  }
-}
-
-function actualizarBadge(){
-  if(typeof db === 'undefined' || !empActualId) return;
-  db.collection('mensajes')
-    .where('noLeidoPor', '==', empActualId)
-    .get().then(snap => {
-      const count = snap.size;
-      ['badgeMensajes','badgeMensajesSup'].forEach(id => {
-        const badge = document.getElementById(id);
-        if(!badge) return;
-        if(count > 0){
-          badge.style.display = 'flex';
-          badge.textContent = count > 9 ? '9+' : count;
-        } else {
-          badge.style.display = 'none';
-        }
-      });
-    }).catch(()=>{});
-}
-
-// Revisar badge cada 30 segundos
-setTimeout(function checkBadge(){
-  actualizarBadge();
-  setTimeout(checkBadge, 30000);
-}, 3000);
-</script>
 </body>
 </html>
 
