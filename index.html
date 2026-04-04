@@ -12,6 +12,95 @@
   --green:#1a7a4a;--green-bg:#e8f5ee;--gold:#b8860b;--gold-bg:#fdf6e3;
   --red-bg:#fdecea;--line:#d4cfc7;
   --shadow:0 2px 16px rgba(15,25,35,0.10);--shadow2:0 8px 32px rgba(15,25,35,0.18);
+  --card-bg:#ffffff;--header-bg:var(--blue);
+}
+
+/* ── DARK MODE ── */
+[data-theme="dark"] {
+  --ink:#e8e8e8;
+  --ink2:#a0a0a0;
+  --paper:#0d0d0d;
+  --paper2:#1a1a1a;
+  --line:#2a2a2a;
+  --card-bg:#161616;
+  --header-bg:#111111;
+  --green-bg:#0d2b1a;
+  --gold-bg:#1e1800;
+  --red-bg:#2b0d0d;
+  --shadow:0 2px 16px rgba(0,0,0,0.5);
+  --shadow2:0 8px 32px rgba(0,0,0,0.7);
+}
+[data-theme="dark"] body {
+  background:#0d0d0d;
+  color:#e8e8e8;
+}
+[data-theme="dark"] header {
+  background:#111111 !important;
+  border-bottom:1px solid #2a2a2a;
+}
+[data-theme="dark"] .modal,
+[data-theme="dark"] .login-box,
+[data-theme="dark"] .dash-panel,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .order-item,
+[data-theme="dark"] .kanban-card,
+[data-theme="dark"] .client-card,
+[data-theme="dark"] .herramientas-widget,
+[data-theme="dark"] #mensajeroPanel {
+  background:#161616 !important;
+  border-color:#2a2a2a !important;
+  color:#e8e8e8 !important;
+}
+[data-theme="dark"] .modal-overlay,
+[data-theme="dark"] #mensajeroOverlay {
+  background:rgba(0,0,0,0.85) !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background:#1f1f1f !important;
+  color:#e8e8e8 !important;
+  border-color:#333 !important;
+}
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .filter-sel {
+  background:#1f1f1f !important;
+  color:#e8e8e8 !important;
+  border-color:#333 !important;
+}
+[data-theme="dark"] .kanban-col {
+  background:#141414 !important;
+}
+[data-theme="dark"] .nav-tab {
+  color:#a0a0a0 !important;
+}
+[data-theme="dark"] .nav-tab.active {
+  color:#fff !important;
+  border-color:#fff !important;
+}
+[data-theme="dark"] .btn-logout {
+  background:#222 !important;
+  color:#ccc !important;
+  border-color:#333 !important;
+}
+[data-theme="dark"] .view {
+  background:#0d0d0d !important;
+}
+[data-theme="dark"] .kanban-empty {
+  color:#555 !important;
+}
+[data-theme="dark"] .order-item {
+  border-bottom:1px solid #222 !important;
+}
+[data-theme="dark"] .order-item:hover {
+  background:#1e1e1e !important;
+}
+[data-theme="dark"] .kanban-board {
+  background:#0d0d0d !important;
+}
+[data-theme="dark"] .emp-header {
+  background:linear-gradient(135deg,#111 0%,#1a1a2e 100%) !important;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overscroll-behavior:none;-webkit-overflow-scrolling:auto;}
@@ -885,6 +974,7 @@ header{
         💬
         <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
       </button>
+      <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙 Modo noche</button>
       <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
@@ -1205,6 +1295,7 @@ header{
         💬
         <span id="badgeMensajes" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
       </button>
+      <button id="darkModeToggleEmp" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙</button>
       <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <span class="user-badge">💻 colaborador</span>
       <button class="btn-logout" onclick="logout()">Salir</button>
@@ -1806,6 +1897,7 @@ async function login(){
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
       actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
+      cargarTemaUsuario(usuario.id);
       (function(){
         if(['emp01','emp02','emp07','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
@@ -1817,6 +1909,7 @@ async function login(){
       document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
       actualizarAvatarColaborador(usuario);
       rendercolaborador(usuario);
+      cargarTemaUsuario(usuario.id);
     }
   }
 
@@ -4870,6 +4963,39 @@ if(typeof enviarMensaje !== "undefined") window.enviarMensaje = enviarMensaje;
 if(typeof actualizarBadge !== "undefined") window.actualizarBadge = actualizarBadge;
 if(typeof abrirHerramienta !== "undefined") window.abrirHerramienta = abrirHerramienta;
 if(typeof cerrarHerramienta !== "undefined") window.cerrarHerramienta = cerrarHerramienta;
+
+// ── DARK MODE ──
+function aplicarTema(modo){
+  document.documentElement.setAttribute('data-theme', modo);
+  localStorage.setItem('tema_panel', modo);
+  const btn = document.getElementById('darkModeToggle');
+  if(btn) btn.textContent = modo === 'dark' ? '☀️ Modo claro' : '🌙 Modo noche';
+}
+
+function toggleDarkMode(){
+  const actual = document.documentElement.getAttribute('data-theme') || 'light';
+  aplicarTema(actual === 'dark' ? 'light' : 'dark');
+  // Guardar en Firestore si hay usuario
+  if(typeof db !== 'undefined' && empActualId){
+    db.collection('colaboradores').doc(empActualId).update({temaPanel: document.documentElement.getAttribute('data-theme')}).catch(()=>{});
+  }
+}
+
+// Cargar tema guardado al iniciar
+(function(){
+  const guardado = localStorage.getItem('tema_panel');
+  if(guardado) aplicarTema(guardado);
+})();
+
+// Cargar tema del usuario desde Firestore después del login
+function cargarTemaUsuario(empId){
+  if(typeof db === 'undefined') return;
+  db.collection('colaboradores').doc(empId).get().then(doc => {
+    if(doc.exists && doc.data().temaPanel){
+      aplicarTema(doc.data().temaPanel);
+    }
+  }).catch(()=>{});
+}
 </script>
 
 <!-- MODAL PERFIL -->
