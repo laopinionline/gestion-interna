@@ -1123,6 +1123,41 @@ header{
   #appSupervisor .header-right { gap:6px !important; }
   #appSupervisor header { padding:0 12px !important; }
 }
+
+/* ══ DESKTOP ONLY ══ */
+@media(max-width:768px){
+  .desktop-only { display:none !important; }
+}
+
+/* ══ DARK MODE — drawer y sidebar ══ */
+[data-theme="dark"] #navDrawerPanel {
+  background:#111 !important;
+}
+[data-theme="dark"] .nav-drawer-item {
+  color:#ccc !important;
+}
+[data-theme="dark"] .nav-drawer-item:hover {
+  background:rgba(255,255,255,0.08) !important;
+}
+[data-theme="dark"] .nav-drawer-top {
+  background:#0a0a0a !important;
+  border-bottom:1px solid #1f1f1f !important;
+}
+[data-theme="dark"] #dashSidebar {
+  background:#0a0a0a !important;
+  border-right:1px solid #1f1f1f !important;
+}
+[data-theme="dark"] .sidebar-section {
+  color:#444 !important;
+}
+[data-theme="dark"] .sidebar-item {
+  color:#888 !important;
+}
+[data-theme="dark"] .sidebar-item:hover,
+[data-theme="dark"] .sidebar-item.active {
+  background:#1a1a1a !important;
+  color:#e8e8e8 !important;
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1219,14 +1254,16 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
     <div class="header-right">
-      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
+      <!-- Acciones mobile: siempre visibles -->
+      <button onclick="toggleDarkMode()" id="darkModeToggle" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;color:#fff;">🌙</button>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
         💬
         <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
       </button>
-      <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙 Modo noche</button>
-      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
-      <button class="btn-logout" onclick="logout()">Salir</button>
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;" title="Mi perfil"><span id="svUserName">?</span></div>
+      <!-- Solo desktop: botones extra -->
+      <button class="btn-logout desktop-only" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
+      <button class="btn-logout desktop-only" onclick="logout()">Salir</button>
     </div>
   </header>
 
@@ -5458,6 +5495,7 @@ function navSidebar(vistaId, el){
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
+    <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
     <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
     <button class="nav-drawer-item" onclick="cerrarDrawer();abrirMensajero()"><span>💬</span> Mensajes</button>
     <button class="nav-drawer-item" onclick="cerrarDrawer();abrirPerfil()"><span>👤</span> Perfil</button>
