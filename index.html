@@ -1087,6 +1087,23 @@ header{
 @media(max-width:768px){
   .sidebar { display:none; }
   .main-content { margin-left:0; padding:12px 16px; }
+  #appSupervisor .container { margin-left:0 !important; }
+}
+
+/* ══ CONTENIDO PRINCIPAL DEL SUPERVISOR ══ */
+#appSupervisor .container {
+  margin-left:var(--sidebar-w);
+  padding-top:8px;
+  min-height:calc(100vh - 52px);
+}
+/* Nav del supervisor — ocultar en desktop que ya tiene sidebar */
+#appSupervisor .nav-tabs-container {
+  display:none;
+}
+@media(max-width:768px){
+  #appSupervisor .nav-tabs-container { display:flex; }
+  #appSupervisor .container { margin-left:0 !important; padding-top:0; }
+  #dashSidebar { display:none !important; }
 }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1231,7 +1248,7 @@ header{
       </div>
 
       <!-- BLOQUE 1: GA4 -->
-      <div style="height:64px;"></div><!-- spacer header fixed supervisor -->
+      <div style="height:60px;"></div><!-- spacer header fixed supervisor -->
    <div class="app-with-sidebar">
    <!-- SIDEBAR -->
    <nav class="sidebar" id="dashSidebar">
