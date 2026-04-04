@@ -1774,7 +1774,7 @@ async function login(){
       document.getElementById('appcolaborador').classList.add('active');
       document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
       actualizarAvatarColaborador(usuario);
-      rendercolaborador();
+      rendercolaborador(usuario);
     }
   }
 
@@ -3127,10 +3127,9 @@ function renderGA4Colaborador(){
     });
 }
 
-function rendercolaborador(){
-  // Intentar detectar qué colaborador es por PIN (futuro: login individual)
-  // Por ahora muestra todas las tareas asignadas a cualquier colaborador
-  empActualId = null; // null = muestra todas (rol genérico)
+function rendercolaborador(usuarioActual){
+  // Setear empActualId con el usuario logueado
+  empActualId = (usuarioActual && usuarioActual.id) ? usuarioActual.id : null;
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoyDate=new Date();
