@@ -1236,23 +1236,22 @@ header{
    <!-- SIDEBAR -->
    <nav class="sidebar" id="dashSidebar">
      <div class="sidebar-section">Principal</div>
-     <div class="sidebar-item active" onclick="cambiarV('vDash',this)">
+     <div class="sidebar-item active" onclick="cambiarVista('vDash',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#e6f1fb;color:#0c447c;">◈</span> Dashboard
      </div>
-     <div class="sidebar-item" onclick="cambiarV('vOrdenes',this)">
+     <div class="sidebar-item" onclick="cambiarVista('vOrdenes',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#faeeda;color:#854f0b;">◉</span> Órdenes
-       <span class="sidebar-badge neutral" id="sidebarOrdenesCount">—</span>
      </div>
-     <div class="sidebar-item" onclick="cambiarV('vClientes',this)">
+     <div class="sidebar-item" onclick="cambiarVista('vClientes',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#e8f5ee;color:#1a7a4a;">◇</span> Clientes
      </div>
-     <div class="sidebar-item" onclick="cambiarV('vEquipo',this)">
+     <div class="sidebar-item" onclick="cambiarVista('vcolaboradores',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#ede8e0;color:#555;">◎</span> Equipo
      </div>
-     <div class="sidebar-item" onclick="cambiarV('vReuniones',this)">
+     <div class="sidebar-item" onclick="cambiarVista('vReuniones',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#fbeaf0;color:#993556;">◈</span> Reuniones
      </div>
-     <div class="sidebar-item" onclick="cambiarV('vProductividad',this)">
+     <div class="sidebar-item" onclick="cambiarVista('vProductividad',this);sincronizarSidebarConNav(this)">
        <span class="sidebar-icon" style="background:#e6f1fb;color:#185fa5;">◎</span> Productividad
      </div>
      <div class="sidebar-section">Herramientas</div>
@@ -5265,6 +5264,26 @@ function cargarTemaUsuario(empId){
       aplicarTema(doc.data().temaPanel);
     }
   }).catch(()=>{});
+}
+
+function sincronizarSidebarConNav(itemActivo){
+  // Actualizar active en sidebar
+  document.querySelectorAll('#dashSidebar .sidebar-item').forEach(i=>i.classList.remove('active'));
+  if(itemActivo) itemActivo.classList.add('active');
+}
+
+// Interceptar cambiarVista para sincronizar sidebar
+const _cambiarVistaOriginal = cambiarVista;
+function cambiarVista(id, btn){
+  _cambiarVistaOriginal(id, btn);
+  // Sincronizar sidebar si el click vino del nav superior
+  if(btn && !btn.closest('#dashSidebar')){
+    const mapa = {vDash:0, vClientes:1, vOrdenes:2, vcolaboradores:3, vReuniones:4, vProductividad:5};
+    const idx = mapa[id];
+    const items = document.querySelectorAll('#dashSidebar .sidebar-item[onclick*="cambiarVista"]');
+    items.forEach(i=>i.classList.remove('active'));
+    if(idx !== undefined && items[idx]) items[idx].classList.add('active');
+  }
 }
 </script>
 
