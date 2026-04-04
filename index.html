@@ -951,7 +951,7 @@ header{
           <div id="dashTareas" style="margin-top:14px"><div class="no-data">No hay tareas para los próximos 7 días</div></div>
         </div>
         <!-- Alertas pauta -->
-        <div class="dash-panel">
+        <div class="dash-panel" id="widgetAlertasPauta" style="display:none">
           <div class="dash-panel-title">🔔 Alertas de vencimiento de pauta</div>
           <div id="dashAlertas"><div class="no-data">Sin alertas</div></div>
         </div>
@@ -964,12 +964,12 @@ header{
 
       <div class="dash-cols">
         <!-- Gráfico rubros -->
-        <div class="dash-panel">
+        <div class="dash-panel" id="widgetClientesRubro" style="display:none">
           <div class="dash-panel-title">📊 Clientes por rubro</div>
           <div class="chart-bars" id="dashChart"><div class="no-data">Sin datos</div></div>
         </div>
         <!-- Resumen tareas por cliente -->
-        <div class="dash-panel">
+        <div class="dash-panel" id="widgetTareasPorCliente" style="display:none">
           <div class="dash-panel-title">📌 Tareas acumuladas por cliente</div>
           <div class="chart-bars" id="dashTareasPorCliente"><div class="no-data">Sin datos</div></div>
         </div>
@@ -984,7 +984,7 @@ header{
       </div>
 
       <!-- BLOQUE 4: Métricas de redes -->
-      <div class="dash-cols" style="grid-template-columns:1fr">
+      <div class="dash-cols" id="widgetRedesSociales" style="display:none;grid-template-columns:1fr">
         <div class="dash-panel">
           <div class="dash-panel-title">📱 Redes sociales</div>
           <div id="dashRedesSociales" style="display:flex;flex-wrap:wrap;gap:10px"></div>
@@ -992,7 +992,7 @@ header{
       </div>
 
       <!-- BLOQUE 5: Estado de Claw -->
-      <div class="dash-cols" style="grid-template-columns:1fr">
+      <div class="dash-cols" id="widgetEstadoClaw" style="display:none;grid-template-columns:1fr">
         <div class="dash-panel">
           <div class="dash-panel-title">🐾 Estado de Claw</div>
           <div id="dashEstadoClaw"><div class="no-data">Última actividad: cargando...</div></div>
@@ -1753,6 +1753,14 @@ async function login(){
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
       actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
+      // Control de visibilidad de widgets por rol
+      (function(){
+        var id = empActualId;
+        var puedeAlertas = ['emp01','emp02','emp07'].includes(id);
+        var puedeTareas  = ['emp01','emp02','emp07','emp05'].includes(id);
+        if(puedeAlertas){ var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display=''; }
+        if(puedeTareas){  var w=document.getElementById('widgetTareasPorCliente'); if(w) w.style.display=''; }
+      })();
     } else {
       document.getElementById('appcolaborador').classList.add('active');
       document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
