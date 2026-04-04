@@ -1169,6 +1169,27 @@ header{
   <header style="z-index:100;position:fixed;top:0;left:0;right:0;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
     <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
+    <!-- RESUMEN TAREAS HEADER -->
+    <div id="headerResumenTareas" style="display:flex;align-items:center;gap:8px;flex:1;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 14px;">
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px;">Mis tareas</span>
+        <span style="width:1px;height:12px;background:rgba(255,255,255,0.2);"></span>
+        <span title="Pendientes" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#fbbf24;">
+          <span style="font-size:10px;">⏳</span>
+          <span id="hdrPendientes">—</span>
+        </span>
+        <span style="width:1px;height:12px;background:rgba(255,255,255,0.2);"></span>
+        <span title="En curso" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#60a5fa;">
+          <span style="font-size:10px;">▶</span>
+          <span id="hdrEnCurso">—</span>
+        </span>
+        <span style="width:1px;height:12px;background:rgba(255,255,255,0.2);"></span>
+        <span title="Completadas" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#34d399;">
+          <span style="font-size:10px;">✓</span>
+          <span id="hdrListas">—</span>
+        </span>
+      </div>
+    </div>
     <div class="header-right">
       <label for="inputFotoPerfil" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;display:block;" title="Toca para cambiar tu foto">
         <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
@@ -3806,6 +3827,13 @@ function renderKanban(){
   renderColumna(document.getElementById('kb-pendiente'), pend, 'Sin tareas pendientes', 'pend');
   renderColumna(document.getElementById('kb-en-curso'), enCurso, 'Nada en curso', 'enCurso');
   renderColumna(document.getElementById('kb-listo'), listo, 'Nada completado', 'listo');
+  // Actualizar resumen en header
+  var hp = document.getElementById('hdrPendientes');
+  var hc = document.getElementById('hdrEnCurso');
+  var hl = document.getElementById('hdrListas');
+  if(hp) hp.textContent = pend.length;
+  if(hc) hc.textContent = enCurso.length;
+  if(hl) hl.textContent = listo.length;
 }
 
 function expandirKanban(colId, btn){
