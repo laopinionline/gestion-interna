@@ -3128,8 +3128,15 @@ function renderGA4Colaborador(){
 }
 
 function rendercolaborador(usuarioActual){
-  // Setear empActualId con el usuario logueado
-  empActualId = (usuarioActual && usuarioActual.id) ? usuarioActual.id : null;
+  // Setear empActualId con el usuario logueado — respetar el que ya viene del login
+  if(usuarioActual && usuarioActual.id) empActualId = usuarioActual.id;
+  // Si empActualId sigue null, intentar leerlo de la sesión guardada
+  if(!empActualId){
+    try {
+      var sess = JSON.parse(localStorage.getItem('gestion_session')||'{}');
+      if(sess && sess.id) empActualId = sess.id;
+    } catch(e){}
+  }
   const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoyDate=new Date();
