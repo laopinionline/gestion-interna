@@ -1187,46 +1187,6 @@ header{
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpProductividad',this)">📊 Mi Productividad</button>
   </div>
   <div class="container" style="max-width:1100px">
-    <!-- TABLERO MÉTRICAS GRUPO (colaborador) - solo para directores -->
-    <div id="tableroMetricasGrupoEmp" class="tablero-metricas-grupo" style="display:none;margin-top:18px"></div>
-    <!-- MIS REDES -->
-    <div id="misRedesWidget" style="display:none;margin-bottom:20px;">
-      <div class="dash-panel">
-        <div class="dash-panel-title">📱 Mis Redes</div>
-        <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
-      </div>
-    </div>
-    <!-- BOTTOM NAV COLABORADOR -->
-    <nav class="bottom-nav" id="bottomNavEmp">
-      <div class="bottom-nav-inner">
-        <button class="bn-item active" id="bne-tareas" onclick="cambiarVistaEmpBN('vEmpKanban','bne-tareas')">
-          <span class="bn-icon">📋</span>Tareas
-        </button>
-        <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
-          <span class="bn-icon">📅</span>Reuniones
-        </button>
-        <button class="bn-item" id="bne-productividad" onclick="cambiarVistaEmpBN('vEmpProductividad','bne-productividad')">
-          <span class="bn-icon">📈</span>Stats
-        </button>
-        <button class="bn-item" id="bne-perfil" onclick="abrirPerfil()">
-          <span class="bn-icon">👤</span>Mi perfil
-        </button>
-      </div>
-    </nav>
-
-    <!-- KANBAN -->
-    <div class="view active" id="vEmpKanban">
-      <!-- LECTURAS SEMANA COLABORADOR -->
-      <div class="container" style="padding-top:14px;padding-bottom:0;">
-        <div class="dash-cols">
-          <div class="dash-panel"><div class="stat-label">LECTURAS ESTA SEMANA</div><div id="empDashLecturas" class="stat-num" style="font-size:2rem;color:var(--blue2)">—</div><div class="stat-sub">pageviews GA4</div></div>
-          <div class="dash-panel"><div class="stat-label">VS SEMANA ANTERIOR</div><div id="empDashVar" class="stat-num" style="font-size:2rem;color:#b8860b">—</div><div class="stat-sub">variación</div></div>
-        </div>
-        <div class="dash-panel" style="margin-top:12px;">
-          <div class="dash-panel-title">📰 Top 5 notas más leídas</div>
-          <div id="empDashTop5"><div class="no-data">Cargando...</div></div>
-        </div>
-      </div>
             <!-- HERRAMIENTAS DE TRABAJO -->
       <div class="container" style="padding-top:14px;padding-bottom:0;">
         <div class="herramientas-widget" id="herramientasWidget">
@@ -1263,6 +1223,46 @@ header{
           </div>
         </div>
       </div>
+      <!-- LECTURAS SEMANA COLABORADOR -->
+      <div class="container" style="padding-top:14px;padding-bottom:0;">
+        <div class="dash-cols">
+          <div class="dash-panel"><div class="stat-label">LECTURAS ESTA SEMANA</div><div id="empDashLecturas" class="stat-num" style="font-size:2rem;color:var(--blue2)">—</div><div class="stat-sub">pageviews GA4</div></div>
+          <div class="dash-panel"><div class="stat-label">VS SEMANA ANTERIOR</div><div id="empDashVar" class="stat-num" style="font-size:2rem;color:#b8860b">—</div><div class="stat-sub">variación</div></div>
+        </div>
+        <div class="dash-panel" style="margin-top:12px;">
+          <div class="dash-panel-title">📰 Top 5 notas más leídas</div>
+          <div id="empDashTop5"><div class="no-data">Cargando...</div></div>
+        </div>
+      </div>
+    <!-- TABLERO MÉTRICAS GRUPO (colaborador) - solo para directores -->
+    <div id="tableroMetricasGrupoEmp" class="tablero-metricas-grupo" style="display:none;margin-top:18px"></div>
+    <!-- MIS REDES -->
+    <div id="misRedesWidget" style="display:none;margin-bottom:20px;">
+      <div class="dash-panel">
+        <div class="dash-panel-title">📱 Mis Redes</div>
+        <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
+      </div>
+    </div>
+    <!-- BOTTOM NAV COLABORADOR -->
+    <nav class="bottom-nav" id="bottomNavEmp">
+      <div class="bottom-nav-inner">
+        <button class="bn-item active" id="bne-tareas" onclick="cambiarVistaEmpBN('vEmpKanban','bne-tareas')">
+          <span class="bn-icon">📋</span>Tareas
+        </button>
+        <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
+          <span class="bn-icon">📅</span>Reuniones
+        </button>
+        <button class="bn-item" id="bne-productividad" onclick="cambiarVistaEmpBN('vEmpProductividad','bne-productividad')">
+          <span class="bn-icon">📈</span>Stats
+        </button>
+        <button class="bn-item" id="bne-perfil" onclick="abrirPerfil()">
+          <span class="bn-icon">👤</span>Mi perfil
+        </button>
+      </div>
+    </nav>
+
+    <!-- KANBAN -->
+    <div class="view active" id="vEmpKanban">
       <div class="emp-header">
         <div class="emp-date" id="empFecha"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
