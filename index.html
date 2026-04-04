@@ -4981,6 +4981,16 @@ function toggleDarkMode(){
   }
 }
 
+function sincronizarSwitchDark(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const sw = document.getElementById('darkModeSwitch');
+  const track = document.getElementById('darkModeSwitchTrack');
+  const thumb = document.getElementById('darkModeSwitchThumb');
+  if(sw) sw.checked = isDark;
+  if(track) track.style.background = isDark ? '#2e6da4' : '#ccc';
+  if(thumb) thumb.style.left = isDark ? '27px' : '3px';
+}
+
 // Cargar tema guardado al iniciar
 (function(){
   const guardado = localStorage.getItem('tema_panel');
@@ -5053,6 +5063,19 @@ function cargarTemaUsuario(empId){
           </div>
         </div>
 
+      <!-- TOGGLE MODO NOCHE -->
+      <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--ink);">🌙 Modo noche</div>
+          <div style="font-size:12px;color:var(--ink2);margin-top:2px;">Fondo oscuro para trabajar de noche</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;">
+          <input type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()" style="opacity:0;width:0;height:0;">
+          <span id="darkModeSwitchTrack" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:28px;transition:0.3s;">
+            <span id="darkModeSwitchThumb" style="position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></span>
+          </span>
+        </label>
+      </div>
       <div class="form-actions">
         <button class="btn-cancel" onclick="cerrarModal('mPerfil')">Cancelar</button>
         <button class="btn-blue" onclick="guardarPerfil()">Guardar cambios</button>
