@@ -4824,6 +4824,20 @@ window.abrirComentariosOrden = typeof abrirComentariosOrden !== "undefined" ? ab
 window.cerrarComentariosTarea = typeof cerrarComentariosTarea !== "undefined" ? cerrarComentariosTarea : window.cerrarComentariosTarea;
 window.enviarComentarioTarea = typeof enviarComentarioTarea !== "undefined" ? enviarComentarioTarea : window.enviarComentarioTarea;
 window.renderHiloComentarios = typeof renderHiloComentarios !== "undefined" ? renderHiloComentarios : window.renderHiloComentarios;
+
+// === EXPONER AL SCOPE GLOBAL ===
+if(typeof abrirComentariosOrden !== "undefined") window.abrirComentariosOrden = abrirComentariosOrden;
+if(typeof cerrarComentariosTarea !== "undefined") window.cerrarComentariosTarea = cerrarComentariosTarea;
+if(typeof enviarComentarioTarea !== "undefined") window.enviarComentarioTarea = enviarComentarioTarea;
+if(typeof renderHiloComentarios !== "undefined") window.renderHiloComentarios = renderHiloComentarios;
+if(typeof abrirMensajero !== "undefined") window.abrirMensajero = abrirMensajero;
+if(typeof cerrarMensajero !== "undefined") window.cerrarMensajero = cerrarMensajero;
+if(typeof abrirChat !== "undefined") window.abrirChat = abrirChat;
+if(typeof volverLista !== "undefined") window.volverLista = volverLista;
+if(typeof enviarMensaje !== "undefined") window.enviarMensaje = enviarMensaje;
+if(typeof actualizarBadge !== "undefined") window.actualizarBadge = actualizarBadge;
+if(typeof abrirHerramienta !== "undefined") window.abrirHerramienta = abrirHerramienta;
+if(typeof cerrarHerramienta !== "undefined") window.cerrarHerramienta = cerrarHerramienta;
 </script>
 
 <!-- MODAL PERFIL -->
