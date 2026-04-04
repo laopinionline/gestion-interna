@@ -4482,12 +4482,21 @@ function renderProductividad(){
   function getFechaO(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
   function getIds(o){ return o.colaboradoresIds && o.colaboradoresIds.length ? o.colaboradoresIds : (o.asignadoA ? [o.asignadoA] : (o.colaboradorId ? [o.colaboradorId] : [])); }
   const tareasRango = ordenes.filter(function(o){ var f=getFechaO(o); return !f||(f>=inicio&&f<=fin); });
-  const cards = internos.map(function(e){
+  const datos = internos.map(function(e){
     var mis = tareasRango.filter(function(o){ return getIds(o).includes(e.id); });
     var comp = mis.filter(function(o){ return o.estado==='completada'; }).length;
     var pend = mis.filter(function(o){ return o.estado==='pendiente'||o.estado==='en-curso'||o.estado==='en_curso'; }).length;
     var total = mis.length;
     var atrasadas = ordenes.filter(function(o){ var f=getFechaO(o); return getIds(o).includes(e.id)&&f&&f<hoyStr&&o.estado!=='completada'&&o.estado!=='cancelada'; }).length;
+    return {e:e, comp:comp, pend:pend, total:total, atrasadas:atrasadas};
+  });
+  // Ordenar: primero por más atrasadas DESC, luego alfabético
+  datos.sort(function(a,b){
+    if(b.atrasadas !== a.atrasadas) return b.atrasadas - a.atrasadas;
+    return (a.e.nombre||'').localeCompare(b.e.nombre||'', 'es');
+  });
+  const cards = datos.map(function(d){
+    var e=d.e, comp=d.comp, pend=d.pend, total=d.total, atrasadas=d.atrasadas;
     var pctComp = total ? Math.round(comp/total*100) : 0;
     var html = '<div class="prod-card '+(atrasadas>0?'atrasado':'')+'">';
     html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
