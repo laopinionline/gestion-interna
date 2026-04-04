@@ -1158,6 +1158,12 @@ header{
   background:#1a1a1a !important;
   color:#e8e8e8 !important;
 }
+
+/* ══ HEADER DERECHO MOBILE ══ */
+@media(max-width:768px){
+  #appSupervisor .header-right { margin-left:auto; }
+  #appSupervisor .nav-tabs { display:none !important; }
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1253,17 +1259,11 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
-    <div class="header-right">
-      <!-- Acciones mobile: siempre visibles -->
-      <button onclick="toggleDarkMode()" id="darkModeToggle" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;color:#fff;">🌙</button>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
-        💬
-        <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
-      </button>
-      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;" title="Mi perfil"><span id="svUserName">?</span></div>
-      <!-- Solo desktop: botones extra -->
-      <button class="btn-logout desktop-only" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
-      <button class="btn-logout desktop-only" onclick="logout()">Salir</button>
+    <div class="header-right" style="display:flex;align-items:center;gap:4px;">
+      <button onclick="toggleDarkMode()" id="darkModeToggle" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;color:#fff;flex-shrink:0;">🌙</button>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;z-index:10;color:#fff;flex-shrink:0;" title="Mensajes">💬<span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span></button>
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;" title="Perfil"><span id="svUserName">?</span></div>
+      <button class="btn-logout desktop-only" onclick="logout()" style="font-size:12px;padding:5px 10px;flex-shrink:0;">Salir</button>
     </div>
   </header>
 
@@ -5308,8 +5308,13 @@ if(typeof cerrarHerramienta !== "undefined") window.cerrarHerramienta = cerrarHe
 function aplicarTema(modo){
   document.documentElement.setAttribute('data-theme', modo);
   localStorage.setItem('tema_panel', modo);
-  const btn = document.getElementById('darkModeToggle');
-  if(btn) btn.textContent = modo === 'dark' ? '☀️ Modo claro' : '🌙 Modo noche';
+  // Actualizar todos los botones de dark mode (header sup, header colab, etc)
+  const isDark = modo === 'dark';
+  document.querySelectorAll('#darkModeToggle, #darkModeToggleEmp').forEach(function(btn){
+    if(!btn) return;
+    // Si el botón solo tiene el emoji (mobile), solo el emoji
+    btn.textContent = isDark ? '☀️' : '🌙';
+  });
 }
 
 function toggleDarkMode(){
@@ -5496,11 +5501,7 @@ function navSidebar(vistaId, el){
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
     <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
-    <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
-    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirMensajero()"><span>💬</span> Mensajes</button>
-    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirPerfil()"><span>👤</span> Perfil</button>
-    <button class="nav-drawer-item" onclick="toggleDarkMode()"><span>🌙</span> Modo noche</button>
-    <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
+
   </div>
   <div id="navDrawerEmp" style="display:none">
     <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
