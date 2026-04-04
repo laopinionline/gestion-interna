@@ -1176,6 +1176,10 @@ header{
       </label>
       <input type="file" id="inputFotoPerfil" accept="image/*" capture="environment" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px;font-size:20px;line-height:1;" title="Mensajes">
+        💬
+        <span id="badgeMensajes" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;"></span>
+      </button>
       <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
       <span class="user-badge">💻 colaborador</span>
       <button class="btn-logout" onclick="logout()">Salir</button>
@@ -4847,6 +4851,199 @@ function cerrarComentariosTarea(){
     </div>
   </div>
 </div>
+
+<!-- MENSAJERO INTERNO -->
+<div id="mensajeroPanel" style="display:none;position:fixed;top:0;right:0;width:340px;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,0.15);z-index:99997;flex-direction:column;font-family:inherit;">
+  <!-- Header mensajero -->
+  <div style="background:var(--blue,#1a3a5c);color:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="font-weight:700;font-size:1rem;">💬 Mensajes</div>
+      <div id="mensajeroSubtitulo" style="font-size:11px;opacity:0.7;">Interno · La Opinión</div>
+    </div>
+    <button onclick="cerrarMensajero()" style="background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;">✕</button>
+  </div>
+
+  <!-- Vista: lista de conversaciones -->
+  <div id="mensajeroLista" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;">
+    <div style="padding:12px 16px;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #f0f0f0;">Colaboradores</div>
+    <div id="mensajeroContactos" style="flex:1;overflow-y:auto;"></div>
+  </div>
+
+  <!-- Vista: conversación individual -->
+  <div id="mensajeroChat" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <div style="padding:10px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;">
+      <button onclick="volverLista()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--blue);">←</button>
+      <div>
+        <div id="chatNombre" style="font-weight:700;font-size:14px;"></div>
+        <div id="chatEquipo" style="font-size:11px;color:#999;"></div>
+      </div>
+    </div>
+    <div id="chatHilo" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="padding:10px;border-top:1px solid #eee;display:flex;gap:8px;">
+      <input id="chatInput" type="text" placeholder="Escribí un mensaje..." 
+        style="flex:1;border:1.5px solid #ddd;border-radius:20px;padding:8px 14px;font-size:14px;outline:none;font-family:inherit;"
+        onkeydown="if(event.key==='Enter') enviarMensaje()">
+      <button onclick="enviarMensaje()" style="background:var(--blue,#1a3a5c);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;flex-shrink:0;">↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay mensajero -->
+<div id="mensajeroOverlay" onclick="cerrarMensajero()" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:99996;"></div>
+
+<script>
+var _chatConId = null;
+var _chatListener = null;
+var _mensajesNoLeidos = 0;
+
+function abrirMensajero(){
+  const panel = document.getElementById('mensajeroPanel');
+  const overlay = document.getElementById('mensajeroOverlay');
+  panel.style.display = 'flex';
+  overlay.style.display = 'block';
+  document.body.appendChild(panel);
+  document.body.appendChild(overlay);
+  renderContactos();
+  volverLista();
+}
+
+function cerrarMensajero(){
+  document.getElementById('mensajeroPanel').style.display = 'none';
+  document.getElementById('mensajeroOverlay').style.display = 'none';
+  if(_chatListener){ _chatListener(); _chatListener = null; }
+}
+
+function renderContactos(){
+  const cont = document.getElementById('mensajeroContactos');
+  const yo = colaboradores.find(c=>c.id===empActualId);
+  const lista = colaboradores.filter(c=>c.id!==empActualId && c.estado!=='inactivo')
+    .sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  
+  cont.innerHTML = lista.map(c => {
+    const convId = [empActualId, c.id].sort().join('_');
+    return '<div onclick="abrirChat(\''+c.id+'\',\''+convId+'\')" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #f5f5f5;display:flex;align-items:center;gap:10px;transition:background 0.15s;" onmouseover="this.style.background=\'#f8f8f8\'" onmouseout="this.style.background=\'\'">'+
+      '<div style="width:38px;height:38px;border-radius:50%;background:var(--blue2,#1565c0);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">'+c.nombre.split(' ').map(p=>p[0]).slice(0,2).join('')+'</div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+c.nombre.split(' ').slice(0,2).join(' ')+'</div>'+
+        '<div style="font-size:11px;color:#999;">'+c.equipo+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function abrirChat(destId, convId){
+  _chatConId = convId;
+  const dest = colaboradores.find(c=>c.id===destId);
+  document.getElementById('chatNombre').textContent = dest ? dest.nombre.split(' ').slice(0,2).join(' ') : '—';
+  document.getElementById('chatEquipo').textContent = dest ? dest.equipo : '';
+  document.getElementById('mensajeroLista').style.display = 'none';
+  document.getElementById('mensajeroChat').style.display = 'flex';
+  document.getElementById('chatInput').focus();
+  cargarMensajes(convId, destId);
+}
+
+function volverLista(){
+  if(_chatListener){ _chatListener(); _chatListener = null; }
+  _chatConId = null;
+  document.getElementById('mensajeroLista').style.display = 'flex';
+  document.getElementById('mensajeroChat').style.display = 'none';
+}
+
+function cargarMensajes(convId, destId){
+  const hilo = document.getElementById('chatHilo');
+  hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Cargando...</div>';
+  
+  if(typeof db === 'undefined') { hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Sin conexión</div>'; return; }
+  
+  // Marcar como leídos
+  db.collection('mensajes').doc(convId).collection('msgs')
+    .where('para', '==', empActualId)
+    .where('leido', '==', false)
+    .get().then(snap => {
+      snap.forEach(doc => doc.ref.update({leido: true}));
+      actualizarBadge();
+    });
+
+  // Listener en tiempo real
+  if(_chatListener) _chatListener();
+  _chatListener = db.collection('mensajes').doc(convId).collection('msgs')
+    .orderBy('fecha', 'asc')
+    .onSnapshot(snap => {
+      const msgs = snap.docs.map(d=>d.data());
+      renderHiloChat(msgs);
+    });
+}
+
+function renderHiloChat(msgs){
+  const hilo = document.getElementById('chatHilo');
+  if(!msgs.length){ hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Empezá la conversación 👋</div>'; return; }
+  
+  hilo.innerHTML = msgs.map(m => {
+    const esYo = m.de === empActualId;
+    const fecha = m.fecha ? new Date(m.fecha.seconds ? m.fecha.seconds*1000 : m.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div style="display:flex;justify-content:'+(esYo?'flex-end':'flex-start')+';">'+
+      '<div style="max-width:75%;background:'+(esYo?'var(--blue,#1a3a5c)':'#f0f0f0')+';color:'+(esYo?'#fff':'#333')+';border-radius:'+(esYo?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:8px 12px;font-size:14px;">'+
+        '<div>'+m.texto+'</div>'+
+        '<div style="font-size:10px;opacity:0.6;text-align:right;margin-top:2px;">'+fecha+(esYo&&m.leido?' ✓✓':esYo?' ✓':'')+'</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  hilo.scrollTop = hilo.scrollHeight;
+}
+
+function enviarMensaje(){
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if(!texto || !_chatConId) return;
+  
+  const destId = _chatConId.split('_').find(id=>id!==empActualId);
+  const msg = {
+    de: empActualId,
+    deNombre: empActualNombre,
+    para: destId,
+    texto: texto,
+    fecha: new Date(),
+    leido: false
+  };
+  
+  input.value = '';
+  if(typeof db !== 'undefined'){
+    db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(e=>console.warn(e));
+    // Actualizar metadata de la conversación
+    db.collection('mensajes').doc(_chatConId).set({
+      participantes: [empActualId, destId],
+      ultimoMensaje: texto,
+      ultimaFecha: new Date(),
+      noLeidoPor: destId
+    }, {merge:true});
+  }
+}
+
+function actualizarBadge(){
+  if(typeof db === 'undefined' || !empActualId) return;
+  db.collection('mensajes')
+    .where('noLeidoPor', '==', empActualId)
+    .get().then(snap => {
+      const count = snap.size;
+      ['badgeMensajes','badgeMensajesSup'].forEach(id => {
+        const badge = document.getElementById(id);
+        if(!badge) return;
+        if(count > 0){
+          badge.style.display = 'flex';
+          badge.textContent = count > 9 ? '9+' : count;
+        } else {
+          badge.style.display = 'none';
+        }
+      });
+    }).catch(()=>{});
+}
+
+// Revisar badge cada 30 segundos
+setTimeout(function checkBadge(){
+  actualizarBadge();
+  setTimeout(checkBadge, 30000);
+}, 3000);
+</script>
 </body>
 </html>
 
