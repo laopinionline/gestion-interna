@@ -4602,7 +4602,7 @@ function abrirComentariosOrden(ordenId){
   const orden = ordenes.find(o=>o.id===ordenId);
   if(!orden) return;
   // Mover modal al body para evitar problemas de z-index con contenedores padre
-  const modal = document.getElementById('modalComentariosTarea');
+  var modal = document.getElementById('modalComentariosTarea');
   if(modal && modal.parentElement !== document.body) document.body.appendChild(modal);
 
   document.getElementById('comentTareaTitulo').textContent = orden.titulo || orden.descripcion || 'Tarea';
@@ -4634,7 +4634,7 @@ function abrirComentariosOrden(ordenId){
   renderHiloComentarios(orden.comentarios || []);
 
   document.getElementById('comentInputTexto').value = '';
-  const modal = document.getElementById('modalComentariosTarea');
+  var modal = document.getElementById('modalComentariosTarea');
   modal.style.display = 'flex';
 }
 
