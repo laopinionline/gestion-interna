@@ -2820,7 +2820,7 @@ function renderTareasConReuniones(){
   // Reuniones
   reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
     .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
-  items.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  items.sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
   div.innerHTML = items.map(i=>{
     const onclick = i.tipo==='orden'
