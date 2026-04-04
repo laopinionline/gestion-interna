@@ -3746,9 +3746,37 @@ function renderKanban(){
     </div>`;
   }
 
-  document.getElementById('kb-pendiente').innerHTML = pend.length ? pend.map(cardHTML).join('') : '<div class="kanban-empty">Sin tareas pendientes</div>';
-  document.getElementById('kb-en-curso').innerHTML = enCurso.length ? enCurso.map(cardHTML).join('') : '<div class="kanban-empty">Nada en curso</div>';
-  document.getElementById('kb-listo').innerHTML = listo.length ? listo.map(cardHTML).join('') : '<div class="kanban-empty">Nada completado</div>';
+  const LIMIT = 5;
+  function renderColumna(el, items, emptyMsg, colId){
+    if(!items.length){ el.innerHTML = '<div class="kanban-empty">'+emptyMsg+'</div>'; return; }
+    const visible = items.slice(0, LIMIT);
+    const resto = items.length - LIMIT;
+    let html2 = visible.map(cardHTML).join('');
+    if(resto > 0){
+      html2 += '<button onclick="expandirKanban(\''+colId+'\',this)" data-col="'+colId+'" style="width:100%;margin-top:8px;padding:10px;background:var(--paper2);border:1.5px dashed var(--blue2);border-radius:10px;color:var(--blue2);font-weight:700;cursor:pointer;font-size:13px;">+ Ver '+resto+' más</button>';
+    }
+    el.innerHTML = html2;
+  }
+  window._kanbanItems = {pend, enCurso, listo};
+  renderColumna(document.getElementById('kb-pendiente'), pend, 'Sin tareas pendientes', 'pend');
+  renderColumna(document.getElementById('kb-en-curso'), enCurso, 'Nada en curso', 'enCurso');
+  renderColumna(document.getElementById('kb-listo'), listo, 'Nada completado', 'listo');
+}
+
+function expandirKanban(colId, btn){
+  const items = window._kanbanItems[colId];
+  const el = btn.parentElement;
+  // Quitar el botón y mostrar el resto
+  const yaVisibles = el.querySelectorAll('.kanban-card').length;
+  const resto = items.slice(yaVisibles);
+  btn.remove();
+  // Función cardHTML no está disponible fuera — re-renderizar todo sin límite
+  const estados = {pend:'kb-pendiente', enCurso:'kb-en-curso', listo:'kb-listo'};
+  const contenedor = document.getElementById(estados[colId]);
+  // Re-invocar renderKanban para ese colId sin límite
+  window._kanbanExpandido = window._kanbanExpandido || {};
+  window._kanbanExpandido[colId] = true;
+  renderKanban();
 }
 
 function cambiarEstadoOrden(id, nuevoEstado){
