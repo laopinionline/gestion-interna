@@ -869,8 +869,7 @@ header{
 
 <!-- ══════════ APP SUPERVISOR ══════════ -->
 <div class="app" id="appSupervisor">
-  <header style="z-index:100;position:relative;">
-    <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
+  <header style="z-index:100;position:fixed;top:0;left:0;right:0;">   <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
     <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="cambiarVista('vDash',this)">Dashboard</button>
@@ -927,7 +926,8 @@ header{
       </div>
 
       <!-- BLOQUE 1: GA4 -->
-      <!-- HERRAMIENTAS DIRECTOR -->
+      <div style="height:64px;"></div><!-- spacer header fixed supervisor -->
+   <!-- HERRAMIENTAS DIRECTOR -->
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <a href="https://www.laopinionline.ar" target="_blank" rel="noopener" class="herramienta-btn" style="background:#1a3a5c;color:#fff;text-decoration:none;font-size:12px;padding:8px 14px;">🌐 El Diario</a>
         <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" rel="noopener" class="herramienta-btn" style="background:#2e7d32;color:#fff;text-decoration:none;font-size:12px;padding:8px 14px;">✏️ Editor CMS</a>
