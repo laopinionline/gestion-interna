@@ -4818,6 +4818,12 @@ setTimeout(function checkBadge(){
   setTimeout(checkBadge, 30000);
 }, 3000);
 
+
+// Exponer al scope global
+window.abrirComentariosOrden = typeof abrirComentariosOrden !== "undefined" ? abrirComentariosOrden : window.abrirComentariosOrden;
+window.cerrarComentariosTarea = typeof cerrarComentariosTarea !== "undefined" ? cerrarComentariosTarea : window.cerrarComentariosTarea;
+window.enviarComentarioTarea = typeof enviarComentarioTarea !== "undefined" ? enviarComentarioTarea : window.enviarComentarioTarea;
+window.renderHiloComentarios = typeof renderHiloComentarios !== "undefined" ? renderHiloComentarios : window.renderHiloComentarios;
 </script>
 
 <!-- MODAL PERFIL -->
