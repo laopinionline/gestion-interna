@@ -951,7 +951,7 @@ header{
           <div id="dashTareas" style="margin-top:14px"><div class="no-data">No hay tareas para los próximos 7 días</div></div>
         </div>
         <!-- Alertas pauta -->
-        <div class="dash-panel" id="widgetAlertasPauta">
+        <div class="dash-panel" id="widgetAlertasPauta" style="display:none">
           <div class="dash-panel-title">🔔 Alertas de vencimiento de pauta</div>
           <div id="dashAlertas"><div class="no-data">Sin alertas</div></div>
         </div>
@@ -1213,7 +1213,18 @@ header{
 
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
-      <!-- HERRAMIENTAS DE TRABAJO -->
+      <!-- LECTURAS SEMANA COLABORADOR -->
+      <div class="container" style="padding-top:14px;padding-bottom:0;">
+        <div class="dash-cols">
+          <div class="dash-panel"><div class="stat-label">LECTURAS ESTA SEMANA</div><div id="empDashLecturas" class="stat-num" style="font-size:2rem;color:var(--blue2)">—</div><div class="stat-sub">pageviews GA4</div></div>
+          <div class="dash-panel"><div class="stat-label">VS SEMANA ANTERIOR</div><div id="empDashVar" class="stat-num" style="font-size:2rem;color:#b8860b">—</div><div class="stat-sub">variación</div></div>
+        </div>
+        <div class="dash-panel" style="margin-top:12px;">
+          <div class="dash-panel-title">📰 Top 5 notas más leídas</div>
+          <div id="empDashTop5"><div class="no-data">Cargando...</div></div>
+        </div>
+      </div>
+            <!-- HERRAMIENTAS DE TRABAJO -->
       <div class="container" style="padding-top:14px;padding-bottom:0;">
         <div class="herramientas-widget" id="herramientasWidget">
           <div class="herramientas-title">🛠 Herramientas de trabajo</div>
@@ -1753,6 +1764,11 @@ async function login(){
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
       actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
+      (function(){
+        if(['emp01','emp02','emp07','emp05'].includes(empActualId)){
+          var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
+        }
+      })();
 
     } else {
       document.getElementById('appcolaborador').classList.add('active');
@@ -3088,6 +3104,29 @@ function eliminarOrden(){
 }
 
 // ══ VISTA COLABORADOR ══
+function renderGA4Colaborador(){
+  fetch('http://localhost:3737/ga4/top-notas')
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.lecturasSemanales!=null){
+        var el=document.getElementById('empDashLecturas');
+        if(el) el.textContent=Number(data.lecturasSemanales).toLocaleString('es-AR');
+      }
+      if(data.variacion!=null){
+        var el=document.getElementById('empDashVar');
+        if(el) el.textContent=data.variacion;
+      }
+      var div=document.getElementById('empDashTop5');
+      var lista=data.topNotas||data.top5||[];
+      if(div && lista.length){
+        div.innerHTML=lista.map((n,i)=>'<div class="task-today-row"><div style="font-weight:700;color:var(--blue2);min-width:20px">'+(i+1)+'</div><div class="task-today-info"><div class="task-today-desc">'+(n.titulo||n.title||'Sin título')+'</div><div class="task-today-meta">👁 '+Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')+' vistas</div></div></div>').join('');
+      } else if(div){ div.innerHTML='<div class="no-data">Sin datos</div>'; }
+    }).catch(function(){ 
+      var div=document.getElementById('empDashTop5');
+      if(div) div.innerHTML='<div class="no-data">Sin conexión al backend</div>';
+    });
+}
+
 function rendercolaborador(){
   // Intentar detectar qué colaborador es por PIN (futuro: login individual)
   // Por ahora muestra todas las tareas asignadas a cualquier colaborador
@@ -3096,6 +3135,7 @@ function rendercolaborador(){
   const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const hoyDate=new Date();
   document.getElementById('empFecha').textContent=`${dias[hoyDate.getDay()]}, ${hoyDate.getDate()} de ${meses[hoyDate.getMonth()]} de ${hoyDate.getFullYear()}`;
+  renderGA4Colaborador();
 
   const {inicio: empInicio, fin: empFin} = proximaSemanaRango();
   const tareasHoy = ordenes.filter(o=>{
