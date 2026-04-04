@@ -3091,6 +3091,12 @@ function editarOrden(id){
   document.getElementById('soCliente').value = o.clienteId||'';
   const asignados = o.colaboradoresIds||(o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[]));
   document.querySelectorAll('.colab-check').forEach(function(cb){ cb.checked = asignados.includes(cb.value); });
+  // Pre-cargar equipo y tipo
+  const selEq = document.getElementById('soEquipo');
+  if(selEq) selEq.value = o.equipo || '';
+  if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
+  const selTipo = document.getElementById('soTipo');
+  if(selTipo && o.tipo) selTipo.value = o.tipo;
   abrirModal('mOrden');
 }
 function guardarOrdenStandalone(){
@@ -3102,6 +3108,9 @@ function guardarOrdenStandalone(){
   if(!validarJerarquiaOrden(colaboradoresIds)) return;
   const equipo = document.getElementById('soEquipo')?.value || '';
   const tipo = document.getElementById('soTipo')?.value || '';
+  // El primer colaborador seleccionado es el responsable principal
+  const asignadoA = colaboradoresIds.length > 0 ? colaboradoresIds[0] : (empActualId || null);
+  const asignadoNombre = asignadoA ? (colaboradores.find(c=>c.id===asignadoA)?.nombre || '') : '';
   const datos={
     fecha, desc,
     equipo, tipo,
@@ -3109,6 +3118,8 @@ function guardarOrdenStandalone(){
     estado:document.getElementById('soEstado').value,
     clienteId:document.getElementById('soCliente').value||null,
     colaboradoresIds,
+    asignadoA,
+    asignadoNombre,
     creadoPor: empActualId || 'emp01',
     creadoPorNombre: empActualNombre || 'Supervisor',
   };
