@@ -913,7 +913,7 @@ header{
 
 
 /* ══ SIDEBAR DISEÑO NUEVO ══ */
-.app-with-sidebar { display:flex; width:100%; min-height:calc(100vh - 52px); }
+.app-with-sidebar { display:block; width:100%; min-height:calc(100vh - 52px); }
 .sidebar {
   width:var(--sidebar-w);
   background:#fff;
@@ -5326,19 +5326,6 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
-
-// ══ FIX DOM: mover vistas al main-content ══
-(function fixVistasDOM(){
-  var mc = document.querySelector('#appSupervisor .main-content');
-  if(!mc) return;
-  var vistas = ['vClientes','vOrdenes','vcolaboradores','vReuniones','vProductividad','vProveedores'];
-  vistas.forEach(function(id){
-    var v = document.getElementById(id);
-    if(v && v.parentElement !== mc){
-      mc.appendChild(v);
-    }
-  });
-})();
 </script>
 
 <!-- MODAL PERFIL -->
