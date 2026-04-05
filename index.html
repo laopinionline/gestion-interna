@@ -2499,7 +2499,10 @@ function logout(){
 
 // ══ VISTAS SUPERVISOR ══
 function cambiarVista(id, btn){
-  window.scrollTo(0,0);
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
+  }, 50);
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   if(btn) btn.classList.add('active');
@@ -2680,6 +2683,11 @@ function cambiarVistaDrawer(id, btn){
   cerrarDrawer();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
+  // Scroll al top de la vista activa
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'smooth'});
+  }, 50);
   if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
