@@ -778,7 +778,7 @@ header{
     animation:slideUp 0.25s ease;
   }
   .view{display:none !important;}
-.view.active{display:block !important;width:100%;box-sizing:border-box;}
+.view.active{display:block !important;width:100%;box-sizing:border-box;min-height:calc(100vh - 120px);}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
 .modal-global{
@@ -982,6 +982,7 @@ header{
   min-width:0;
   padding:20px 24px;
   box-sizing:border-box;
+  min-height:100vh;
 }
 @media(max-width:768px){
   .main-content {
