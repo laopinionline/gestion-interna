@@ -913,7 +913,7 @@ header{
 
 
 /* ══ SIDEBAR DISEÑO NUEVO ══ */
-.app-with-sidebar { display:block; min-height:calc(100vh - 52px); }
+.app-with-sidebar { min-height:calc(100vh - 52px); }
 .sidebar {
   width:var(--sidebar-w);
   background:#fff;
@@ -982,21 +982,7 @@ header{
   min-width:0;
   padding:20px 24px;
 }
-/* Vistas dentro de app-with-sidebar */
-.app-with-sidebar > .view {
-  width:100%;
-  box-sizing:border-box;
-  margin-left:var(--sidebar-w);
-  padding:20px 24px;
-  min-height:calc(100vh - 60px);
-}
-@media(max-width:768px){
-  .app-with-sidebar > .view {
-    margin-left:0 !important;
-    width:100% !important;
-    padding:12px 16px;
-  }
-}
+
 
 /* ══ HEADER NUEVO ══ */
 #appSupervisor > header, #appcolaborador > header {
@@ -1179,6 +1165,23 @@ header{
   #appSupervisor .header-right { margin-left:auto; }
   #appSupervisor .nav-tabs { display:none !important; }
 }
+
+/* ══ SIDEBAR LAYOUT (definitivo) ══ */
+/* Desktop: sidebar fixed, contenido con margen */
+@media(min-width:769px){
+  #supervisorMainContainer { margin-left:var(--sidebar-w,220px) !important; }
+  .app-with-sidebar > .view { margin-left:0; padding:20px 24px; }
+}
+/* Mobile: sin sidebar, sin margen */
+@media(max-width:768px){
+  #dashSidebar { display:none !important; }
+  #supervisorMainContainer { margin-left:0 !important; }
+  .app-with-sidebar > .view { margin-left:0 !important; padding:12px 16px; }
+}
+/* Quitar nav-tabs del header en desktop (sidebar las reemplaza) */
+@media(min-width:769px){
+  #appSupervisor .nav-tabs { display:none !important; }
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1305,7 +1308,7 @@ header{
     </div>
   </nav>
 
-  <div class="container" id="supervisorMainContainer" style="margin-left:var(--sidebar-w,220px);padding-top:8px;min-height:calc(100vh - 52px);">
+  <div class="container" id="supervisorMainContainer">
 
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
