@@ -401,7 +401,7 @@ header{
 
 /* ── DASHBOARD SUPERVISOR ── */
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
-.stat-card{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
+.stat-card{background:var(--card-bg,#fff);border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
 .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#999;margin-bottom:6px;}
 .stat-value{font-family:'Playfair Display',serif;font-size:34px;line-height:1;}
 .stat-sub{font-size:12px;color:#aaa;margin-top:3px;}
@@ -423,7 +423,7 @@ header{
 .tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:#aaa;margin-top:2px;}
 
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
-.dash-panel{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;}
+.dash-panel{background:var(--card-bg,#fff);border-radius:12px;border:1.5px solid var(--line);padding:20px;}
 .dash-panel-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;color:var(--ink);}
 .dash-panel-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 
@@ -475,7 +475,7 @@ header{
 .count-badge{background:var(--paper2);color:var(--ink2);padding:5px 12px;border-radius:20px;font-size:13px;border:1px solid var(--line);}
 
 .clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.client-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.client-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
 .client-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue2);transition:width 0.2s;}
 .client-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px);border-color:var(--blue2);}
 .client-card:hover::before{width:6px;}
@@ -847,7 +847,7 @@ header{
 @media(max-width:700px){.kanban-board{grid-template-columns:1fr;}}
 
 /* ── REUNIONES ── */
-.meeting-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
+.meeting-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
 .meeting-card:hover{box-shadow:var(--shadow);border-color:var(--blue2);}
 .meeting-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .meeting-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);}
@@ -873,7 +873,7 @@ header{
 
 /* ── PRODUCTIVIDAD SUPERVISOR ── */
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.prod-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:16px 18px;}
+.prod-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:16px 18px;}
 .prod-card.atrasado{border-color:#f5c6c2;background:var(--red-bg);}
 .prod-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;}
 .prod-puesto{font-size:11px;color:#999;margin-bottom:10px;}
