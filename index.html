@@ -913,7 +913,7 @@ header{
 
 
 /* ══ SIDEBAR DISEÑO NUEVO ══ */
-.app-with-sidebar { min-height:calc(100vh - 52px); }
+.app-with-sidebar { display:flex; min-height:calc(100vh - 52px); }
 .sidebar {
   width:var(--sidebar-w);
   background:#fff;
@@ -982,7 +982,6 @@ header{
   min-width:0;
   padding:20px 24px;
 }
-
 
 /* ══ HEADER NUEVO ══ */
 #appSupervisor > header, #appcolaborador > header {
@@ -1124,64 +1123,6 @@ header{
   #appSupervisor .header-right { gap:6px !important; }
   #appSupervisor header { padding:0 12px !important; }
 }
-
-/* ══ DESKTOP ONLY ══ */
-@media(max-width:768px){
-  .desktop-only { display:none !important; }
-}
-
-/* ══ DARK MODE — drawer y sidebar ══ */
-[data-theme="dark"] #navDrawerPanel {
-  background:#111 !important;
-}
-[data-theme="dark"] .nav-drawer-item {
-  color:#ccc !important;
-}
-[data-theme="dark"] .nav-drawer-item:hover {
-  background:rgba(255,255,255,0.08) !important;
-}
-[data-theme="dark"] .nav-drawer-top {
-  background:#0a0a0a !important;
-  border-bottom:1px solid #1f1f1f !important;
-}
-[data-theme="dark"] #dashSidebar {
-  background:#0a0a0a !important;
-  border-right:1px solid #1f1f1f !important;
-}
-[data-theme="dark"] .sidebar-section {
-  color:#444 !important;
-}
-[data-theme="dark"] .sidebar-item {
-  color:#888 !important;
-}
-[data-theme="dark"] .sidebar-item:hover,
-[data-theme="dark"] .sidebar-item.active {
-  background:#1a1a1a !important;
-  color:#e8e8e8 !important;
-}
-
-/* ══ HEADER DERECHO MOBILE ══ */
-@media(max-width:768px){
-  #appSupervisor .header-right { margin-left:auto; }
-  #appSupervisor .nav-tabs { display:none !important; }
-}
-
-/* ══ SIDEBAR LAYOUT (definitivo) ══ */
-/* Desktop: sidebar fixed, contenido con margen */
-@media(min-width:769px){
-  #supervisorMainContainer { margin-left:var(--sidebar-w,220px) !important; }
-  .app-with-sidebar > .view { margin-left:0; padding:20px 24px; }
-}
-/* Mobile: sin sidebar, sin margen */
-@media(max-width:768px){
-  #dashSidebar { display:none !important; }
-  #supervisorMainContainer { margin-left:0 !important; }
-  .app-with-sidebar > .view { margin-left:0 !important; padding:12px 16px; }
-}
-/* Quitar nav-tabs del header en desktop (sidebar las reemplaza) */
-@media(min-width:769px){
-  #appSupervisor .nav-tabs { display:none !important; }
-}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1277,11 +1218,15 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
-    <div class="header-right" style="display:flex;align-items:center;gap:4px;">
-      <button onclick="toggleDarkMode()" id="darkModeToggle" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;color:#fff;flex-shrink:0;">🌙</button>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;line-height:1;z-index:10;color:#fff;flex-shrink:0;" title="Mensajes">💬<span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span></button>
-      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;" title="Perfil"><span id="svUserName">?</span></div>
-      <button class="btn-logout desktop-only" onclick="logout()" style="font-size:12px;padding:5px 10px;flex-shrink:0;">Salir</button>
+    <div class="header-right">
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
+        💬
+        <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
+      </button>
+      <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙 Modo noche</button>
+      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
+      <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </header>
 
@@ -1308,7 +1253,7 @@ header{
     </div>
   </nav>
 
-  <div class="container" id="supervisorMainContainer">
+  <div class="container" id="supervisorMainContainer" style="margin-left:var(--sidebar-w,220px);padding-top:8px;min-height:calc(100vh - 52px);">
 
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
@@ -5326,13 +5271,8 @@ if(typeof cerrarHerramienta !== "undefined") window.cerrarHerramienta = cerrarHe
 function aplicarTema(modo){
   document.documentElement.setAttribute('data-theme', modo);
   localStorage.setItem('tema_panel', modo);
-  // Actualizar todos los botones de dark mode (header sup, header colab, etc)
-  const isDark = modo === 'dark';
-  document.querySelectorAll('#darkModeToggle, #darkModeToggleEmp').forEach(function(btn){
-    if(!btn) return;
-    // Si el botón solo tiene el emoji (mobile), solo el emoji
-    btn.textContent = isDark ? '☀️' : '🌙';
-  });
+  const btn = document.getElementById('darkModeToggle');
+  if(btn) btn.textContent = modo === 'dark' ? '☀️ Modo claro' : '🌙 Modo noche';
 }
 
 function toggleDarkMode(){
@@ -5376,11 +5316,22 @@ function sincronizarSidebarConNav(itemActivo){
 }
 
 function navSidebar(vistaId, el){
-  // Usar cambiarVista original que ya maneja todo correctamente
-  cambiarVista(vistaId, null);
-  // Solo sincronizar el active del sidebar
+  // Activar vista
+  window.scrollTo(0,0);
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const vista = document.getElementById(vistaId);
+  if(vista) vista.classList.add('active');
+  // Activar item sidebar
   document.querySelectorAll('#dashSidebar .sidebar-item').forEach(i=>i.classList.remove('active'));
   if(el) el.classList.add('active');
+  // Callbacks por sección
+  if(vistaId==='vDash'){ renderDashboard(); renderAlertasYouTube(); filtrarReuniones(); }
+  if(vistaId==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+  if(vistaId==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
+  if(vistaId==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
+  if(vistaId==='vReuniones'){ filtrarReuniones(); }
+  if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
 </script>
 
@@ -5518,8 +5469,11 @@ function navSidebar(vistaId, el){
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
-    <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
-
+    <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
+    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirMensajero()"><span>💬</span> Mensajes</button>
+    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirPerfil()"><span>👤</span> Perfil</button>
+    <button class="nav-drawer-item" onclick="toggleDarkMode()"><span>🌙</span> Modo noche</button>
+    <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
   <div id="navDrawerEmp" style="display:none">
     <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
