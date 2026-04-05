@@ -2630,7 +2630,10 @@ function abrirPerfilColaborador(empId){
 // ── DRAWER MOBILE ──
 // ── BOTTOM NAV ──
 function cambiarVistaBN(id, bnId){
-  window.scrollTo(0,0);
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
+  }, 50);
   document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById(bnId);
   if(btn) btn.classList.add('active');
