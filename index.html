@@ -141,7 +141,7 @@
   background:linear-gradient(135deg,#111 0%,#1a1a2e 100%) !important;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{overscroll-behavior:none;-webkit-overflow-scrolling:auto;}body{font-family:var(--font-body);background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+html{overscroll-behavior:none;-webkit-overflow-scrolling:auto;}body{overscroll-behavior:none;-webkit-overflow-scrolling:auto;overflow-x:hidden;}body{font-family:var(--font-body);background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 
 /* ── LOGIN ── */
 .login-screen {
@@ -5389,6 +5389,32 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
+
+// ══ BLOQUEAR PULL-TO-REFRESH iOS ══
+(function(){
+  var lastY = 0;
+  document.addEventListener('touchstart', function(e){
+    lastY = e.touches[0].clientY;
+  }, {passive: false});
+  document.addEventListener('touchmove', function(e){
+    var el = e.target;
+    var scrollable = false;
+    // Verificar si el elemento o sus padres son scrolleables
+    while(el && el !== document.body){
+      if(el.scrollHeight > el.clientHeight){
+        scrollable = true;
+        break;
+      }
+      el = el.parentElement;
+    }
+    var y = e.touches[0].clientY;
+    var atTop = window.scrollY === 0 && y > lastY;
+    if(atTop && !scrollable){
+      e.preventDefault();
+    }
+    lastY = y;
+  }, {passive: false});
+})();
 </script>
 
 <!-- MODAL PERFIL -->
