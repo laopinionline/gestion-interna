@@ -1169,6 +1169,12 @@ header{
 [data-theme="dark"] .order-item { border-color:var(--line) !important; }
 [data-theme="dark"] .order-item:hover { background:var(--paper2) !important; }
 [data-theme="dark"] .orden-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+
+/* Cuando una vista secundaria está activa, ocultar el vDash */
+#vDash { display:block; }
+#supervisorMainContainer.vista-secundaria #vDash { display:none !important; }
+#supervisorMainContainer.vista-secundaria .spacer-header { display:none !important; }
+#supervisorMainContainer.vista-secundaria .app-with-sidebar { margin-top:0; }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1401,7 +1407,7 @@ header{
 
 </div><!-- /vDash -->
       <!-- BLOQUE 1: GA4 -->
-      <div style="height:60px;"></div><!-- spacer header fixed supervisor -->
+      <div class="spacer-header" style="height:60px;"></div><!-- spacer header fixed supervisor -->
    <div class="app-with-sidebar">
    <!-- SIDEBAR -->
    <nav class="sidebar" id="dashSidebar">
@@ -2556,6 +2562,11 @@ function logout(){
 // ══ VISTAS SUPERVISOR ══
 function cambiarVista(id, btn){
   try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
+  var smc = document.getElementById('supervisorMainContainer');
+  if(smc){
+    if(id === 'vDash') smc.classList.remove('vista-secundaria');
+    else smc.classList.add('vista-secundaria');
+  }
   setTimeout(function(){
     var el = document.getElementById(id);
     if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
@@ -2688,6 +2699,11 @@ function abrirPerfilColaborador(empId){
 // ── BOTTOM NAV ──
 function cambiarVistaBN(id, bnId){
   try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
+  var smc = document.getElementById('supervisorMainContainer');
+  if(smc){
+    if(id === 'vDash') smc.classList.remove('vista-secundaria');
+    else smc.classList.add('vista-secundaria');
+  }
   setTimeout(function(){
     var el = document.getElementById(id);
     if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
@@ -2740,6 +2756,11 @@ function cambiarVistaEmpDrawer(id, btn){
 }
 function cambiarVistaDrawer(id, btn){
   try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
+  var smc = document.getElementById('supervisorMainContainer');
+  if(smc){ 
+    if(id === 'vDash') smc.classList.remove('vista-secundaria');
+    else smc.classList.add('vista-secundaria');
+  }
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   cerrarDrawer();
