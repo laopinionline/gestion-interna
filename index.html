@@ -1123,6 +1123,15 @@ header{
   #appSupervisor .header-right { gap:6px !important; }
   #appSupervisor header { padding:0 12px !important; }
 }
+
+/* header supervisor mobile */
+@media(max-width:768px){
+  #appSupervisor .nav-tabs { display:none !important; }
+}
+@media(min-width:769px){
+  #btnSalirSup { display:inline-block !important; }
+  #darkModeToggle { font-size:13px !important; border:1.5px solid rgba(255,255,255,0.3) !important; border-radius:20px !important; padding:5px 10px !important; }
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1218,15 +1227,11 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
-    <div class="header-right">
-      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
-        💬
-        <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
-      </button>
-      <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙 Modo noche</button>
-      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
-      <button class="btn-logout" onclick="logout()">Salir</button>
+    <div class="header-right" style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button id="darkModeToggle" onclick="toggleDarkMode()" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;color:#fff;flex-shrink:0;">🌙</button>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;color:#fff;flex-shrink:0;" title="Mensajes">💬<span id="badgeMensajesSup" style="display:none;position:absolute;top:2px;right:2px;background:#e53935;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span></button>
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;" title="Perfil"><span id="svUserName">?</span></div>
+      <button class="btn-logout" onclick="logout()" style="font-size:12px;padding:5px 10px;display:none;" id="btnSalirSup">Salir</button>
     </div>
   </header>
 
