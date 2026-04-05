@@ -1102,35 +1102,15 @@ header{
 }
 @media(max-width:768px){
   #appSupervisor .nav-tabs { display:none !important; }
-  #appSupervisor .header-right { display:none !important; }
-  #appSupervisor header .hamburger-btn { display:flex !important; }
-  /* Mostrar solo avatar y mensajero en mobile header */
-  #appSupervisor header::after {
-    content:'';
-  }
-}
-@media(max-width:768px){
-  #appSupervisor .nav-tabs { display:flex !important; }
-  #appSupervisor .container { margin-left:0 !important; padding-top:0; }
+  #appSupervisor .container { margin-left:0 !important; }
   #dashSidebar { display:none !important; }
 }
 
-/* ══ MOBILE HEADER SUPERVISOR ══ */
-@media(max-width:768px){
-  #appSupervisor .nav-tabs { display:none !important; }
-  #appSupervisor .header-right .btn-logout { display:none !important; }
-  #appSupervisor .header-right #darkModeToggle { display:none !important; }
-  #appSupervisor .header-right { gap:6px !important; }
-  #appSupervisor header { padding:0 12px !important; }
-}
-
-/* header supervisor mobile */
-@media(max-width:768px){
-  #appSupervisor .nav-tabs { display:none !important; }
-}
+/* ══ HEADER SUPERVISOR ══ */
 @media(min-width:769px){
   #btnSalirSup { display:inline-block !important; }
-  #darkModeToggle { font-size:13px !important; border:1.5px solid rgba(255,255,255,0.3) !important; border-radius:20px !important; padding:5px 10px !important; }
+}
+
 }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
