@@ -1170,11 +1170,33 @@ header{
 [data-theme="dark"] .order-item:hover { background:var(--paper2) !important; }
 [data-theme="dark"] .orden-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
 
-/* Cuando una vista secundaria está activa, ocultar el vDash */
+/* Cuando una vista secundaria está activa, ocultar todo excepto la vista */
 #vDash { display:block; }
 #supervisorMainContainer.vista-secundaria #vDash { display:none !important; }
 #supervisorMainContainer.vista-secundaria .spacer-header { display:none !important; }
-#supervisorMainContainer.vista-secundaria .app-with-sidebar { margin-top:0; }
+#supervisorMainContainer.vista-secundaria .app-with-sidebar { 
+  position:fixed;
+  top:60px;
+  left:0;
+  right:0;
+  bottom:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:var(--paper);
+  z-index:10;
+}
+#supervisorMainContainer.vista-secundaria .main-content {
+  margin-left:0 !important;
+  width:100% !important;
+  padding:12px 16px;
+  padding-bottom:80px;
+}
+@media(min-width:769px){
+  #supervisorMainContainer.vista-secundaria .app-with-sidebar {
+    left:var(--sidebar-w);
+    top:60px;
+  }
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
