@@ -982,17 +982,18 @@ header{
   min-width:0;
   padding:20px 24px;
 }
-/* Las vistas hermanas del sidebar también necesitan margin-left */
+/* Vistas dentro de app-with-sidebar */
 .app-with-sidebar > .view {
+  width:100%;
+  box-sizing:border-box;
   margin-left:var(--sidebar-w);
-  flex:1;
-  min-width:0;
   padding:20px 24px;
   min-height:calc(100vh - 60px);
 }
 @media(max-width:768px){
   .app-with-sidebar > .view {
     margin-left:0 !important;
+    width:100% !important;
     padding:12px 16px;
   }
 }
