@@ -301,7 +301,7 @@ header{
 }
 /* Modal mejorado */
 .modal{
-  background:#fff;
+  background:var(--card-bg,#fff);
   border-radius:16px;
   box-shadow:0 20px 60px rgba(0,0,0,0.18);
   width:90%;
@@ -350,7 +350,7 @@ header{
 /* ── MODALES ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,25,35,0.55);backdrop-filter:blur(4px);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 .modal-overlay.active{opacity:1;pointer-events:all;}
-.modal{background:#fff;border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25);transform:translateY(20px);transition:transform 0.25s;}
+.modal{background:var(--card-bg,#fff);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25);transform:translateY(20px);transition:transform 0.25s;}
 .modal-overlay.active .modal{transform:translateY(0);}
 .modal-lg{max-width:860px;}
 .modal-header{padding:22px 26px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2;}
@@ -415,7 +415,7 @@ header{
 .tablero-metricas-grupo .tmg-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:10px;}
 .tablero-metricas-grupo .tmg-row{display:flex;flex-wrap:wrap;gap:10px;}
 .tablero-metricas-grupo .tmg-card{
-  background:#fff;border-radius:10px;border:1.5px solid var(--line);
+  background:var(--card-bg,#fff);border-radius:10px;border:1.5px solid var(--line);
   padding:12px 16px;min-width:100px;flex:1;max-width:200px;
 }
 .tablero-metricas-grupo .tmg-card-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -511,7 +511,7 @@ header{
 /* ══ CHIPS COLABORADORES EN MODAL ORDEN ══ */
 .colabs-grupos{display:flex;flex-direction:column;gap:14px;}
 .colab-grupo-section{
-  background:#fff;
+  background:var(--card-bg,#fff);
   border-radius:10px;
   padding:10px 12px;
   border:1px solid var(--line);
@@ -564,7 +564,7 @@ header{
   content:'✓ ';font-weight:700;
 }
 /* ══ HERRAMIENTAS DE TRABAJO ══ */
-.herramientas-widget{background:#fff;border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
+.herramientas-widget{background:var(--card-bg,#fff);border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
 .herramientas-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;}
 .herramientas-links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
 .herramienta-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
@@ -1148,6 +1148,27 @@ header{
 [data-theme="dark"] .nav-drawer-item span {
   filter: none !important;
 }
+
+/* ══ DARK MODE adicional ══ */
+[data-theme="dark"] .modal { background:var(--card-bg) !important; color:var(--ink) !important; }
+[data-theme="dark"] .modal-header { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .meeting-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .meeting-header, [data-theme="dark"] .meeting-title { color:var(--ink) !important; }
+[data-theme="dark"] .meeting-meta, [data-theme="dark"] .meeting-desc { color:var(--ink2) !important; }
+[data-theme="dark"] .stat-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .dash-panel { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .client-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .herramientas-widget { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .prod-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .filter-sel { background:var(--paper2) !important; color:var(--ink) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .search-box { background:var(--paper2) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .search-box input { background:transparent !important; color:var(--ink) !important; }
+[data-theme="dark"] .toolbar { background:var(--paper) !important; }
+[data-theme="dark"] .colab-grupo-section { background:var(--card-bg) !important; }
+[data-theme="dark"] .tmg-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
+[data-theme="dark"] .order-item { border-color:var(--line) !important; }
+[data-theme="dark"] .order-item:hover { background:var(--paper2) !important; }
+[data-theme="dark"] .orden-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
