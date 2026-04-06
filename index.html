@@ -5351,6 +5351,18 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
+
+// ══ FIX LAYOUT: mover aws al supervisorMainContainer y arreglar posición ══
+(function(){
+  var smc = document.getElementById('supervisorMainContainer');
+  var aws = document.querySelector('.app-with-sidebar');
+  if(!smc || !aws) return;
+  // Si aws no está dentro de smc, moverlo
+  if(!smc.contains(aws)){
+    smc.appendChild(aws);
+    console.log('aws movido al smc');
+  }
+})();
 </script>
 
 <!-- MODAL PERFIL -->
