@@ -4095,7 +4095,7 @@ function cambiarVistaEmp(id, btn){
   // Scroll a la vista activa
   setTimeout(function(){
     var el = document.getElementById(id);
-    if(el){ window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 97, behavior:'instant'}); }
+    if(el){ window.scrollTo({top: el.offsetTop - 97, behavior:'instant'}); }
   }, 20);
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpReuniones') renderEmpReuniones();
