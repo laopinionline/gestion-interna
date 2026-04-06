@@ -4586,6 +4586,11 @@ function renderProductividad(){
     return html;
   }).join('');
   document.getElementById('prodGrid').innerHTML = cards || '<div class="no-data">Sin colaboradores</div>';
+  // Event delegation para clicks en prod-cards
+  document.getElementById('prodGrid').onclick = function(e){
+    const card = e.target.closest('[data-empid]');
+    if(card) abrirOrdenesColaborador(card.dataset.empid, card.dataset.nombre);
+  };
 }
 
 
