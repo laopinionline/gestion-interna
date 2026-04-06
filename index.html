@@ -1635,6 +1635,9 @@ header{
         <button class="bn-item active" id="bne-tareas" onclick="cambiarVistaEmpBN('vEmpKanban','bne-tareas')">
           <span class="bn-icon">📋</span>Tareas
         </button>
+        <button class="bn-item" id="bne-clientes-dir" style="display:none" onclick="cambiarVistaEmpBN('vEmpClientes','bne-clientes-dir')">
+          <span class="bn-icon">👥</span>Clientes
+        </button>
         <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
           <span class="bn-icon">📅</span>Reuniones
         </button>
@@ -1647,6 +1650,8 @@ header{
       </div>
     </nav>
 
+    <!-- CLIENTES DIRECTOR -->
+    <div class="view" id="vEmpClientes"><div id="empClientesList" style="margin-top:4px"></div></div>
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
       <div class="emp-header">
@@ -2216,6 +2221,13 @@ async function login(){
 
 
 // ══════════ TIPOS DE TAREA POR EQUIPO ══════════
+const DIRECTORES = {
+  'emp02': { equipo: 'Administración' },
+  'emp05': { equipo: 'Comercial' },
+  'emp07': { equipo: 'Redacción' },
+  'emp16': { equipo: 'Digital' },
+};
+const PUEDE_VER_PAUTA = ['emp01', 'emp02'];
 const TAREAS_POR_EQUIPO = {
   'Redacción': [
     'Subir nota al diario digital',
@@ -3166,7 +3178,7 @@ function renderClientes(lista){
         ${c.email?`<div class="ci-row">✉ ${c.email}</div>`:''}
         ${c.pautaVence?`<div class="ci-row">📅 Vence: ${fmtD(c.pautaVence)}</div>`:''}
       </div>
-      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:var(--green-bg);color:var(--green);border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:var(--green);">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
+      ${PUEDE_VER_PAUTA.includes(empActualId)&&(c.montoPauta||c.esCanje)?`<div style="background:var(--green-bg);color:var(--green);border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:var(--green);">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
       <div class="card-footer">
         <div class="orders-count"><strong>${ords.length}</strong> orden${ords.length!==1?'es':''}${pend?` · <strong style="color:var(--gold)">${pend} pend.</strong>`:''}</div>
         ${c.pauta?`<span class="pauta-tag">📢 Pauta</span>`:''}
@@ -3598,6 +3610,15 @@ function renderGA4Colaborador(){
 function rendercolaborador(usuarioActual){
   // Setear empActualId con el usuario logueado — respetar el que ya viene del login
   if(usuarioActual && usuarioActual.id) empActualId = usuarioActual.id;
+  // Inyectar jerarquía si es director
+  if(usuarioActual && DIRECTORES[usuarioActual.id]) {
+    usuarioActual.jerarquia = 'director';
+    usuarioActual.equipoDir = DIRECTORES[usuarioActual.id].equipo;
+  }
+  // Mostrar tab Clientes si es director
+  const esDirectorEmp = usuarioActual && !!DIRECTORES[usuarioActual.id];
+  const tabClientesDir = document.getElementById('bne-clientes-dir');
+  if(tabClientesDir) tabClientesDir.style.display = esDirectorEmp ? '' : 'none';
   // Si empActualId sigue null, intentar leerlo de la sesión guardada
   if(!empActualId){
     try {
