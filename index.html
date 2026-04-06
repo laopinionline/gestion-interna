@@ -2608,11 +2608,16 @@ function cambiarVista(id, btn){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
   var vistaEl = document.getElementById(id);
   if(vistaEl) vistaEl.classList.add('active');
-  // vDash: mostrar solo en dashboard
+  // Scroll a la vista activa (vDash siempre visible)
   var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
-  // Scroll arriba
-  window.scrollTo(0, 0);
+  if(vDE) vDE.style.display = '';
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el){
+      var top = el.getBoundingClientRect().top + window.scrollY - 62;
+      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
+    }
+  }, 20);
   // Callbacks
   if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
   if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
@@ -2745,11 +2750,16 @@ function cambiarVistaBN(id, bnId){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
   var vistaEl = document.getElementById(id);
   if(vistaEl) vistaEl.classList.add('active');
-  // vDash: mostrar solo en dashboard
+  // Scroll a la vista activa (vDash siempre visible)
   var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
-  // Scroll arriba
-  window.scrollTo(0, 0);
+  if(vDE) vDE.style.display = '';
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el){
+      var top = el.getBoundingClientRect().top + window.scrollY - 62;
+      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
+    }
+  }, 20);
   // Callbacks
   if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
   if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
@@ -2799,11 +2809,16 @@ function cambiarVistaDrawer(id, btn){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
   var vistaEl = document.getElementById(id);
   if(vistaEl) vistaEl.classList.add('active');
-  // vDash: mostrar solo en dashboard
+  // Scroll a la vista activa (vDash siempre visible)
   var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
-  // Scroll arriba
-  window.scrollTo(0, 0);
+  if(vDE) vDE.style.display = '';
+  setTimeout(function(){
+    var el = document.getElementById(id);
+    if(el){
+      var top = el.getBoundingClientRect().top + window.scrollY - 62;
+      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
+    }
+  }, 20);
   // Callbacks
   if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
   if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
