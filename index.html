@@ -505,15 +505,7 @@ header{
 .herramienta-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
 .herramienta-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.12);}
 .herramienta-btn.instagram{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:#fff;}
-.asistente-wrap{border-top:1px solid var(--line);padding-top:16px;}
-.asistente-label{font-size:11px;font-weight:700;color:#999;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px;}
-.asistente-opciones{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.asistente-opcion{padding:5px 12px;border-radius:20px;border:1.5px solid var(--line);background:#fff;font-size:12px;font-weight:500;cursor:pointer;color:var(--ink2);transition:all 0.15s;}
-.asistente-opcion.sel{background:var(--blue);color:#fff;border-color:var(--blue);}
-.asistente-input{width:100%;min-height:70px;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;outline:none;}
-.asistente-input:focus{border-color:var(--blue2);}
-.asistente-resultado{background:#f9f7f3;border-radius:9px;padding:14px;font-size:13px;line-height:1.65;color:var(--ink);white-space:pre-wrap;margin-top:10px;border:1px solid var(--line);}
-.asistente-actions{display:flex;gap:8px;margin-top:10px;}
+
 .btn-primary,.btn-blue{
   background:var(--blue);color:#fff;border:none;
   padding:10px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;
@@ -1611,22 +1603,7 @@ header{
               ✏️ Editor CMS
             </a>
           </div>
-          <div class="asistente-wrap">
-            <div class="asistente-label">📝 Asistente de redacción</div>
-            <div class="asistente-opciones">
-              <button class="asistente-opcion sel" onclick="selAsistente(this,'titulo')">✏️ Mejorar título</button>
-              <button class="asistente-opcion" onclick="selAsistente(this,'bajada')">📄 Escribir bajada</button>
-              <button class="asistente-opcion" onclick="selAsistente(this,'copete')">🔤 Generar copete</button>
-              <button class="asistente-opcion" onclick="selAsistente(this,'reformular')">🔄 Reformular párrafo</button>
-              <button class="asistente-opcion" onclick="selAsistente(this,'redes')">📱 Adaptá para redes</button>
-            </div>
-            <textarea class="asistente-input" id="asistenteInput" placeholder="Pegá tu texto acá..."></textarea>
-            <div class="asistente-actions">
-              <button onclick="ejecutarAsistente()" style="flex:1;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;" id="btnAsistente">Generar ✦</button>
-              <button onclick="document.getElementById('asistenteResultado').remove?.();document.getElementById('asistenteInput').value=''" style="padding:10px 14px;background:var(--paper2);border:1px solid var(--line);border-radius:8px;font-size:13px;cursor:pointer;">Limpiar</button>
-            </div>
-            <div id="asistenteResultado" class="asistente-resultado" style="display:none;"></div>
-          </div>
+
         </div>
       </div>
       <!-- LECTURAS SEMANA COLABORADOR -->
@@ -3693,51 +3670,7 @@ function previsualizarLogoCliente(input){
   img.src = objectUrl;
 }
 
-var _asistenteMode = 'titulo';
 
-function selAsistente(btn, modo){
-  document.querySelectorAll('.asistente-opcion').forEach(function(b){ b.classList.remove('sel'); });
-  btn.classList.add('sel');
-  _asistenteMode = modo;
-}
-
-async function ejecutarAsistente(){
-  var texto = document.getElementById('asistenteInput').value.trim();
-  if(!texto){ toast('Escribí o pegá algo primero','err'); return; }
-  var btn = document.getElementById('btnAsistente');
-  var res = document.getElementById('asistenteResultado');
-  btn.textContent = 'Generando...';
-  btn.disabled = true;
-  res.style.display = 'block';
-  res.textContent = '...';
-
-  var prompts = {
-    titulo: 'Sos editor periodístico de un diario digital argentino. Mejorá el siguiente título de nota para que sea más atractivo, claro y genere clicks, sin perder precisión. Dame 3 opciones. Título: ',
-    bajada: 'Sos editor periodístico. Escribí una bajada informativa y atractiva de máximo 160 caracteres para esta nota. Solo dame la bajada, sin explicaciones. Nota: ',
-    copete: 'Sos periodista. Escribí un copete de 2-3 oraciones que resuma lo más importante de esta nota. Solo el copete. Nota: ',
-    reformular: 'Sos editor periodístico argentino. Reescribí este párrafo con mejor redacción, más fluida y clara, sin cambiar el significado. Solo el párrafo reescrito. Párrafo: ',
-    redes: 'Sos community manager de un diario argentino. Adaptá este texto para publicarlo en Instagram y Twitter/X. Dame ambas versiones claramente separadas. Texto: '
-  };
-
-  try {
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: (prompts[_asistenteMode]||prompts.titulo) + texto }]
-      })
-    });
-    var data = await response.json();
-    var resultado = data.content && data.content[0] ? data.content[0].text : 'Sin respuesta';
-    res.textContent = resultado;
-  } catch(e){
-    res.textContent = 'Error: ' + e.message;
-  }
-  btn.textContent = 'Generar ✦';
-  btn.disabled = false;
-}
 
 function onGrupoSelect(sel){
   var inp = document.getElementById('fGrupoNuevo');
