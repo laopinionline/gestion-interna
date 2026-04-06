@@ -1588,7 +1588,7 @@ header{
   </div>
   <div class="container" style="max-width:1100px">
             <!-- HERRAMIENTAS DE TRABAJO -->
-      <div class="container" style="padding-top:14px;padding-bottom:0;">
+      <div id="empDashContainer" class="container" style="padding-top:14px;padding-bottom:0;">
         <div class="herramientas-widget" id="herramientasWidget">
           <div class="herramientas-title">🛠 Herramientas de trabajo</div>
           <div class="herramientas-links">
@@ -2663,6 +2663,9 @@ function cambiarVistaEmpBN(id, bnId){
   if(vista) vista.classList.add('active');
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpClientes') renderEmpClientes();
+  // Mostrar dashboard solo en vista inicial (cuando se hace scroll al inicio)
+  const dash = document.getElementById('empDashContainer');
+  if(dash) dash.style.display = (id==='vEmpKanban') ? '' : 'none';
 }
 
 function abrirDrawer(){
@@ -3644,6 +3647,38 @@ function rendercolaborador(usuarioActual){
   renderEmpReuniones();
   renderMisRedes();
 
+}
+
+function renderEmpClientes(){
+  const cont = document.getElementById('empClientesList');
+  if(!cont) return;
+  const lista = clientes.filter(c => c.estado !== 'inactivo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  if(!lista.length){ cont.innerHTML='<div class="no-data">No hay clientes activos</div>'; return; }
+  cont.innerHTML = lista.map(c => {
+    const logoHtml = c.logoUrl
+      ? `<img src="${c.logoUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;">`
+      : `<div style="width:40px;height:40px;border-radius:8px;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏢</div>`;
+    const estadoBadge = c.estado === 'pausado'
+      ? `<span class="status-badge badge-pausado">PAUSADO</span>`
+      : `<span class="status-badge badge-activo">ACTIVO</span>`;
+    const pautaHtml = PUEDE_VER_PAUTA.includes(empActualId) && (c.montoPauta||c.esCanje)
+      ? `<div style="background:var(--green-bg);color:var(--green);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:6px;">${c.esCanje ? '🔄 CANJE' : '$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes'}</div>` : '';
+    const vence = c.fechaVencimiento ? `<div style="font-size:12px;color:var(--ink2);margin-top:4px;">📅 Vence: ${c.fechaVencimiento}</div>` : '';
+    const contacto = c.contacto ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">👤 ${c.contacto}</div>` : '';
+    return `<div style="margin-bottom:10px;padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--line);">
+      <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${logoHtml}
+          <div>
+            <div style="font-weight:700;font-size:15px;">${c.nombre||'Sin nombre'}</div>
+            <div class="client-rubro">${c.rubro||''}</div>
+          </div>
+        </div>
+        ${estadoBadge}
+      </div>
+      ${contacto}${vence}${pautaHtml}
+    </div>`;
+  }).join('');
 }
 
 async function renderMisRedes(){
