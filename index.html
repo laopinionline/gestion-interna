@@ -4401,7 +4401,17 @@ function eliminarReunion(){
 
 function filtrarReuniones(){
   const filtro = document.getElementById('filtroReunionEstado')?.value||'';
-  let listaR = [...reuniones].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  const hoyStr = new Date().toISOString().slice(0,10);
+  let listaR = [...reuniones].sort((a,b)=>{
+    const sA = statusReunion(a);
+    const sB = statusReunion(b);
+    const pasadaA = (sA==='pasada'||sA==='realizada') ? 1 : 0;
+    const pasadaB = (sB==='pasada'||sB==='realizada') ? 1 : 0;
+    if(pasadaA !== pasadaB) return pasadaA - pasadaB;
+    // Próximas: más cercana primero (ASC); pasadas: más reciente primero (DESC)
+    if(pasadaA === 1) return (b.fecha||'').localeCompare(a.fecha||'');
+    return (a.fecha||'').localeCompare(b.fecha||'');
+  });
   // Filtrar por participante — colaboradores solo ven sus reuniones
   if(rolActual !== 'supervisor'){
     listaR = listaR.filter(r => {
