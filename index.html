@@ -37,6 +37,7 @@
 [data-theme="dark"] .sidebar { background:#111111 !important; border-right:1px solid #2a2a2a !important; }
 [data-theme="dark"] .nav-drawer-panel { background:#161616 !important; }
 [data-theme="dark"] .bottom-nav { background:#111111 !important; border-top-color:#2a2a2a !important; }
+[data-theme="dark"] #empResumenMobile { background:rgba(255,255,255,0.04) !important; border-color:#2a2a2a !important; }
 [data-theme="dark"] .bn-item { color:#666 !important; }
 [data-theme="dark"] .bn-item.active { color:#5b9bd5 !important; }
 [data-theme="dark"] .nav-drawer-item { color:#e8e8e8; }
@@ -692,6 +693,8 @@ header{
   .kanban-board{grid-template-columns:1fr;gap:10px;}
   
   /* Header colaborador */
+  #headerResumenTareas{display:none !important;}
+  #empResumenMobile{display:block !important;}
   .emp-header{padding:16px 14px;border-radius:10px;margin-bottom:12px;}
   .emp-title{font-size:15px;}
   .emp-stats{gap:10px;flex-wrap:wrap;}
@@ -1667,7 +1670,25 @@ header{
           <div class="emp-stat"><div class="emp-stat-val" id="empTotal">0</div><div class="emp-stat-lbl">Total</div></div>
         </div>
       </div>
-      <div class="kanban-board">
+      <div id="empResumenMobile" style="display:none;margin-bottom:14px;background:rgba(255,255,255,0.06);border-radius:14px;padding:12px 16px;border:1px solid var(--line);">
+        <div style="display:flex;justify-content:space-around;align-items:center;">
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#fbbf24;" id="empResumPend">0</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-top:2px;">⏳ Pendientes</div>
+          </div>
+          <div style="width:1px;height:32px;background:var(--line);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#60a5fa;" id="empResumCurso">0</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-top:2px;">▶ En curso</div>
+          </div>
+          <div style="width:1px;height:32px;background:var(--line);"></div>
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:#34d399;" id="empResumListas">0</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-top:2px;">✓ Listas</div>
+          </div>
+        </div>
+      </div>
+<div class="kanban-board">
         <div class="kanban-col kcol-pendiente">
           <div class="kanban-col-header">⏳ Pendiente<span class="kcount" id="kc-pend">0</span></div>
           <div class="kanban-cards" id="kb-pendiente"></div>
