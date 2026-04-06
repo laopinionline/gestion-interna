@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Grupo La Opinión — Sistema de Gestión</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
@@ -141,20 +141,18 @@
   background:linear-gradient(135deg,#111 0%,#1a1a2e 100%) !important;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{overscroll-behavior:none;}body{font-family:var(--font-body);background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+html,body{overscroll-behavior:none;-webkit-overflow-scrolling:auto;}body{font-family:var(--font-body);background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 
 /* ── LOGIN ── */
 .login-screen {
   min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:var(--paper);
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue2) 100%);
   padding:20px;
 }
 .login-box {
-  background:#fff;border-radius:20px;padding:40px 36px;
-  width:100%;max-width:380px;
-  box-shadow:0 8px 40px rgba(0,0,0,0.12);
+  background:#fff;border-radius:20px;padding:48px 40px;
+  width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.3);
   text-align:center;
-  border:1px solid var(--line);
 }
 .login-logo {font-family:'Playfair Display',serif;font-size:28px;color:var(--blue);margin-bottom:6px;}
 .login-logo span{color:var(--accent2);}
@@ -303,7 +301,7 @@ header{
 }
 /* Modal mejorado */
 .modal{
-  background:var(--card-bg,#fff);
+  background:#fff;
   border-radius:16px;
   box-shadow:0 20px 60px rgba(0,0,0,0.18);
   width:90%;
@@ -352,7 +350,7 @@ header{
 /* ── MODALES ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(15,25,35,0.55);backdrop-filter:blur(4px);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.25s;}
 .modal-overlay.active{opacity:1;pointer-events:all;}
-.modal{background:var(--card-bg,#fff);border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25);transform:translateY(20px);transition:transform 0.25s;}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.25);transform:translateY(20px);transition:transform 0.25s;}
 .modal-overlay.active .modal{transform:translateY(0);}
 .modal-lg{max-width:860px;}
 .modal-header{padding:22px 26px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2;}
@@ -388,7 +386,7 @@ header{
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:10px;font-size:26px;color:#fff;line-height:1;flex-shrink:0;}
 .nav-drawer-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.45);}
 .nav-drawer-overlay.open{display:block;}
-.nav-drawer-panel{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--card-bg,#fff);z-index:350;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,0.18);transition:left 0.25s ease;}
+.nav-drawer-panel{position:fixed;top:0;left:-280px;width:270px;height:100%;background:#fff;z-index:350;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,0.18);transition:left 0.25s ease;}
 .nav-drawer-panel.open{left:0;}
 .nav-drawer-top{background:var(--blue);padding:20px 18px 14px;display:flex;align-items:center;justify-content:space-between;}
 .nav-drawer-logo{font-family:'Playfair Display',serif;color:#fff;font-size:16px;}
@@ -403,7 +401,7 @@ header{
 
 /* ── DASHBOARD SUPERVISOR ── */
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
-.stat-card{background:var(--card-bg,#fff);border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
+.stat-card{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:18px 20px;}
 .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#999;margin-bottom:6px;}
 .stat-value{font-family:'Playfair Display',serif;font-size:34px;line-height:1;}
 .stat-sub{font-size:12px;color:#aaa;margin-top:3px;}
@@ -417,7 +415,7 @@ header{
 .tablero-metricas-grupo .tmg-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:10px;}
 .tablero-metricas-grupo .tmg-row{display:flex;flex-wrap:wrap;gap:10px;}
 .tablero-metricas-grupo .tmg-card{
-  background:var(--card-bg,#fff);border-radius:10px;border:1.5px solid var(--line);
+  background:#fff;border-radius:10px;border:1.5px solid var(--line);
   padding:12px 16px;min-width:100px;flex:1;max-width:200px;
 }
 .tablero-metricas-grupo .tmg-card-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -425,7 +423,7 @@ header{
 .tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:#aaa;margin-top:2px;}
 
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
-.dash-panel{background:var(--card-bg,#fff);border-radius:12px;border:1.5px solid var(--line);padding:20px;}
+.dash-panel{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;}
 .dash-panel-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;color:var(--ink);}
 .dash-panel-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 
@@ -477,7 +475,7 @@ header{
 .count-badge{background:var(--paper2);color:var(--ink2);padding:5px 12px;border-radius:20px;font-size:13px;border:1px solid var(--line);}
 
 .clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
-.client-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.client-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
 .client-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue2);transition:width 0.2s;}
 .client-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px);border-color:var(--blue2);}
 .client-card:hover::before{width:6px;}
@@ -513,7 +511,7 @@ header{
 /* ══ CHIPS COLABORADORES EN MODAL ORDEN ══ */
 .colabs-grupos{display:flex;flex-direction:column;gap:14px;}
 .colab-grupo-section{
-  background:var(--card-bg,#fff);
+  background:#fff;
   border-radius:10px;
   padding:10px 12px;
   border:1px solid var(--line);
@@ -566,7 +564,7 @@ header{
   content:'✓ ';font-weight:700;
 }
 /* ══ HERRAMIENTAS DE TRABAJO ══ */
-.herramientas-widget{background:var(--card-bg,#fff);border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
+.herramientas-widget{background:#fff;border-radius:14px;border:1.5px solid var(--line);padding:20px;margin-bottom:18px;}
 .herramientas-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;}
 .herramientas-links{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
 .herramienta-btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;}
@@ -780,7 +778,7 @@ header{
     animation:slideUp 0.25s ease;
   }
   .view{display:none !important;}
-.view.active{display:block !important;width:100%;box-sizing:border-box;min-height:calc(100vh - 120px);}
+.view.active{display:block !important;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
 .modal-global{
@@ -849,7 +847,7 @@ header{
 @media(max-width:700px){.kanban-board{grid-template-columns:1fr;}}
 
 /* ── REUNIONES ── */
-.meeting-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
+.meeting-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
 .meeting-card:hover{box-shadow:var(--shadow);border-color:var(--blue2);}
 .meeting-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .meeting-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);}
@@ -875,7 +873,7 @@ header{
 
 /* ── PRODUCTIVIDAD SUPERVISOR ── */
 .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.prod-card{background:var(--card-bg,#fff);border-radius:11px;border:1.5px solid var(--line);padding:16px 18px;}
+.prod-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:16px 18px;}
 .prod-card.atrasado{border-color:#f5c6c2;background:var(--red-bg);}
 .prod-name{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;}
 .prod-puesto{font-size:11px;color:#999;margin-bottom:10px;}
@@ -915,7 +913,7 @@ header{
 
 
 /* ══ SIDEBAR DISEÑO NUEVO ══ */
-.app-with-sidebar { display:block; width:100%; min-height:calc(100vh - 52px); }
+.app-with-sidebar { display:flex; min-height:calc(100vh - 52px); }
 .sidebar {
   width:var(--sidebar-w);
   background:#fff;
@@ -980,18 +978,9 @@ header{
 .sidebar-badge.neutral { background:var(--paper2);color:var(--ink2); }
 .main-content {
   margin-left:var(--sidebar-w);
-  width:calc(100% - var(--sidebar-w));
+  flex:1;
   min-width:0;
   padding:20px 24px;
-  box-sizing:border-box;
-  min-height:100vh;
-}
-@media(max-width:768px){
-  .main-content {
-    margin-left:0 !important;
-    width:100% !important;
-    padding:12px 16px;
-  }
 }
 
 /* ══ HEADER NUEVO ══ */
@@ -1113,116 +1102,26 @@ header{
 }
 @media(max-width:768px){
   #appSupervisor .nav-tabs { display:none !important; }
-  #appSupervisor .container { margin-left:0 !important; }
+  #appSupervisor .header-right { display:none !important; }
+  #appSupervisor header .hamburger-btn { display:flex !important; }
+  /* Mostrar solo avatar y mensajero en mobile header */
+  #appSupervisor header::after {
+    content:'';
+  }
+}
+@media(max-width:768px){
+  #appSupervisor .nav-tabs { display:flex !important; }
+  #appSupervisor .container { margin-left:0 !important; padding-top:0; }
   #dashSidebar { display:none !important; }
 }
 
-/* ══ HEADER SUPERVISOR ══ */
-@media(min-width:769px){
-  #btnSalirSup { display:inline-block !important; }
-}
-
-}
-
-/* ══ DARK MODE: drawer lateral ══ */
-[data-theme="dark"] #navDrawerPanel {
-  background:#111 !important;
-  border-right:1px solid #222 !important;
-}
-[data-theme="dark"] .nav-drawer-top {
-  background:#0a0a0a !important;
-  border-bottom:1px solid #222 !important;
-}
-[data-theme="dark"] .nav-drawer-logo {
-  color:#e8e8e8 !important;
-}
-[data-theme="dark"] .nav-drawer-close {
-  color:#888 !important;
-}
-[data-theme="dark"] .nav-drawer-item {
-  color:#c8c8c8 !important;
-}
-[data-theme="dark"] .nav-drawer-item:hover,
-[data-theme="dark"] .nav-drawer-item.active {
-  background:rgba(255,255,255,0.07) !important;
-  color:#fff !important;
-}
-[data-theme="dark"] .nav-drawer-item span {
-  filter: none !important;
-}
-
-/* ══ DARK MODE adicional ══ */
-[data-theme="dark"] .modal { background:var(--card-bg) !important; color:var(--ink) !important; }
-[data-theme="dark"] .modal-header { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .meeting-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .meeting-header, [data-theme="dark"] .meeting-title { color:var(--ink) !important; }
-[data-theme="dark"] .meeting-meta, [data-theme="dark"] .meeting-desc { color:var(--ink2) !important; }
-[data-theme="dark"] .stat-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .dash-panel { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .client-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .herramientas-widget { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .prod-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .filter-sel { background:var(--paper2) !important; color:var(--ink) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .search-box { background:var(--paper2) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .search-box input { background:transparent !important; color:var(--ink) !important; }
-[data-theme="dark"] .toolbar { background:var(--paper) !important; }
-[data-theme="dark"] .colab-grupo-section { background:var(--card-bg) !important; }
-[data-theme="dark"] .tmg-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-[data-theme="dark"] .order-item { border-color:var(--line) !important; }
-[data-theme="dark"] .order-item:hover { background:var(--paper2) !important; }
-[data-theme="dark"] .orden-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
-
-/* Cuando una vista secundaria está activa */
-#supervisorMainContainer.vista-secundaria .spacer-header { display:none !important; }
-#supervisorMainContainer.vista-secundaria .app-with-sidebar { 
-  position:fixed;
-  top:60px;
-  left:0;
-  right:0;
-  bottom:0;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  background:var(--paper);
-  z-index:10;
-}
-#supervisorMainContainer.vista-secundaria .main-content {
-  margin-left:0 !important;
-  width:100% !important;
-  padding:12px 16px;
-  padding-bottom:80px;
-}
-@media(min-width:769px){
-  #supervisorMainContainer.vista-secundaria .app-with-sidebar {
-    left:var(--sidebar-w,220px);
-    top:60px;
-  }
-  /* En desktop el sidebar sigue visible al lado */
-  #dashSidebar { display:flex !important; }
-}
-
-/* ══ DARK MODE: pauta valor ══ */
-[data-theme="dark"] { --green-bg:#0a2a0a; }
-
-/* ══ DARK MODE: login ══ */
-[data-theme="dark"] .login-screen { background:var(--paper) !important; }
-[data-theme="dark"] .login-box { background:var(--card-bg) !important; border-color:var(--line) !important; color:var(--ink) !important; }
-[data-theme="dark"] .login-sub { color:var(--ink2) !important; }
-
-/* ══ DARK MODE: precio en client-card ══ */
-[data-theme="dark"] .client-card .precio-pauta,
-[data-theme="dark"] .client-card [style*="green-bg"] {
-  background:rgba(46,125,50,0.15) !important;
-  border-color:rgba(46,125,50,0.3) !important;
-}
-[data-theme="dark"] .client-card [style*="color:#2e7d32"],
-[data-theme="dark"] .client-card [style*="color: #2e7d32"] {
-  color:#66bb6a !important;
-}
-[data-theme="dark"] .client-card [style*="background:#fff3cd"] {
-  background:rgba(133,100,4,0.2) !important;
-}
-[data-theme="dark"] .client-card [style*="color:#856404"] {
-  color:#ffd54f !important;
+/* ══ MOBILE HEADER SUPERVISOR ══ */
+@media(max-width:768px){
+  #appSupervisor .nav-tabs { display:none !important; }
+  #appSupervisor .header-right .btn-logout { display:none !important; }
+  #appSupervisor .header-right #darkModeToggle { display:none !important; }
+  #appSupervisor .header-right { gap:6px !important; }
+  #appSupervisor header { padding:0 12px !important; }
 }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1319,11 +1218,15 @@ header{
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
     </div>
-    <div class="header-right" style="margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;">
-      <button id="darkModeToggle" onclick="toggleDarkMode()" title="Modo noche" style="background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;color:#fff;flex-shrink:0;">🌙</button>
-      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:6px 8px;font-size:18px;color:#fff;flex-shrink:0;" title="Mensajes">💬<span id="badgeMensajesSup" style="display:none;position:absolute;top:2px;right:2px;background:#e53935;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span></button>
-      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;" title="Perfil"><span id="svUserName">?</span></div>
-      <button class="btn-logout" onclick="logout()" style="font-size:12px;padding:5px 10px;display:none;" id="btnSalirSup">Salir</button>
+    <div class="header-right">
+      <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
+      <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;color:#fff;" title="Mensajes">
+        💬
+        <span id="badgeMensajesSup" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
+      </button>
+      <button id="darkModeToggle" onclick="toggleDarkMode()" style="background:none;border:1.5px solid rgba(255,255,255,0.3);color:#fff;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">🌙 Modo noche</button>
+      <button class="btn-logout" onclick="abrirPerfil()" style="font-size:12px;padding:5px 10px;">Perfil</button>
+      <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </header>
 
@@ -1362,7 +1265,50 @@ header{
         <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
       </div>
 
-    
+      <!-- BLOQUE 1: GA4 -->
+      <div style="height:60px;"></div><!-- spacer header fixed supervisor -->
+   <div class="app-with-sidebar">
+   <!-- SIDEBAR -->
+   <nav class="sidebar" id="dashSidebar">
+     <div class="sidebar-section">Principal</div>
+     <div class="sidebar-item active" onclick="navSidebar('vDash',this)">
+       <span class="sidebar-icon" style="background:#e6f1fb;color:#0c447c;">◈</span> Dashboard
+     </div>
+     <div class="sidebar-item" onclick="navSidebar('vOrdenes',this)">
+       <span class="sidebar-icon" style="background:#faeeda;color:#854f0b;">◉</span> Órdenes
+     </div>
+     <div class="sidebar-item" onclick="navSidebar('vClientes',this)">
+       <span class="sidebar-icon" style="background:#e8f5ee;color:#1a7a4a;">◇</span> Clientes
+     </div>
+     <div class="sidebar-item" onclick="navSidebar('vcolaboradores',this)">
+       <span class="sidebar-icon" style="background:#ede8e0;color:#555;">◎</span> Equipo
+     </div>
+     <div class="sidebar-item" onclick="navSidebar('vReuniones',this)">
+       <span class="sidebar-icon" style="background:#fbeaf0;color:#993556;">◈</span> Reuniones
+     </div>
+     <div class="sidebar-item" onclick="navSidebar('vProductividad',this)">
+       <span class="sidebar-icon" style="background:#e6f1fb;color:#185fa5;">◎</span> Productividad
+     </div>
+     <div class="sidebar-section">Herramientas</div>
+     <a href="https://www.laopinionline.ar" target="_blank" class="sidebar-item">
+       <span class="sidebar-icon" style="background:#1a3a5c;color:#fff;font-size:9px;font-weight:700;">WEB</span> El Diario
+     </a>
+     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="sidebar-item">
+       <span class="sidebar-icon" style="background:#2e7d32;color:#fff;font-size:9px;font-weight:700;">CMS</span> Editor
+     </a>
+     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="sidebar-item">
+       <span class="sidebar-icon" style="background:#c8392b;color:#fff;font-size:9px;font-weight:700;">IG</span> Placas IG
+     </a>
+     <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="sidebar-item">
+       <span class="sidebar-icon" style="background:#111;color:#fff;font-size:9px;">✂</span> Recortes
+     </a>
+     <div class="sidebar-section">Alertas</div>
+     <div id="widgetAlertasPauta" style="display:none;padding:8px 10px;font-size:11px;color:var(--accent);">
+       Sin alertas
+     </div>
+   </nav>
+   <!-- CONTENIDO PRINCIPAL -->
+   <div class="main-content">
    <!-- HERRAMIENTAS DIRECTOR -->
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
         <a href="https://www.laopinionline.ar" target="_blank" rel="noopener" class="herramienta-btn" style="background:#1a3a5c;color:#fff;text-decoration:none;font-size:12px;padding:8px 14px;">🌐 El Diario</a>
@@ -1454,51 +1400,7 @@ header{
       </div>
     </div>
 
-</div><!-- /vDash -->
-      <!-- BLOQUE 1: GA4 -->
-      <div class="spacer-header" style="height:60px;"></div><!-- spacer header fixed supervisor -->
-   <div class="app-with-sidebar">
-   <!-- SIDEBAR -->
-   <nav class="sidebar" id="dashSidebar">
-     <div class="sidebar-section">Principal</div>
-     <div class="sidebar-item active" onclick="navSidebar('vDash',this)">
-       <span class="sidebar-icon" style="background:#e6f1fb;color:#0c447c;">◈</span> Dashboard
-     </div>
-     <div class="sidebar-item" onclick="navSidebar('vOrdenes',this)">
-       <span class="sidebar-icon" style="background:#faeeda;color:#854f0b;">◉</span> Órdenes
-     </div>
-     <div class="sidebar-item" onclick="navSidebar('vClientes',this)">
-       <span class="sidebar-icon" style="background:#e8f5ee;color:#1a7a4a;">◇</span> Clientes
-     </div>
-     <div class="sidebar-item" onclick="navSidebar('vcolaboradores',this)">
-       <span class="sidebar-icon" style="background:#ede8e0;color:#555;">◎</span> Equipo
-     </div>
-     <div class="sidebar-item" onclick="navSidebar('vReuniones',this)">
-       <span class="sidebar-icon" style="background:#fbeaf0;color:#993556;">◈</span> Reuniones
-     </div>
-     <div class="sidebar-item" onclick="navSidebar('vProductividad',this)">
-       <span class="sidebar-icon" style="background:#e6f1fb;color:#185fa5;">◎</span> Productividad
-     </div>
-     <div class="sidebar-section">Herramientas</div>
-     <a href="https://www.laopinionline.ar" target="_blank" class="sidebar-item">
-       <span class="sidebar-icon" style="background:#1a3a5c;color:#fff;font-size:9px;font-weight:700;">WEB</span> El Diario
-     </a>
-     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="sidebar-item">
-       <span class="sidebar-icon" style="background:#2e7d32;color:#fff;font-size:9px;font-weight:700;">CMS</span> Editor
-     </a>
-     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="sidebar-item">
-       <span class="sidebar-icon" style="background:#c8392b;color:#fff;font-size:9px;font-weight:700;">IG</span> Placas IG
-     </a>
-     <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="sidebar-item">
-       <span class="sidebar-icon" style="background:#111;color:#fff;font-size:9px;">✂</span> Recortes
-     </a>
-     <div class="sidebar-section">Alertas</div>
-     <div id="widgetAlertasPauta" style="display:none;padding:8px 10px;font-size:11px;color:var(--accent);">
-       Sin alertas
-     </div>
-   </nav>
-   <!-- CONTENIDO PRINCIPAL -->
-   <div class="main-content">    <!-- CLIENTES -->
+    <!-- CLIENTES -->
     <div class="view" id="vClientes">
       <div class="toolbar">
         <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="searchInput" placeholder="Buscar..." oninput="filtrarClientes()"></div>
@@ -1641,7 +1543,7 @@ header{
         <div class="form-group form-full"><label class="form-label">Notas</label><textarea class="form-textarea" id="provNotas" placeholder="Notas adicionales..."></textarea></div>
       
    </div><!-- /main-content -->
-   </div><!-- /app-with-sidebar -->
+   </div><!-- /app-with-sidebar --></div>
       <div class="form-actions">
         <button class="btn-cancel" onclick="cerrarModal('mProveedor')">Cancelar</button>
         <button class="btn-blue" onclick="guardarProveedor()">Guardar</button>
@@ -2290,7 +2192,6 @@ async function login(){
       actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
       cargarTemaUsuario(usuario.id);
-
       (function(){
         if(['emp01','emp02','emp07','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
@@ -2604,31 +2505,21 @@ function logout(){
 
 // ══ VISTAS SUPERVISOR ══
 function cambiarVista(id, btn){
-  // Activar vista correcta
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  var vistaEl = document.getElementById(id);
-  if(vistaEl) vistaEl.classList.add('active');
-  // Scroll a la vista activa (vDash siempre visible)
-  var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = '';
-  setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el){
-      var top = el.getBoundingClientRect().top + window.scrollY - 62;
-      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
-    }
-  }, 20);
-  // Callbacks
-  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
-  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
-  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
-  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
-  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
-  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
-  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
+  window.scrollTo(0,0);
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
+  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
+  if(id==='vReuniones'){ filtrarReuniones(); }
+  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
+  if(id==='vProveedores'){ renderProveedores(); }
 }
 
-
+// ══ DASHBOARD ══
 function proximaSemanaRango(){
   const h = new Date(); h.setHours(0,0,0,0);
   const fin = new Date(h); fin.setDate(h.getDate()+7);
@@ -2742,34 +2633,23 @@ function abrirPerfilColaborador(empId){
 // ── DRAWER MOBILE ──
 // ── BOTTOM NAV ──
 function cambiarVistaBN(id, bnId){
-  // Actualizar bottom nav
-  document.querySelectorAll('#bottomNavSup .bn-item').forEach(function(b){b.classList.remove('active');});
-  var bnBtn = document.getElementById(bnId);
-  if(bnBtn) bnBtn.classList.add('active');
-  // Activar vista correcta
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  var vistaEl = document.getElementById(id);
-  if(vistaEl) vistaEl.classList.add('active');
-  // Scroll a la vista activa (vDash siempre visible)
-  var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = '';
-  setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el){
-      var top = el.getBoundingClientRect().top + window.scrollY - 62;
-      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
-    }
-  }, 20);
-  // Callbacks
-  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
-  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
-  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
-  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
-  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
-  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
-  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
+  window.scrollTo(0,0);
+  document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById(bnId);
+  if(btn) btn.classList.add('active');
+  // Cambiar vista directamente sin depender del querySelector del nav-tab
+  document.querySelectorAll('#appSupervisor .nav-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#appSupervisor .view').forEach(v=>v.classList.remove('active'));
+  const vista = document.getElementById(id);
+  if(vista) vista.classList.add('active');
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
+  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
+  if(id==='vReuniones'){ filtrarReuniones(); }
+  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
+  if(id==='vProveedores'){ renderProveedores(); }
 }
-
 
 function cambiarVistaEmpBN(id, bnId){
   document.querySelectorAll('#bottomNavEmp .bn-item').forEach(b=>b.classList.remove('active'));
@@ -2801,35 +2681,19 @@ function cambiarVistaEmpDrawer(id, btn){
   cambiarVistaEmp(id, null);
 }
 function cambiarVistaDrawer(id, btn){
-  // Cerrar drawer y actualizar nav
-  document.querySelectorAll('.nav-drawer-item').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   cerrarDrawer();
-  // Activar vista correcta
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  var vistaEl = document.getElementById(id);
-  if(vistaEl) vistaEl.classList.add('active');
-  // Scroll a la vista activa (vDash siempre visible)
-  var vDE = document.getElementById('vDash');
-  if(vDE) vDE.style.display = '';
-  setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el){
-      var top = el.getBoundingClientRect().top + window.scrollY - 62;
-      window.scrollTo({top: Math.max(0, top), behavior:'instant'});
-    }
-  }, 20);
-  // Callbacks
-  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
-  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
-  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
-  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
-  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
-  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
-  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
+  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
+  if(id==='vReuniones'){ filtrarReuniones(); }
+  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
+  if(id==='vProveedores'){ renderProveedores(); }
 }
-
-
 function puedeCheckOrden(orden){
   if(!empActualId) return false;
   // Propio: cualquiera puede marcar sus propias órdenes
@@ -3308,7 +3172,7 @@ function renderClientes(lista){
         ${c.email?`<div class="ci-row">✉ ${c.email}</div>`:''}
         ${c.pautaVence?`<div class="ci-row">📅 Vence: ${fmtD(c.pautaVence)}</div>`:''}
       </div>
-      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:var(--green-bg,#e8f5ee);border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;border:1px solid var(--green,#2e7d32);" class="precio-pauta">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:#2e7d32;">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
+      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:#e8f5ee;border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:#2e7d32;">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
       <div class="card-footer">
         <div class="orders-count"><strong>${ords.length}</strong> orden${ords.length!==1?'es':''}${pend?` · <strong style="color:var(--gold)">${pend} pend.</strong>`:''}</div>
         ${c.pauta?`<span class="pauta-tag">📢 Pauta</span>`:''}
@@ -4504,18 +4368,7 @@ function eliminarReunion(){
 
 function filtrarReuniones(){
   const filtro = document.getElementById('filtroReunionEstado')?.value||'';
-  let listaR = [...reuniones].sort((a,b)=>{
-    const sA = statusReunion(a);
-    const sB = statusReunion(b);
-    // pasada y realizada van al final
-    const esPasadaA = (sA==='pasada'||sA==='realizada') ? 1 : 0;
-    const esPasadaB = (sB==='pasada'||sB==='realizada') ? 1 : 0;
-    if(esPasadaA !== esPasadaB) return esPasadaA - esPasadaB;
-    // Próximas: más cercana primero (ASC)
-    // Pasadas: más reciente primero (DESC)
-    if(esPasadaA === 1) return (b.fecha||'').localeCompare(a.fecha||'');
-    return (a.fecha||'').localeCompare(b.fecha||'');
-  });
+  let listaR = [...reuniones].sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   // Filtrar por participante — colaboradores solo ven sus reuniones
   if(rolActual !== 'supervisor'){
     listaR = listaR.filter(r => {
@@ -5419,9 +5272,7 @@ function aplicarTema(modo){
   document.documentElement.setAttribute('data-theme', modo);
   localStorage.setItem('tema_panel', modo);
   const btn = document.getElementById('darkModeToggle');
-  if(btn) btn.textContent = modo === 'dark' ? '☀️' : '🌙';
-  const btnEmp = document.getElementById('darkModeToggleEmp');
-  if(btnEmp) btnEmp.textContent = modo === 'dark' ? '☀️' : '🌙';
+  if(btn) btn.textContent = modo === 'dark' ? '☀️ Modo claro' : '🌙 Modo noche';
 }
 
 function toggleDarkMode(){
@@ -5482,32 +5333,6 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
-
-// ══ BLOQUEAR PULL-TO-REFRESH iOS ══
-(function(){
-  var lastY = 0;
-  document.addEventListener('touchstart', function(e){
-    lastY = e.touches[0].clientY;
-  }, {passive: false});
-  document.addEventListener('touchmove', function(e){
-    var el = e.target;
-    var scrollable = false;
-    // Verificar si el elemento o sus padres son scrolleables
-    while(el && el !== document.body){
-      if(el.scrollHeight > el.clientHeight){
-        scrollable = true;
-        break;
-      }
-      el = el.parentElement;
-    }
-    var y = e.touches[0].clientY;
-    var atTop = window.scrollY === 0 && y > lastY;
-    if(atTop && !scrollable){
-      e.preventDefault();
-    }
-    lastY = y;
-  }, {passive: false});
-})();
 </script>
 
 <!-- MODAL PERFIL -->
@@ -5644,7 +5469,11 @@ function navSidebar(vistaId, el){
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
-    <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂️</span> Recortes Streaming</a>
+    <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
+    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirMensajero()"><span>💬</span> Mensajes</button>
+    <button class="nav-drawer-item" onclick="cerrarDrawer();abrirPerfil()"><span>👤</span> Perfil</button>
+    <button class="nav-drawer-item" onclick="toggleDarkMode()"><span>🌙</span> Modo noche</button>
+    <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
   <div id="navDrawerEmp" style="display:none">
     <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
