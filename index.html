@@ -2604,62 +2604,26 @@ function logout(){
 
 // ══ VISTAS SUPERVISOR ══
 function cambiarVista(id, btn){
-  var aws = document.querySelector('.app-with-sidebar');
-  var mc = document.querySelector('.main-content');
-  var smc = document.getElementById('supervisorMainContainer');
-  if(id === 'vDash'){
-    if(smc) smc.classList.remove('vista-secundaria');
-    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
-    if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
-    if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
-  } else {
-    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
-    if(smc) smc.classList.add('vista-secundaria');
-    var isMobile = window.innerWidth <= 768;
-    if(aws){
-      if(isMobile){
-        aws.style.position='fixed';
-        aws.style.top='60px';
-        aws.style.left='0';
-        aws.style.right='0';
-        aws.style.bottom='60px';
-        aws.style.overflowY='auto';
-        aws.style.webkitOverflowScrolling='touch';
-        aws.style.zIndex='10';
-        aws.style.background='var(--paper)';
-        aws.scrollTop=0;
-      } else {
-        // Desktop: sin fixed, scroll normal del documento
-        aws.style.position='';
-        aws.style.top='';
-        aws.style.left='';
-        aws.style.right='';
-        aws.style.bottom='';
-        aws.style.overflowY='';
-        aws.style.zIndex='';
-        setTimeout(function(){ window.scrollTo(0,0); }, 30);
-      }
-    }
-    if(mc){ if(window.innerWidth<=768){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; } else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; } }
-  }
-  setTimeout(function(){
-    var awsEl = document.querySelector('.app-with-sidebar');
-    if(awsEl) awsEl.scrollTop = 0;
-  }, 50);
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById(id).classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
-  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
-  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
-  if(id==='vReuniones'){ filtrarReuniones(); }
-  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
-  if(id==='vProveedores'){ renderProveedores(); }
+  // Activar vista correcta
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  var vistaEl = document.getElementById(id);
+  if(vistaEl) vistaEl.classList.add('active');
+  // vDash: mostrar solo en dashboard
+  var vDE = document.getElementById('vDash');
+  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
+  // Scroll arriba
+  window.scrollTo(0, 0);
+  // Callbacks
+  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
+  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
+  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
+  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
+  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
+  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
+  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
 }
 
-// ══ DASHBOARD ══
+
 function proximaSemanaRango(){
   const h = new Date(); h.setHours(0,0,0,0);
   const fin = new Date(h); fin.setDate(h.getDate()+7);
@@ -2773,64 +2737,29 @@ function abrirPerfilColaborador(empId){
 // ── DRAWER MOBILE ──
 // ── BOTTOM NAV ──
 function cambiarVistaBN(id, bnId){
-  var aws = document.querySelector('.app-with-sidebar');
-  var mc = document.querySelector('.main-content');
-  var smc = document.getElementById('supervisorMainContainer');
-  if(id === 'vDash'){
-    if(smc) smc.classList.remove('vista-secundaria');
-    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
-    if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
-    if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
-  } else {
-    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
-    if(smc) smc.classList.add('vista-secundaria');
-    var isMobile = window.innerWidth <= 768;
-    if(aws){
-      if(isMobile){
-        aws.style.position='fixed';
-        aws.style.top='60px';
-        aws.style.left='0';
-        aws.style.right='0';
-        aws.style.bottom='60px';
-        aws.style.overflowY='auto';
-        aws.style.webkitOverflowScrolling='touch';
-        aws.style.zIndex='10';
-        aws.style.background='var(--paper)';
-        aws.scrollTop=0;
-      } else {
-        // Desktop: sin fixed, scroll normal del documento
-        aws.style.position='';
-        aws.style.top='';
-        aws.style.left='';
-        aws.style.right='';
-        aws.style.bottom='';
-        aws.style.overflowY='';
-        aws.style.zIndex='';
-        setTimeout(function(){ window.scrollTo(0,0); }, 30);
-      }
-    }
-    if(mc){ if(window.innerWidth<=768){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; } else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; } }
-  }
-  setTimeout(function(){
-    var awsEl = document.querySelector('.app-with-sidebar');
-    if(awsEl) awsEl.scrollTop = 0;
-  }, 50);
-  document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
-  const btn = document.getElementById(bnId);
-  if(btn) btn.classList.add('active');
-  // Cambiar vista directamente sin depender del querySelector del nav-tab
-  document.querySelectorAll('#appSupervisor .nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#appSupervisor .view').forEach(v=>v.classList.remove('active'));
-  const vista = document.getElementById(id);
-  if(vista) vista.classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
-  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
-  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
-  if(id==='vReuniones'){ filtrarReuniones(); }
-  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
-  if(id==='vProveedores'){ renderProveedores(); }
+  // Actualizar bottom nav
+  document.querySelectorAll('#bottomNavSup .bn-item').forEach(function(b){b.classList.remove('active');});
+  var bnBtn = document.getElementById(bnId);
+  if(bnBtn) bnBtn.classList.add('active');
+  // Activar vista correcta
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  var vistaEl = document.getElementById(id);
+  if(vistaEl) vistaEl.classList.add('active');
+  // vDash: mostrar solo en dashboard
+  var vDE = document.getElementById('vDash');
+  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
+  // Scroll arriba
+  window.scrollTo(0, 0);
+  // Callbacks
+  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
+  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
+  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
+  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
+  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
+  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
+  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
 }
+
 
 function cambiarVistaEmpBN(id, bnId){
   document.querySelectorAll('#bottomNavEmp .bn-item').forEach(b=>b.classList.remove('active'));
@@ -2862,66 +2791,30 @@ function cambiarVistaEmpDrawer(id, btn){
   cambiarVistaEmp(id, null);
 }
 function cambiarVistaDrawer(id, btn){
-  var smc = document.getElementById('supervisorMainContainer');
-  var aws = document.querySelector('.app-with-sidebar');
-  var mc = document.querySelector('.main-content');
-  if(id === 'vDash'){
-    if(smc) smc.classList.remove('vista-secundaria');
-    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
-    if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
-    if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
-  } else {
-    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
-    if(smc) smc.classList.add('vista-secundaria');
-    var isMobile = window.innerWidth <= 768;
-    if(aws){
-      if(isMobile){
-        aws.style.position='fixed';
-        aws.style.top='60px';
-        aws.style.left='0';
-        aws.style.right='0';
-        aws.style.bottom='60px';
-        aws.style.overflowY='auto';
-        aws.style.webkitOverflowScrolling='touch';
-        aws.style.zIndex='10';
-        aws.style.background='var(--paper)';
-        aws.scrollTop=0;
-      } else {
-        // Desktop: sin fixed, scroll normal del documento
-        aws.style.position='';
-        aws.style.top='';
-        aws.style.left='';
-        aws.style.right='';
-        aws.style.bottom='';
-        aws.style.overflowY='';
-        aws.style.zIndex='';
-        setTimeout(function(){ window.scrollTo(0,0); }, 30);
-      }
-    }
-    if(mc){ if(window.innerWidth<=768){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; } else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; } }
-  }
-  document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
+  // Cerrar drawer y actualizar nav
+  document.querySelectorAll('.nav-drawer-item').forEach(function(b){b.classList.remove('active');});
   if(btn) btn.classList.add('active');
   cerrarDrawer();
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
-  // Scroll al top
-  setTimeout(function(){
-    if(window.innerWidth<=768){
-      var awsEl = document.querySelector('.app-with-sidebar');
-      if(awsEl) awsEl.scrollTop = 0;
-    } else {
-      window.scrollTo(0,0);
-    }
-  }, 80);
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
-  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
-  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
-  if(id==='vReuniones'){ filtrarReuniones(); }
-  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
-  if(id==='vProveedores'){ renderProveedores(); }
+  // Activar vista correcta
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  var vistaEl = document.getElementById(id);
+  if(vistaEl) vistaEl.classList.add('active');
+  // vDash: mostrar solo en dashboard
+  var vDE = document.getElementById('vDash');
+  if(vDE) vDE.style.display = (id==='vDash') ? '' : 'none';
+  // Scroll arriba
+  window.scrollTo(0, 0);
+  // Callbacks
+  if(id==='vDash'){ try{renderDashboard();renderAlertasYouTube();}catch(e){} }
+  if(id==='vClientes'){ try{actualizarFiltroRubros();filtrarClientes();}catch(e){} }
+  if(id==='vOrdenes'){ try{actualizarFiltroOrdenes();filtrarOrdenes();}catch(e){} }
+  if(id==='vcolaboradores'){ setTimeout(function(){try{filtrarcolaboradores();}catch(e){}},100); }
+  if(id==='vReuniones'){ try{filtrarReuniones();}catch(e){} }
+  if(id==='vProductividad'){ semanaOffset=0; try{renderProductividad();}catch(e){} }
+  if(id==='vProveedores'){ try{renderProveedores();}catch(e){} }
 }
+
+
 function puedeCheckOrden(orden){
   if(!empActualId) return false;
   // Propio: cualquiera puede marcar sus propias órdenes
