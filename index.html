@@ -2624,14 +2624,16 @@ function cambiarVista(id, btn){
       aws.style.right='0';
       aws.style.bottom=bottomH+'px';
       aws.style.overflowY='auto';
+      aws.style.webkitOverflowScrolling='touch';
       aws.style.zIndex='10';
       aws.style.background='var(--paper)';
+      aws.scrollTop=0;
     }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
+    var awsEl = document.querySelector('.app-with-sidebar');
+    if(awsEl) awsEl.scrollTop = 0;
   }, 50);
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -2780,14 +2782,16 @@ function cambiarVistaBN(id, bnId){
       aws.style.right='0';
       aws.style.bottom=bottomH+'px';
       aws.style.overflowY='auto';
+      aws.style.webkitOverflowScrolling='touch';
       aws.style.zIndex='10';
       aws.style.background='var(--paper)';
+      aws.scrollTop=0;
     }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'instant'});
+    var awsEl = document.querySelector('.app-with-sidebar');
+    if(awsEl) awsEl.scrollTop = 0;
   }, 50);
   document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById(bnId);
@@ -2856,8 +2860,10 @@ function cambiarVistaDrawer(id, btn){
       aws.style.right='0';
       aws.style.bottom=bottomH+'px';
       aws.style.overflowY='auto';
+      aws.style.webkitOverflowScrolling='touch';
       aws.style.zIndex='10';
       aws.style.background='var(--paper)';
+      aws.scrollTop=0;
     }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
@@ -2866,10 +2872,10 @@ function cambiarVistaDrawer(id, btn){
   cerrarDrawer();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
-  // Scroll al top de la vista activa
+  // Scroll al top del contenedor
   setTimeout(function(){
-    var el = document.getElementById(id);
-    if(el) window.scrollTo({top: el.offsetTop - 60, behavior:'smooth'});
+    var awsEl = document.querySelector('.app-with-sidebar');
+    if(awsEl) awsEl.scrollTop = 0;
   }, 50);
   if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
