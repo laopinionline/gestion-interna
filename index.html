@@ -169,6 +169,13 @@ header{
 .nav-tab:hover{background:rgba(255,255,255,0.1);color:#fff;}
 .nav-tab:focus,.nav-tab:focus-visible{outline:none;box-shadow:none;}
 .nav-tab.active{background:rgba(255,255,255,0.15);color:#fff;font-weight:600;}
+/* Tabs del colaborador — fuera del header oscuro, sobre fondo claro */
+#appcolaborador .nav-tabs .nav-tab{color:var(--ink2);}
+#appcolaborador .nav-tabs .nav-tab:hover{background:var(--paper2);color:var(--ink);}
+#appcolaborador .nav-tabs .nav-tab.active{background:var(--paper2);color:var(--blue);font-weight:600;border-bottom:2px solid var(--blue);}
+[data-theme="dark"] #appcolaborador .nav-tabs .nav-tab{color:#a0a0a0;}
+[data-theme="dark"] #appcolaborador .nav-tabs .nav-tab:hover{background:#1a1a1a;color:#e8e8e8;}
+[data-theme="dark"] #appcolaborador .nav-tabs .nav-tab.active{background:#1a1a1a;color:#fff;border-bottom-color:#fff;}
 #globalHamburger{display:none;}
 .form-input,.form-select,.form-textarea{
   width:100%;
@@ -3639,7 +3646,7 @@ async function renderMisRedes(){
     content.innerHTML = redes.map(r=>{
       const emoji = EMOJI_PLATAFORMA[r.plataforma] || '🌐';
       const nombre = r.nombre || `${r.marca} ${r.plataforma}`;
-      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;"><span style="font-size:18px">${emoji}</span><span style="font-weight:500">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
+      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border-radius:8px;margin-bottom:6px;"><span style="font-size:18px">${emoji}</span><span style="font-weight:500">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
 
       const seguidores = r.seguidores != null ? Number(r.seguidores).toLocaleString('es-AR') : '—';
       const eng = r.engagement != null ? r.engagement+'%' : '';
@@ -3647,7 +3654,7 @@ async function renderMisRedes(){
       const badge = notif > 0 ? `<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px">${notif}</span>` : '';
       const fecha = r.fecha_actualizacion ? `<div style="font-size:11px;color:#999;margin-top:2px">Actualizado: ${r.fecha_actualizacion}</div>` : '';
 
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f9f7f3;border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
         <span style="font-size:18px">${emoji}</span>
         <span style="font-weight:500">${nombre}</span>${badge}
         <span style="margin-left:auto;font-weight:600;color:var(--blue)">${seguidores}</span>
@@ -4074,54 +4081,70 @@ function cambiarVistaEmp(id, btn){
 async function renderProductividadEmp(){
   const ct = document.getElementById('empProductividadContent');
   if(!ct) return;
-  if(!empActualId){
-    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
-    return;
-  }
-  try {
-    const snap = await db.collection('colaboradores').doc(empActualId).get();
-    const data = snap.exists ? snap.data() : null;
-    const rep = data && data.reporte_diario ? data.reporte_diario : null;
-    if(!rep){
-      ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
-      return;
-    }
-    const bloques = [
-      { titulo:'Ayer', datos:rep.ayer },
-      { titulo:'Últimos 7 días', datos:rep.ultimos_7_dias },
-      { titulo:'Últimos 30 días', datos:rep.ultimos_30_dias }
-    ];
-    const metricas = [
-      { key:'produccion', label:'Producción', icon:'📝' },
-      { key:'lecturas', label:'Lecturas', icon:'👁️' },
-      { key:'tiempo_edicion', label:'Tiempo edición', icon:'⏱️' },
-      { key:'seo_score', label:'SEO Score', icon:'🔍' },
-      { key:'performance', label:'Performance', icon:'⚡' }
-    ];
-    let html = '<div style="margin-bottom:12px;color:var(--ink2);font-size:.85rem">Reporte: '+(rep.fecha||'—')+'</div>';
-    bloques.forEach(b=>{
-      html+='<div style="margin-bottom:24px">';
-      html+='<div style="font-family:Playfair Display,serif;font-size:1.15rem;font-weight:700;color:var(--blue);margin-bottom:10px">'+b.titulo+'</div>';
-      html+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">';
-      if(b.datos){
-        metricas.forEach(m=>{
-          const val = b.datos[m.key]!=null ? b.datos[m.key] : '—';
-          html+='<div style="background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:16px;text-align:center">';
-          html+='<div style="font-size:1.3rem;margin-bottom:4px">'+m.icon+'</div>';
-          html+='<div style="font-family:DM Sans,sans-serif;font-size:1.5rem;font-weight:700;color:var(--blue)">'+val+'</div>';
-          html+='<div style="font-family:DM Sans,sans-serif;font-size:.8rem;color:var(--ink2);margin-top:2px">'+m.label+'</div>';
-          html+='</div>';
-        });
-      } else {
-        html+='<div class="no-data" style="grid-column:1/-1">Sin datos para este período</div>';
-      }
-      html+='</div></div>';
-    });
-    ct.innerHTML=html;
-  } catch(e){
-    console.error('Error renderProductividadEmp:',e);
-    ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>';
-  }
+  if(!empActualId){ ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>'; return; }
+
+  const hoyStr = hoy();
+  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
+  function misOrdenes(){ return ordenes.filter(o=>getIds(o).includes(empActualId)); }
+
+  // Semana actual (lunes a hoy)
+  const lunes = lunesDeSemana(hoyStr);
+  const misSemana = misOrdenes().filter(o=>{ const f=getFecha(o); return f>=lunes && f<=hoyStr; });
+  const misTotal = misOrdenes();
+  const atrasadas = misTotal.filter(o=>{ const f=getFecha(o); return f && f<hoyStr && o.estado!=='completada' && o.estado!=='cancelada'; });
+
+  const compSemana = misSemana.filter(o=>o.estado==='completada').length;
+  const pendSemana = misSemana.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
+  const totalSemana = misSemana.length;
+  const pct = totalSemana ? Math.round(compSemana/totalSemana*100) : null;
+
+  const compTotal = misTotal.filter(o=>o.estado==='completada').length;
+  const pendTotal = misTotal.filter(o=>o.estado==='pendiente'||o.estado==='en-curso').length;
+
+  const pctBar = pct===null ? '' : `
+    <div style="margin:14px 0 6px">
+      <div style="font-size:11px;color:var(--ink2);margin-bottom:6px">Cumplimiento esta semana</div>
+      <div style="background:var(--paper2);border-radius:4px;height:10px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:${pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--accent)'};width:${pct}%;transition:width 0.4s"></div>
+      </div>
+      <div style="font-size:12px;color:var(--ink2);margin-top:4px;text-align:right">${pct}%</div>
+    </div>`;
+
+  ct.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+      <div class="prod-card">
+        <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">✅</div>
+        <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--green);text-align:center">${compSemana}</div>
+        <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Hechas esta semana</div>
+      </div>
+      <div class="prod-card">
+        <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">⏳</div>
+        <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--gold);text-align:center">${pendSemana}</div>
+        <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Pendientes esta semana</div>
+      </div>
+      <div class="prod-card ${atrasadas.length>0?'atrasado':''}">
+        <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">🔴</div>
+        <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--accent);text-align:center">${atrasadas.length}</div>
+        <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Atrasadas</div>
+      </div>
+      <div class="prod-card">
+        <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">📋</div>
+        <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--blue2);text-align:center">${compTotal}</div>
+        <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Total completadas</div>
+      </div>
+    </div>
+    ${pctBar}
+    ${atrasadas.length>0 ? `
+    <div style="margin-top:16px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-bottom:8px">⚠️ Tareas atrasadas</div>
+      ${atrasadas.map(o=>`
+        <div style="background:var(--red-bg);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;margin-bottom:6px;">
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">${o.titulo||o.desc||'Sin título'}</div>
+          <div style="font-size:11px;color:var(--accent);margin-top:2px">Vencía: ${fmtD(getFecha(o))}</div>
+        </div>`).join('')}
+    </div>` : ''}
+  `;
 }
 
 // ══ KANBAN ══
