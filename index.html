@@ -5291,7 +5291,7 @@ function aplicarTema(modo){
   document.documentElement.setAttribute('data-theme', modo);
   localStorage.setItem('tema_panel', modo);
   const btn = document.getElementById('darkModeToggle');
-  if(btn) btn.textContent = modo === 'dark' ? '☀️ Modo claro' : '🌙 Modo noche';
+  if(btn) btn.textContent = modo === 'dark' ? '☀️' : '🌙';
 }
 
 function toggleDarkMode(){
