@@ -44,6 +44,7 @@
 [data-theme="dark"] .nav-drawer-item { color:#e8e8e8; }
 [data-theme="dark"] .nav-drawer-item:hover { background:#1a1a1a; }
 [data-theme="dark"] .nav-drawer-item.active { background:#1a1a1a; color:#5b9bd5; border-left-color:#5b9bd5; }
+[data-theme="dark"] .modal-header { background:var(--card-bg) !important; color:var(--ink) !important; border-bottom:1px solid var(--line) !important; }
 [data-theme="dark"] .modal,
 [data-theme="dark"] .login-box,
 [data-theme="dark"] .dash-panel,
@@ -4587,6 +4588,37 @@ function renderProductividad(){
   document.getElementById('prodGrid').innerHTML = cards || '<div class="no-data">Sin colaboradores</div>';
 }
 
+
+// ══ ÓRDENES POR COLABORADOR (desde Productividad) ══
+function abrirOrdenesColaborador(empId, nombre){
+  const modal = document.getElementById('modalCheckColaborador');
+  if(!modal) return;
+  document.getElementById('mchkNombre').textContent = '📋 Tareas de ' + nombre;
+  document.getElementById('mchkEmpId').value = empId;
+  // Reusar el modal pero mostrar órdenes en lugar del check
+  const body = document.getElementById('mchkBody');
+  const hoyStr = hoy();
+  function getFechaO(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
+  const mis = ordenes.filter(o => getIds(o).includes(empId))
+    .sort((a,b) => getFechaO(b).localeCompare(getFechaO(a)));
+  if(!mis.length){ body.innerHTML='<div class="no-data">Sin órdenes</div>'; }
+  else {
+    body.innerHTML = mis.map(o => {
+      const fecha = getFechaO(o);
+      const atrasada = fecha && fecha < hoyStr && o.estado !== 'completada' && o.estado !== 'cancelada';
+      const estadoColor = o.estado==='completada' ? 'var(--green)' : atrasada ? 'var(--accent)' : 'var(--ink2)';
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--line);">
+        <div style="font-weight:600;font-size:14px;">${o.titulo||o.desc||o.descripcion||'Sin descripción'}</div>
+        <div style="font-size:12px;color:${estadoColor};margin-top:3px;">${o.estado||''} ${fecha ? '· '+fecha : ''}</div>
+      </div>`;
+    }).join('');
+  }
+  // Ocultar boton guardar check — no aplica aqui
+  const btnGuardar = modal.querySelector('[onclick="guardarCheckColaborador()"]');
+  if(btnGuardar) btnGuardar.style.display = 'none';
+  modal.style.display = 'flex';
+}
 
 // ══ PERFIL ══
 async function subirFotoEnPerfil(input){
