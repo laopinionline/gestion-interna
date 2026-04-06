@@ -2615,18 +2615,19 @@ function cambiarVista(id, btn){
   } else {
     var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
-    var esMobile = window.innerWidth <= 768;
-    if(aws){ 
-      if(esMobile){
-        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
-      } else {
-        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
-      }
+    var sidebarW = window.innerWidth > 768 ? 220 : 0;
+    var bottomH = window.innerWidth <= 768 ? 60 : 0;
+    if(aws){
+      aws.style.position='fixed';
+      aws.style.top='60px';
+      aws.style.left=sidebarW+'px';
+      aws.style.right='0';
+      aws.style.bottom=bottomH+'px';
+      aws.style.overflowY='auto';
+      aws.style.zIndex='10';
+      aws.style.background='var(--paper)';
     }
-    if(mc){
-      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
-      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
-    }
+    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
     var el = document.getElementById(id);
@@ -2770,18 +2771,19 @@ function cambiarVistaBN(id, bnId){
   } else {
     var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
-    var esMobile = window.innerWidth <= 768;
-    if(aws){ 
-      if(esMobile){
-        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
-      } else {
-        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
-      }
+    var sidebarW = window.innerWidth > 768 ? 220 : 0;
+    var bottomH = window.innerWidth <= 768 ? 60 : 0;
+    if(aws){
+      aws.style.position='fixed';
+      aws.style.top='60px';
+      aws.style.left=sidebarW+'px';
+      aws.style.right='0';
+      aws.style.bottom=bottomH+'px';
+      aws.style.overflowY='auto';
+      aws.style.zIndex='10';
+      aws.style.background='var(--paper)';
     }
-    if(mc){
-      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
-      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
-    }
+    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
     var el = document.getElementById(id);
@@ -2845,18 +2847,19 @@ function cambiarVistaDrawer(id, btn){
   } else {
     var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
-    var esMobile = window.innerWidth <= 768;
-    if(aws){ 
-      if(esMobile){
-        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
-      } else {
-        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
-      }
+    var sidebarW = window.innerWidth > 768 ? 220 : 0;
+    var bottomH = window.innerWidth <= 768 ? 60 : 0;
+    if(aws){
+      aws.style.position='fixed';
+      aws.style.top='60px';
+      aws.style.left=sidebarW+'px';
+      aws.style.right='0';
+      aws.style.bottom=bottomH+'px';
+      aws.style.overflowY='auto';
+      aws.style.zIndex='10';
+      aws.style.background='var(--paper)';
     }
-    if(mc){
-      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
-      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
-    }
+    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding=window.innerWidth>768?'20px 24px':'12px 16px'; mc.style.paddingBottom='20px'; }
   }
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
