@@ -4218,6 +4218,13 @@ function renderKanban(){
   if(hp) hp.textContent = pend.length;
   if(hc) hc.textContent = enCurso.length;
   if(hl) hl.textContent = listo.length;
+  // Sincronizar card mobile
+  var rp = document.getElementById('empResumPend');
+  var rc = document.getElementById('empResumCurso');
+  var rl = document.getElementById('empResumListas');
+  if(rp) rp.textContent = pend.length;
+  if(rc) rc.textContent = enCurso.length;
+  if(rl) rl.textContent = listo.length;
 }
 
 function expandirKanban(colId, btn){
