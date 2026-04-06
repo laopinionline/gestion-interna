@@ -1138,6 +1138,46 @@ header{
 @media(max-width:768px){
   #dashSidebar { display: none !important; }
 }
+
+/* ══ DARK MODE: kanban ══ */
+[data-theme="dark"] .kanban-card {
+  background: var(--card-bg) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+[data-theme="dark"] .kanban-card .orden-titulo,
+[data-theme="dark"] .kanban-card .task-title {
+  color: var(--ink) !important;
+}
+[data-theme="dark"] .kcol-pendiente .kanban-col-header {
+  background: rgba(184,134,11,0.15) !important;
+  color: #f0c060 !important;
+  border-bottom-color: rgba(184,134,11,0.3) !important;
+}
+[data-theme="dark"] .kcol-en-curso .kanban-col-header {
+  background: rgba(60,100,160,0.15) !important;
+  color: #7ab4f0 !important;
+  border-bottom-color: rgba(60,100,160,0.3) !important;
+}
+[data-theme="dark"] .kcol-listo .kanban-col-header {
+  background: rgba(26,122,74,0.15) !important;
+  color: #5fd49a !important;
+  border-bottom-color: rgba(26,122,74,0.3) !important;
+}
+[data-theme="dark"] .prioridad-urgente {
+  background: rgba(229,57,53,0.15) !important;
+}
+[data-theme="dark"] .pill-urgente {
+  background: rgba(198,40,40,0.3) !important;
+  color: #ff8a80 !important;
+}
+[data-theme="dark"] .kanban-col-header .kcount {
+  background: rgba(255,255,255,0.1) !important;
+}
+[data-theme="dark"] .en-tarea {
+  background: rgba(245,124,0,0.2) !important;
+  color: #ffb74d !important;
+}
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
