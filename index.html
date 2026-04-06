@@ -36,6 +36,9 @@
 [data-theme="dark"] header { background:#111111 !important; border-bottom:1px solid #2a2a2a; }
 [data-theme="dark"] .sidebar { background:#111111 !important; border-right:1px solid #2a2a2a !important; }
 [data-theme="dark"] .nav-drawer-panel { background:#161616 !important; }
+[data-theme="dark"] .bottom-nav { background:#111111 !important; border-top-color:#2a2a2a !important; }
+[data-theme="dark"] .bn-item { color:#666 !important; }
+[data-theme="dark"] .bn-item.active { color:#5b9bd5 !important; }
 [data-theme="dark"] .nav-drawer-item { color:#e8e8e8; }
 [data-theme="dark"] .nav-drawer-item:hover { background:#1a1a1a; }
 [data-theme="dark"] .nav-drawer-item.active { background:#1a1a1a; color:#5b9bd5; border-left-color:#5b9bd5; }
@@ -1640,8 +1643,8 @@ header{
         <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
           <span class="bn-icon">📅</span>Reuniones
         </button>
-        <button class="bn-item" id="bne-productividad" onclick="cambiarVistaEmpBN('vEmpProductividad','bne-productividad')">
-          <span class="bn-icon">📈</span>Stats
+        <button class="bn-item" id="bne-mensajes" onclick="cerrarDrawer();abrirMensajero()">
+          <span class="bn-icon">💬</span>Mensajes
         </button>
         <button class="bn-item" id="bne-perfil" onclick="abrirPerfil()">
           <span class="bn-icon">👤</span>Mi perfil
@@ -5468,9 +5471,16 @@ function navSidebar(vistaId, el){
     <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
   <div id="navDrawerEmp" style="display:none">
-    <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpReuniones',this)"><span>📅</span> Reuniones</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📈</span> Productividad</button>
+    <div style="padding:12px 18px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink2);">Herramientas</div>
+    <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
+    <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
+    <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
+    <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
+    <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📊</span> Mi Productividad</button>
+    <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
+    <button class="nav-drawer-item" onclick="toggleDarkMode()"><span>🌙</span> Modo noche</button>
+    <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
 </div>
 
