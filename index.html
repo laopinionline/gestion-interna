@@ -1124,15 +1124,30 @@ header{
   #appSupervisor header { padding:0 12px !important; }
 }
 
-/* ══ LAYOUT SUPERVISOR ══ */
-#supervisorMainContainer { display:block; width:100%; padding-left:var(--sidebar-w,220px); box-sizing:border-box; }
-#supervisorMainContainer #vDash { width:100%; box-sizing:border-box; padding:20px 24px; }
-#supervisorMainContainer .app-with-sidebar { display:block; width:100%; }
-#supervisorMainContainer .main-content { width:100%; box-sizing:border-box; padding:20px 24px; min-height:80vh; }
-#supervisorMainContainer .app-with-sidebar .view { width:100%; box-sizing:border-box; min-height:80vh; }
+
+
+/* ══ SUPERVISOR LAYOUT ══ */
+#appSupervisor .app-with-sidebar {
+  display: block;
+  margin-left: var(--sidebar-w, 220px);
+}
+#appSupervisor .main-content {
+  padding: 20px 24px;
+  min-height: 80vh;
+}
+#appSupervisor .app-with-sidebar .view {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 80vh;
+}
+#appSupervisor #vDash {
+  margin-left: var(--sidebar-w, 220px);
+  padding: 20px 24px;
+}
 @media(max-width:768px){
-  #supervisorMainContainer { padding-left:0 !important; }
-  #dashSidebar { display:none !important; }
+  #appSupervisor .app-with-sidebar { margin-left: 0 !important; }
+  #appSupervisor #vDash { margin-left: 0 !important; padding: 12px 16px; }
+  #dashSidebar { display: none !important; }
 }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1264,7 +1279,7 @@ header{
     </div>
   </nav>
 
-  <div class="container" id="supervisorMainContainer" style="margin-left:var(--sidebar-w,220px);padding-top:8px;min-height:calc(100vh - 52px);">
+  <div class="container" id="supervisorMainContainer" style="padding-top:8px;">
 
     <!-- DASHBOARD -->
     <div class="view active" id="vDash">
@@ -5351,18 +5366,6 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
-
-// ══ FIX LAYOUT: mover aws al supervisorMainContainer y arreglar posición ══
-(function(){
-  var smc = document.getElementById('supervisorMainContainer');
-  var aws = document.querySelector('.app-with-sidebar');
-  if(!smc || !aws) return;
-  // Si aws no está dentro de smc, moverlo
-  if(!smc.contains(aws)){
-    smc.appendChild(aws);
-    console.log('aws movido al smc');
-  }
-})();
 </script>
 
 <!-- MODAL PERFIL -->
