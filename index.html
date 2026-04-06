@@ -2606,7 +2606,10 @@ function cambiarVista(id, btn){
         aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
       }
     }
-    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+    if(mc){
+      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
+    }
   }
   setTimeout(function(){
     var el = document.getElementById(id);
@@ -2757,7 +2760,10 @@ function cambiarVistaBN(id, bnId){
         aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
       }
     }
-    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+    if(mc){
+      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
+    }
   }
   setTimeout(function(){
     var el = document.getElementById(id);
@@ -2828,7 +2834,10 @@ function cambiarVistaDrawer(id, btn){
         aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
       }
     }
-    if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+    if(mc){
+      if(esMobile){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
+      else { mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; mc.style.paddingBottom=''; }
+    }
   }
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
