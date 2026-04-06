@@ -2618,9 +2618,11 @@ function cambiarVista(id, btn){
   var smc = document.getElementById('supervisorMainContainer');
   if(id === 'vDash'){
     if(smc) smc.classList.remove('vista-secundaria');
+    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
     if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
+    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
     var esMobile = window.innerWidth <= 768;
     if(aws){ 
@@ -2772,9 +2774,11 @@ function cambiarVistaBN(id, bnId){
   var smc = document.getElementById('supervisorMainContainer');
   if(id === 'vDash'){
     if(smc) smc.classList.remove('vista-secundaria');
+    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
     if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
+    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
     var esMobile = window.innerWidth <= 768;
     if(aws){ 
@@ -2846,9 +2850,11 @@ function cambiarVistaDrawer(id, btn){
   var mc = document.querySelector('.main-content');
   if(id === 'vDash'){
     if(smc) smc.classList.remove('vista-secundaria');
+    var vDE=document.getElementById('vDash'); if(vDE) vDE.style.display='';
     if(aws){ aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex=''; }
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
+    var vDE2=document.getElementById('vDash'); if(vDE2) vDE2.style.display='none';
     if(smc) smc.classList.add('vista-secundaria');
     var esMobile = window.innerWidth <= 768;
     if(aws){ 
