@@ -3474,6 +3474,20 @@ function abrirNuevaOrdenEmp(){
   document.querySelectorAll('.colab-check').forEach(c=>{
     c.checked = empActualId ? c.value === empActualId : false;
   });
+  // Pre-seleccionar equipo según director
+  const equipoPorDirector = {
+    'emp02': 'Administración',
+    'emp07': 'Redacción',
+    'emp05': 'Comercial',
+    'emp16': 'Digital'
+  };
+  const selEq = document.getElementById('soEquipo');
+  if(selEq && empActualId && equipoPorDirector[empActualId]){
+    selEq.value = equipoPorDirector[empActualId];
+    if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
+  } else if(selEq) {
+    selEq.value = '';
+  }
   abrirModal('mOrden');
 }
 
