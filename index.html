@@ -2662,6 +2662,7 @@ function cambiarVistaEmpBN(id, bnId){
   const vista = document.getElementById(id);
   if(vista) vista.classList.add('active');
   if(id==='vEmpKanban') renderKanban();
+  if(id==='vEmpClientes') renderEmpClientes();
 }
 
 function abrirDrawer(){
