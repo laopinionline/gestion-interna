@@ -1588,7 +1588,7 @@ header{
   </div>
   <div class="container" style="max-width:1100px">
             <!-- HERRAMIENTAS DE TRABAJO -->
-      <div id="empDashContainer" class="container" style="padding-top:14px;padding-bottom:0;">
+      <div class="container" id="empDashContainer" style="padding-top:14px;padding-bottom:0;display:none;">
         <div class="herramientas-widget" id="herramientasWidget">
           <div class="herramientas-title">🛠 Herramientas de trabajo</div>
           <div class="herramientas-links">
@@ -2663,9 +2663,8 @@ function cambiarVistaEmpBN(id, bnId){
   if(vista) vista.classList.add('active');
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpClientes') renderEmpClientes();
-  // Mostrar dashboard solo en vista inicial (cuando se hace scroll al inicio)
   const dash = document.getElementById('empDashContainer');
-  if(dash) dash.style.display = (id==='vEmpKanban') ? '' : 'none';
+  if(dash) dash.style.display = (id==='vEmpKanban') ? 'block' : 'none';
 }
 
 function abrirDrawer(){
@@ -3646,6 +3645,8 @@ function rendercolaborador(usuarioActual){
   renderKanban();
   renderEmpReuniones();
   renderMisRedes();
+  // Vista inicial: tareas
+  cambiarVistaEmpBN('vEmpKanban', 'bne-tareas');
 
 }
 
