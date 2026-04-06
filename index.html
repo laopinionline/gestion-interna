@@ -696,6 +696,7 @@ header{
   /* Header colaborador */
   #headerResumenTareas{display:none !important;}
   #empResumenMobile{display:block !important;}
+  #empDashContainer{display:none !important;}
   .emp-header{padding:16px 14px;border-radius:10px;margin-bottom:12px;}
   .emp-title{font-size:15px;}
   .emp-stats{gap:10px;flex-wrap:wrap;}
@@ -2663,8 +2664,7 @@ function cambiarVistaEmpBN(id, bnId){
   if(vista) vista.classList.add('active');
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpClientes') renderEmpClientes();
-  const dash = document.getElementById('empDashContainer');
-  if(dash) dash.style.display = (id==='vEmpKanban') ? 'block' : 'none';
+  // dash visible solo en desktop (CSS media query lo oculta en mobile)
 }
 
 function abrirDrawer(){
