@@ -4458,9 +4458,23 @@ function toggleCumplimiento(reunionId, empId){
 }
 
 function renderEmpReuniones(){
-  const lista = [...reuniones].sort((a,b)=>a.fecha.localeCompare(b.fecha));
   const cont = document.getElementById('empReunionesList');
-  if(!lista.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px">No hay reuniones agendadas</div>'; return; }
+  // Filtrar solo las reuniones donde el colaborador está como participante
+  let lista = reuniones.filter(r => {
+    const parts = Array.isArray(r.participantes) ? r.participantes :
+      (() => { try { return JSON.parse(r.participantes || '[]'); } catch { return []; } })();
+    return parts.includes(empActualId);
+  });
+  if(!lista.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px">No tenés reuniones agendadas</div>'; return; }
+  const hoyStr = hoy();
+  // Próximas y de hoy primero (ASC), pasadas al final (DESC)
+  lista.sort((a,b)=>{
+    const stA = statusReunion(a), stB = statusReunion(b);
+    const ord = {hoy:0, proxima:1, pasada:2};
+    if(ord[stA] !== ord[stB]) return ord[stA] - ord[stB];
+    if(stA === 'pasada') return (b.fecha||'').localeCompare(a.fecha||''); // pasadas: más reciente primero
+    return (a.fecha||'').localeCompare(b.fecha||''); // próximas: más cercana primero
+  });
   cont.innerHTML = '<div style="margin-bottom:12px;font-family:Playfair Display,serif;font-size:20px;color:var(--ink)">Reuniones</div>' + lista.map(r=>renderReunionCard(r,false)).join('');
 }
 
