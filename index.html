@@ -2290,15 +2290,7 @@ async function login(){
       actualizarAvatarHeader(usuario);
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
       cargarTemaUsuario(usuario.id);
-      // Restaurar vista activa si hubo recarga
-      try{
-        var vistaGuardada = sessionStorage.getItem('vistaActual');
-        if(vistaGuardada && vistaGuardada !== 'vDash'){
-          setTimeout(function(){ 
-            cambiarVista(vistaGuardada, null);
-          }, 400);
-        }
-      }catch(e){}
+
       (function(){
         if(['emp01','emp02','emp07','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
@@ -2612,7 +2604,6 @@ function logout(){
 
 // ══ VISTAS SUPERVISOR ══
 function cambiarVista(id, btn){
-  try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
   var aws = document.querySelector('.app-with-sidebar');
   var mc = document.querySelector('.main-content');
   var smc = document.getElementById('supervisorMainContainer');
@@ -2768,7 +2759,6 @@ function abrirPerfilColaborador(empId){
 // ── DRAWER MOBILE ──
 // ── BOTTOM NAV ──
 function cambiarVistaBN(id, bnId){
-  try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
   var aws = document.querySelector('.app-with-sidebar');
   var mc = document.querySelector('.main-content');
   var smc = document.getElementById('supervisorMainContainer');
@@ -2844,7 +2834,6 @@ function cambiarVistaEmpDrawer(id, btn){
   cambiarVistaEmp(id, null);
 }
 function cambiarVistaDrawer(id, btn){
-  try{ sessionStorage.setItem('vistaActual', id); }catch(e){}
   var smc = document.getElementById('supervisorMainContainer');
   var aws = document.querySelector('.app-with-sidebar');
   var mc = document.querySelector('.main-content');
