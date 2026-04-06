@@ -1090,8 +1090,12 @@ header{
 
 /* ══ CONTENIDO PRINCIPAL DEL SUPERVISOR ══ */
 #appSupervisor .container {
-  padding-top:8px;
+  margin-left:var(--sidebar-w);
+  padding-top:60px;
   min-height:calc(100vh - 52px);
+}
+@media(max-width:768px){
+  .container { margin-left:0 !important; }
 }
 /* Nav del supervisor — en desktop ya tenemos sidebar, ocultar nav del header */
 @media(min-width:769px){
@@ -1125,7 +1129,6 @@ header{
 
 /* ══ SUPERVISOR LAYOUT ══ */
 #appSupervisor #supervisorMainContainer {
-  margin-left: var(--sidebar-w, 220px);
   padding-top: 8px;
 }
 #appSupervisor .app-with-sidebar { display: block; }
@@ -1133,7 +1136,6 @@ header{
 #appSupervisor #vDash { padding: 20px 24px; }
 #appSupervisor .app-with-sidebar .view { width: 100%; box-sizing: border-box; min-height: 80vh; }
 @media(max-width:768px){
-  #appSupervisor #supervisorMainContainer { margin-left: 0 !important; }
   #dashSidebar { display: none !important; }
 }
 </style>
@@ -5363,6 +5365,19 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
 }
+
+// Asegurar que vDash y aws están dentro del smc
+(function(){
+  var smc = document.getElementById('supervisorMainContainer');
+  if(!smc) return;
+  ['vDash'].concat(['.app-with-sidebar']).forEach(function(sel){
+    var el = sel.startsWith('.') ? document.querySelector(sel) : document.getElementById(sel);
+    if(el && !smc.contains(el)){
+      if(sel === '.app-with-sidebar') smc.appendChild(el);
+      else smc.insertBefore(el, smc.firstChild);
+    }
+  });
+})();
 </script>
 
 <!-- MODAL PERFIL -->
