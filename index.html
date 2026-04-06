@@ -1193,10 +1193,15 @@ header{
 }
 @media(min-width:769px){
   #supervisorMainContainer.vista-secundaria .app-with-sidebar {
-    left:var(--sidebar-w);
+    left:var(--sidebar-w,220px);
     top:60px;
   }
+  /* En desktop el sidebar sigue visible al lado */
+  #dashSidebar { display:flex !important; }
 }
+
+/* ══ DARK MODE: pauta valor ══ */
+[data-theme="dark"] { --green-bg:#0a2a0a; }
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -2593,7 +2598,14 @@ function cambiarVista(id, btn){
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
     if(smc) smc.classList.add('vista-secundaria');
-    if(aws){ aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)'; }
+    var esMobile = window.innerWidth <= 768;
+    if(aws){ 
+      if(esMobile){
+        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
+      } else {
+        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
+      }
+    }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
@@ -2737,7 +2749,14 @@ function cambiarVistaBN(id, bnId){
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
     if(smc) smc.classList.add('vista-secundaria');
-    if(aws){ aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)'; }
+    var esMobile = window.innerWidth <= 768;
+    if(aws){ 
+      if(esMobile){
+        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
+      } else {
+        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
+      }
+    }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
   }
   setTimeout(function(){
@@ -2801,7 +2820,14 @@ function cambiarVistaDrawer(id, btn){
     if(mc){ mc.style.marginLeft=''; mc.style.width=''; mc.style.padding=''; }
   } else {
     if(smc) smc.classList.add('vista-secundaria');
-    if(aws){ aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)'; }
+    var esMobile = window.innerWidth <= 768;
+    if(aws){ 
+      if(esMobile){
+        aws.style.position='fixed'; aws.style.top='60px'; aws.style.left='0'; aws.style.right='0'; aws.style.bottom='60px'; aws.style.overflowY='auto'; aws.style.zIndex='10'; aws.style.background='var(--paper)';
+      } else {
+        aws.style.position=''; aws.style.top=''; aws.style.left=''; aws.style.right=''; aws.style.bottom=''; aws.style.overflowY=''; aws.style.zIndex='';
+      }
+    }
     if(mc){ mc.style.marginLeft='0'; mc.style.width='100%'; mc.style.padding='12px 16px'; mc.style.paddingBottom='20px'; }
   }
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
@@ -3300,7 +3326,7 @@ function renderClientes(lista){
         ${c.email?`<div class="ci-row">✉ ${c.email}</div>`:''}
         ${c.pautaVence?`<div class="ci-row">📅 Vence: ${fmtD(c.pautaVence)}</div>`:''}
       </div>
-      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:#e8f5ee;border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:#2e7d32;">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
+      ${(empActualId==="emp01"||empActualId==="emp02")&&(c.montoPauta||c.esCanje)?`<div style="background:var(--green-bg,#e8f5ee);border-radius:6px;padding:5px 10px;margin:4px 0 6px;font-size:12px;display:flex;gap:10px;border:1px solid var(--green,#2e7d32);">${c.esCanje?'<span style="background:#fff3cd;color:#856404;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;">🔄 CANJE</span>':'<span style="font-weight:700;color:#2e7d32;">$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes</span>'}<span style="color:#666;">${c.periodicidad||"mensual"}</span>${c.tieneComision==="si"?`<span style="color:#1565C0;">Comisión ${c.comisionPct||0}%</span>`:""}</div>`:""}
       <div class="card-footer">
         <div class="orders-count"><strong>${ords.length}</strong> orden${ords.length!==1?'es':''}${pend?` · <strong style="color:var(--gold)">${pend} pend.</strong>`:''}</div>
         ${c.pauta?`<span class="pauta-tag">📢 Pauta</span>`:''}
