@@ -1172,9 +1172,7 @@ header{
 [data-theme="dark"] .order-item:hover { background:var(--paper2) !important; }
 [data-theme="dark"] .orden-card { background:var(--card-bg) !important; border-color:var(--line) !important; }
 
-/* Cuando una vista secundaria está activa, ocultar todo excepto la vista */
-#vDash { display:block; }
-#supervisorMainContainer.vista-secundaria #vDash { display:none !important; }
+/* Cuando una vista secundaria está activa */
 #supervisorMainContainer.vista-secundaria .spacer-header { display:none !important; }
 #supervisorMainContainer.vista-secundaria .app-with-sidebar { 
   position:fixed;
@@ -2296,7 +2294,9 @@ async function login(){
       try{
         var vistaGuardada = sessionStorage.getItem('vistaActual');
         if(vistaGuardada && vistaGuardada !== 'vDash'){
-          setTimeout(function(){ cambiarVista(vistaGuardada, null); }, 300);
+          setTimeout(function(){ 
+            cambiarVista(vistaGuardada, null);
+          }, 400);
         }
       }catch(e){}
       (function(){
