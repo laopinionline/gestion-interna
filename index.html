@@ -847,12 +847,12 @@ header{
 @media(max-width:700px){.kanban-board{grid-template-columns:1fr;}}
 
 /* ── REUNIONES ── */
-.meeting-card{background:#fff;border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
+.meeting-card{background:var(--card);border-radius:11px;border:1.5px solid var(--line);padding:18px 20px;margin-bottom:12px;transition:all 0.2s;}
 .meeting-card:hover{box-shadow:var(--shadow);border-color:var(--blue2);}
 .meeting-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
 .meeting-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);}
 .meeting-datetime{font-family:'DM Mono',monospace;font-size:12px;color:var(--blue2);margin-top:3px;}
-.meeting-desc{font-size:13px;color:#666;line-height:1.5;margin-bottom:10px;}
+.meeting-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
 .meeting-participants{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .participant-chip{display:flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:4px 10px;font-size:12px;}
 .participant-chip.done{background:var(--green-bg);border-color:var(--green);color:var(--green);}
