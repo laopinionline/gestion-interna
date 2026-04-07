@@ -1637,7 +1637,7 @@ header{
         <button class="bn-item active" id="bne-tareas" onclick="cambiarVistaEmpBN('vEmpKanban','bne-tareas')">
           <span class="bn-icon">📋</span>Tareas
         </button>
-        <button class="bn-item" id="bne-clientes-dir" onclick="cambiarVistaEmpBN('vEmpClientes','bne-clientes-dir')">
+        <button class="bn-item" id="bne-clientes-dir" style="display:none" onclick="cambiarVistaEmpBN('vEmpClientes','bne-clientes-dir')">
           <span class="bn-icon">👥</span>Clientes
         </button>
         <button class="bn-item" id="bne-reuniones" onclick="cambiarVistaEmpBN('vEmpReuniones','bne-reuniones')">
@@ -3707,6 +3707,10 @@ function rendercolaborador(usuarioActual){
   renderKanban();
   renderEmpReuniones();
   renderMisRedes();
+  // Mostrar tab Clientes solo para directores
+  const esDir = DIRECTORES[empActualId] || empActualId === 'emp01';
+  const tabClDir = document.getElementById('bne-clientes-dir');
+  if(tabClDir) tabClDir.style.display = esDir ? '' : 'none';
   // Ocultar dashboard en mobile ANTES de cambiar vista
   if(window.innerWidth <= 768){
     ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
