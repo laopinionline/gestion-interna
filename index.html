@@ -3576,7 +3576,10 @@ function abrirNuevaOrdenEmp(){
     selEq.value = equipoPorDirector[empActualId];
     if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
   } else if(selEq) {
-    selEq.value = '';
+    // Preseleccionar equipo propio para colaboradores comunes
+    const miEquipo = colaboradores.find(c=>c.id===empActualId)?.equipo || '';
+    selEq.value = miEquipo;
+    if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
   }
   abrirModal('mOrden');
 }
