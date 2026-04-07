@@ -3435,7 +3435,7 @@ function actualizarFiltroOrdenes(){
     selColab.innerHTML='<option value="">Todos los colaboradores</option>'+activos.map(c=>`<option value="${c.id}">${c.nombre.split(' ').slice(0,2).join(' ')}</option>`).join('');
   }
   const selC=document.getElementById('soCliente');
-  selC.innerHTML='<option value="">— Sin cliente —</option>'+clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  selC.innerHTML='<option value="">— Sin cliente —</option>'+clientes.filter(c=>c.estado==='activo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'')).map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
   // Poblar checkboxes de colaboradores en el modal de orden
   const wrapE = document.getElementById('socolaboradoresWrap');
   if(wrapE){
