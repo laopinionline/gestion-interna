@@ -5885,7 +5885,7 @@ function navSidebar(vistaId, el){
 </div>
 
 <!-- MENSAJERO INTERNO -->
-<div id="mensajeroPanel" style="display:none;position:fixed;top:0;right:0;width:340px;height:100vh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,0.15);z-index:99997;flex-direction:column;font-family:inherit;">
+<div id="mensajeroPanel" style="display:none;position:fixed;top:0;right:0;width:min(340px,100vw);height:100vh;height:100dvh;background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,0.15);z-index:99997;flex-direction:column;font-family:inherit;overflow:hidden;">
   <!-- Header mensajero -->
   <div style="background:var(--blue,#1a3a5c);color:#fff;padding:16px;display:flex;align-items:center;justify-content:space-between;">
     <div>
@@ -5902,7 +5902,7 @@ function navSidebar(vistaId, el){
   </div>
 
   <!-- Vista: conversación individual -->
-  <div id="mensajeroChat" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+  <div id="mensajeroChat" style="display:none;flex:1;flex-direction:column;overflow:hidden;height:0;">
     <div style="padding:10px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;">
       <button onclick="volverLista()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--blue);">←</button>
       <div>
