@@ -3511,6 +3511,9 @@ function abrirNuevaOrdenEmp(){
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
   document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
   document.getElementById('btnEliminarOrden').style.display='none';
+  // Poblar colaboradores si el wrap está vacío (colaboradores no llaman actualizarFiltroOrdenes)
+  const wrap = document.getElementById('socolaboradoresWrap');
+  if(wrap && wrap.querySelectorAll('.colab-check').length === 0) actualizarFiltroOrdenes();
   // Pre-marcar el colaborador logueado
   document.querySelectorAll('.colab-check').forEach(c=>{
     c.checked = empActualId ? c.value === empActualId : false;
