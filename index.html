@@ -3584,6 +3584,13 @@ function abrirNuevaOrdenEmp(){
   abrirModal('mOrden');
 }
 
+function abrirDetalleOrdenEmp(id){
+  const o = ordenes.find(x => x.id === id);
+  if(!o) return;
+  // Abrir modal de comentarios que ya tiene título + hilo
+  abrirComentariosOrden(id);
+}
+
 function editarOrden(id){
   const o=ordenes.find(function(x){return x.id===id;}); if(!o) return;
   editandoOrdenId=id;
@@ -4361,7 +4368,7 @@ function renderKanban(){
       : `<button class="kc-btn prev" onclick="moverTarea('${o.id}','en-curso')">↩ Reabrir</button>`;
     const comentBtn = `<button onclick="abrirComentariosOrden('${o.id}')" class="kc-btn" style="background:var(--paper2);color:var(--ink);">💬${comentCount>0?' '+comentCount:''}</button>`;
     const esUrgente = o.prioridad==='urgente';
-    return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}">
+    return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}" onclick="abrirDetalleOrdenEmp('${o.id}')" style="cursor:pointer;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
         <div class="kc-title" style="flex:1;">${o.titulo||o.desc||'Sin título'}</div>
