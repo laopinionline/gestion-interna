@@ -3651,6 +3651,13 @@ function rendercolaborador(usuarioActual){
   renderMisRedes();
   // Vista inicial: tareas
   cambiarVistaEmpBN('vEmpKanban', 'bne-tareas');
+  // Ocultar dashboard en mobile via JS (CSS media query no siempre gana)
+  if(window.innerWidth <= 600){
+    ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.style.display = 'none';
+    });
+  }
 
 }
 
