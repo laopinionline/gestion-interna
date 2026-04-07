@@ -3550,7 +3550,6 @@ function abrirNuevaOrden(){
 
 
 function abrirNuevaOrdenEmp(){
-  // Abre el modal de nueva orden igual que supervisor, pero preselecciona al colaborador logueado
   editandoOrdenId=null;
   document.getElementById('mOrdenTitle').textContent='Nueva tarea';
   document.getElementById('soFecha').value=hoy();
@@ -3564,28 +3563,20 @@ function abrirNuevaOrdenEmp(){
   document.querySelectorAll('.colab-check').forEach(c=>{
     c.checked = empActualId ? c.value === empActualId : false;
   });
-  // Para colaboradores comunes (no directores con acceso total), filtrar por su equipo
+  // Determinar equipo a preseleccionar
   const esAccesoTotal = ['emp01','emp02','emp07','emp16'].includes(empActualId) || rolActual === 'supervisor';
-  if(!esAccesoTotal){
-    const miEquipoFiltro = colaboradores.find(c=>c.id===empActualId)?.equipo || '';
-    if(miEquipoFiltro) filtrarColabsPorEquipo(miEquipoFiltro);
-  }
-  // Pre-seleccionar equipo según director
-  const equipoPorDirector = {
-    'emp02': 'Administración',
-    'emp07': 'Redacción',
-    'emp05': 'Comercial',
-    'emp16': 'Digital'
-  };
+  const equipoPorDirector = {'emp02':'Administración','emp07':'Redacción','emp16':'Digital'};
+  const miEquipo = colaboradores.find(c=>c.id===empActualId)?.equipo || '';
+  const equipoAUsar = equipoPorDirector[empActualId] || miEquipo || '';
+  // Setear equipo en el selector
   const selEq = document.getElementById('soEquipo');
-  if(selEq && empActualId && equipoPorDirector[empActualId]){
-    selEq.value = equipoPorDirector[empActualId];
+  if(selEq){
+    selEq.value = equipoAUsar;
     if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
-  } else if(selEq) {
-    // Preseleccionar equipo propio para colaboradores comunes
-    const miEquipo = colaboradores.find(c=>c.id===empActualId)?.equipo || '';
-    selEq.value = miEquipo;
-    if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
+  }
+  // Filtrar colaboradores AL FINAL (después de actualizarTiposTarea que puede revertirlo)
+  if(!esAccesoTotal && equipoAUsar){
+    filtrarColabsPorEquipo(equipoAUsar);
   }
   abrirModal('mOrden');
 }
