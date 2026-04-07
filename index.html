@@ -4291,22 +4291,22 @@ async function renderProductividadEmp(){
 
   ct.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
-      <div class="prod-card">
+      <div class="prod-card" style="cursor:pointer" onclick="mostrarOrdenesEmp('hechas-semana')" title="Ver tareas">
         <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">✅</div>
         <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--green);text-align:center">${compSemana}</div>
         <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Hechas esta semana</div>
       </div>
-      <div class="prod-card">
+      <div class="prod-card" style="cursor:pointer" onclick="mostrarOrdenesEmp('pendientes-semana')" title="Ver tareas">
         <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">⏳</div>
         <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--gold);text-align:center">${pendSemana}</div>
         <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Pendientes esta semana</div>
       </div>
-      <div class="prod-card ${atrasadas.length>0?'atrasado':''}">
+      <div class="prod-card ${atrasadas.length>0?'atrasado':''}" style="cursor:pointer" onclick="mostrarOrdenesEmp('atrasadas')" title="Ver tareas">
         <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">🔴</div>
         <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--accent);text-align:center">${atrasadas.length}</div>
         <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Atrasadas</div>
       </div>
-      <div class="prod-card">
+      <div class="prod-card" style="cursor:pointer" onclick="mostrarOrdenesEmp('total')" title="Ver tareas">
         <div style="font-size:1.8rem;text-align:center;margin-bottom:4px">📋</div>
         <div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:700;color:var(--blue2);text-align:center">${compTotal}</div>
         <div style="font-size:11px;color:var(--ink2);text-align:center;text-transform:uppercase;letter-spacing:.5px">Total completadas</div>
@@ -4323,6 +4323,46 @@ async function renderProductividadEmp(){
         </div>`).join('')}
     </div>` : ''}
   `;
+}
+
+function mostrarOrdenesEmp(filtro){
+  const hoyStr = hoy();
+  const lunes = lunesDeSemana(hoyStr);
+  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
+  const misTotal = ordenes.filter(o=>getIds(o).includes(empActualId));
+  let lista = [], titulo = '';
+  if(filtro==='hechas-semana'){
+    lista = misTotal.filter(o=>{ const f=getFecha(o); return f>=lunes&&f<=hoyStr&&o.estado==='completada'; });
+    titulo = '✅ Hechas esta semana';
+  } else if(filtro==='pendientes-semana'){
+    lista = misTotal.filter(o=>{ const f=getFecha(o); return f>=lunes&&f<=hoyStr&&(o.estado==='pendiente'||o.estado==='en-curso'); });
+    titulo = '⏳ Pendientes esta semana';
+  } else if(filtro==='atrasadas'){
+    lista = misTotal.filter(o=>{ const f=getFecha(o); return f&&f<hoyStr&&o.estado!=='completada'&&o.estado!=='cancelada'; });
+    titulo = '🔴 Atrasadas';
+  } else {
+    lista = misTotal.filter(o=>o.estado==='completada');
+    titulo = '📋 Total completadas';
+  }
+  // Reusar modal de check colaborador
+  document.getElementById('mchkNombre').textContent = titulo;
+  const body = document.getElementById('mchkBody');
+  if(!lista.length){ body.innerHTML='<div class="no-data">Sin tareas en esta categoría</div>'; }
+  else {
+    body.innerHTML = lista.sort((a,b)=>getFecha(b).localeCompare(getFecha(a))).map(o=>{
+      const f = getFecha(o);
+      const atrasada = f && f<hoyStr && o.estado!=='completada';
+      const color = o.estado==='completada'?'var(--green)':atrasada?'var(--accent)':'var(--ink2)';
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="cerrarCheckColaborador();abrirDetalleOrdenEmp('${o.id}')">
+        <div style="font-weight:600;font-size:14px;">${o.titulo||o.descripcion||o.desc||'Sin título'}</div>
+        <div style="font-size:12px;color:${color};margin-top:2px;">${o.estado||''} ${f?'· '+fmtD(f):''}</div>
+      </div>`;
+    }).join('');
+  }
+  const btnGuardar = document.querySelector('[onclick="guardarCheckColaborador()"]');
+  if(btnGuardar) btnGuardar.style.display='none';
+  document.getElementById('modalCheckColaborador').style.display='flex';
 }
 
 // ══ KANBAN ══
