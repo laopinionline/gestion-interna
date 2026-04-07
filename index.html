@@ -2182,6 +2182,9 @@ async function login(){
   function iniciarSesion(rol){
     rolActual = rol;
     document.getElementById('loginScreen').style.display='none';
+    // Limpiar ambos panels antes de activar el correcto
+    document.getElementById('appSupervisor').classList.remove('active');
+    document.getElementById('appcolaborador').classList.remove('active');
     if(rolActual==='supervisor'){
       document.getElementById('appSupervisor').classList.add('active');
       document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
