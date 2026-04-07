@@ -3557,13 +3557,19 @@ function abrirNuevaOrdenEmp(){
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
   document.getElementById('soEstado').value='pendiente'; document.getElementById('soCliente').value='';
   document.getElementById('btnEliminarOrden').style.display='none';
-  // Poblar colaboradores si el wrap está vacío (colaboradores no llaman actualizarFiltroOrdenes)
+  // Poblar colaboradores si el wrap está vacío
   const wrap = document.getElementById('socolaboradoresWrap');
   if(wrap && wrap.querySelectorAll('.colab-check').length === 0) actualizarFiltroOrdenes();
   // Pre-marcar el colaborador logueado
   document.querySelectorAll('.colab-check').forEach(c=>{
     c.checked = empActualId ? c.value === empActualId : false;
   });
+  // Para colaboradores comunes (no directores con acceso total), filtrar por su equipo
+  const esAccesoTotal = ['emp01','emp02','emp07','emp16'].includes(empActualId) || rolActual === 'supervisor';
+  if(!esAccesoTotal){
+    const miEquipoFiltro = colaboradores.find(c=>c.id===empActualId)?.equipo || '';
+    if(miEquipoFiltro) filtrarColabsPorEquipo(miEquipoFiltro);
+  }
   // Pre-seleccionar equipo según director
   const equipoPorDirector = {
     'emp02': 'Administración',
