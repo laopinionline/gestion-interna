@@ -2309,13 +2309,21 @@ function actualizarTiposTarea(){
 }
 
 function filtrarColabsPorEquipo(equipo){
+  // Directores con acceso total: emp02 (Adriana) y emp07 (Toto)
+  const accesoTotal = rolActual === 'supervisor' || ['emp02','emp07'].includes(empActualId);
   document.querySelectorAll('.colab-check-wrap').forEach(wrap => {
     const empId = wrap.dataset.empId;
     const emp = colaboradores.find(c => c.id === empId);
-    if(!equipo || !emp || emp.equipo === equipo || rolActual === 'supervisor'){
+    if(accesoTotal){
+      // Ven todos
+      wrap.style.display = '';
+    } else if(!equipo || !emp){
       wrap.style.display = '';
     } else {
-      wrap.style.display = 'none';
+      // Resto: su equipo + Dirección
+      const esDirector = emp.equipo === 'Dirección';
+      const mismoEquipo = emp.equipo === equipo;
+      wrap.style.display = (mismoEquipo || esDirector) ? '' : 'none';
     }
   });
 }
