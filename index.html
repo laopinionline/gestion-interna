@@ -3428,7 +3428,7 @@ function cambiarTab(tabId,btn){
 // ══ ÓRDENES STANDALONE ══
 function actualizarFiltroOrdenes(){
   const sel=document.getElementById('filtroOrdenCliente');
-  sel.innerHTML='<option value="">Todos los clientes</option>'+clientes.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  sel.innerHTML='<option value="">Todos los clientes</option>'+clientes.filter(c=>c.estado==='activo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'')).map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
   const selColab=document.getElementById('filtroOrdenColaborador');
   if(selColab){
     const activos=colaboradores.filter(c=>c.estado!=='inactivo'&&c.jerarquia!=='externo').sort((a,b)=>a.nombre.localeCompare(b.nombre));
