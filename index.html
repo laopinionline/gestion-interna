@@ -3658,9 +3658,16 @@ function rendercolaborador(usuarioActual){
   renderKanban();
   renderEmpReuniones();
   renderMisRedes();
+  // Ocultar dashboard en mobile ANTES de cambiar vista
+  if(window.innerWidth <= 768){
+    ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.style.setProperty('display','none','important');
+    });
+  }
   // Vista inicial: tareas
   cambiarVistaEmpBN('vEmpKanban', 'bne-tareas');
-  // Ocultar dashboard en mobile siempre (el kanban es la vista principal)
+  // Reocutar por si acaso (cambiarVistaEmpBN puede haber revertido)
   if(window.innerWidth <= 768){
     ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
       var el = document.getElementById(id);
