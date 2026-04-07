@@ -2668,7 +2668,13 @@ function cambiarVistaEmpBN(id, bnId){
   if(vista) vista.classList.add('active');
   if(id==='vEmpKanban') renderKanban();
   if(id==='vEmpClientes') renderEmpClientes();
-  // dash visible solo en desktop (CSS media query lo oculta en mobile)
+  // Mantener dash oculto en mobile siempre
+  if(window.innerWidth > 768){
+    const dash = document.getElementById('empDashContainer');
+    const lect = document.getElementById('empLecturasContainer');
+    if(dash) dash.style.display = (id==='vEmpKanban') ? '' : 'none';
+    if(lect) lect.style.display = (id==='vEmpKanban') ? '' : 'none';
+  }
 }
 
 function abrirDrawer(){
@@ -3651,11 +3657,11 @@ function rendercolaborador(usuarioActual){
   renderMisRedes();
   // Vista inicial: tareas
   cambiarVistaEmpBN('vEmpKanban', 'bne-tareas');
-  // Ocultar dashboard en mobile via JS (CSS media query no siempre gana)
-  if(window.innerWidth <= 600){
+  // Ocultar dashboard en mobile siempre (el kanban es la vista principal)
+  if(window.innerWidth <= 768){
     ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
       var el = document.getElementById(id);
-      if(el) el.style.display = 'none';
+      if(el) el.style.setProperty('display','none','important');
     });
   }
 
