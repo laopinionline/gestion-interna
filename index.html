@@ -4530,9 +4530,18 @@ function diaSemanaActual(){ return new Date().getDay(); }
 function statusReunion(r){
   if(r.tipo==='semanal') return diaSemanaActual()===parseInt(r.diaSemana) ? 'hoy' : 'proxima';
   const hoyStr = hoy();
-  if(r.fecha === hoyStr) return 'hoy';
   if(r.fecha > hoyStr) return 'proxima';
-  return 'pasada';
+  if(r.fecha < hoyStr) return 'pasada';
+  // Es hoy — comparar hora de fin (hora inicio + duracion o + 60min por defecto)
+  if(r.hora){
+    const [h, m] = r.hora.split(':').map(Number);
+    const durMin = r.duracion || 60;
+    const ahora = new Date();
+    const horaFinMin = h * 60 + m + durMin;
+    const ahoraMin = ahora.getHours() * 60 + ahora.getMinutes();
+    if(ahoraMin > horaFinMin) return 'pasada';
+  }
+  return 'hoy';
 }
 
 function toggleReunionSemanal(){
