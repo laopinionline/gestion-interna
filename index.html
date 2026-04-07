@@ -1752,6 +1752,11 @@ header{
         <div class="form-group"><label class="form-label">Vencimiento de pauta</label><input type="date" class="form-input" id="fPautaV"></div>
         <div class="form-section">Notas</div>
         <div class="form-group form-full"><label class="form-label">Notas</label><textarea class="form-textarea" id="fNotas"></textarea></div>
+        <div class="form-group form-full">
+          <label class="form-label">Responsables del cliente</label>
+          <div id="fResponsablesWrap" style="background:var(--paper);border-radius:10px;padding:12px;border:1.5px solid var(--line);max-height:180px;overflow-y:auto;"></div>
+          <div style="font-size:11px;color:var(--ink2);margin-top:4px;">Colaboradores a cargo de este cliente</div>
+        </div>
         <!-- CAMPOS CONFIDENCIALES — solo emp01 y emp02 -->
         <div class="form-section campos-confidenciales" id="seccionConfidencial" style="display:none;">💰 Datos económicos (confidencial)</div>
         <div class="campos-confidenciales" id="camposConfidenciales" style="display:none;">
@@ -3242,6 +3247,30 @@ function abrirModalCliente(id){
   document.getElementById('btnEliminarCliente').style.display=c?'block':'none';
   mostrarCamposConfidenciales();
   poblarGrupos(c?.grupoEmpresarial||'');
+  // Poblar responsables
+  const wrapResp = document.getElementById('fResponsablesWrap');
+  if(wrapResp){
+    const responsablesActuales = c?.responsables || [];
+    const activos = colaboradores.filter(x => x.estado !== 'inactivo' && x.jerarquia !== 'externo');
+    const equiposOrden = ['Dirección','Administración','Comercial','Redacción','Digital'];
+    const porEquipo = {};
+    activos.forEach(e => { const eq = e.equipo||'Otros'; if(!porEquipo[eq]) porEquipo[eq]=[]; porEquipo[eq].push(e); });
+    let htmlR = '';
+    equiposOrden.forEach(eq => {
+      if(!porEquipo[eq]) return;
+      htmlR += '<div style="font-size:10px;font-weight:700;color:var(--blue2);text-transform:uppercase;letter-spacing:0.8px;margin:8px 0 4px;">'+eq+'</div>';
+      htmlR += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">';
+      porEquipo[eq].forEach(e => {
+        const checked = responsablesActuales.includes(e.id) ? 'checked' : '';
+        const nombre = e.nombre.split(' ').slice(0,2).join(' ');
+        htmlR += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 8px;background:var(--paper2);border-radius:6px;font-size:12px;">'
+          + '<input type="checkbox" class="resp-check" value="'+e.id+'" '+checked+'>'
+          + '<span>'+nombre+'</span></label>';
+      });
+      htmlR += '</div>';
+    });
+    wrapResp.innerHTML = htmlR;
+  }
   abrirModal('mCliente');
 }
 
@@ -3258,6 +3287,8 @@ function guardarCliente(){
     comisionEmp: document.getElementById('fComisionEmp')?.value || '',
     esCanje: document.getElementById('fEsCanje')?.checked || false,
   } : {};
+  // Recoger responsables seleccionados
+  const responsables = Array.from(document.querySelectorAll('.resp-check:checked')).map(cb => cb.value);
   var grupoSel = document.getElementById('fGrupoSelect')?.value;
   var grupoNuevo = document.getElementById('fGrupoNuevo')?.value.trim();
   var grupoEmpresarial = grupoSel === '__nuevo__' ? grupoNuevo : (grupoSel || '');
@@ -3692,9 +3723,21 @@ function rendercolaborador(usuarioActual){
 function renderEmpClientes(){
   const cont = document.getElementById('empClientesList');
   if(!cont) return;
-  const lista = clientes.filter(c => c.estado !== 'inactivo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
-  if(!lista.length){ cont.innerHTML='<div class="no-data">No hay clientes activos</div>'; return; }
-  cont.innerHTML = lista.map(c => {
+  // Si el colaborador tiene clientes asignados, mostrar solo los suyos
+  // Si es director (emp02, emp07, emp16) o supervisor, mostrar todos
+  const esDirectorOSup = rolActual === 'supervisor' || ['emp02','emp07','emp16'].includes(empActualId);
+  const misClientes = clientes.filter(c => (c.responsables||[]).includes(empActualId));
+  const lista = esDirectorOSup
+    ? clientes.filter(c => c.estado !== 'inactivo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''))
+    : misClientes.length > 0
+      ? misClientes.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''))
+      : clientes.filter(c => c.estado !== 'inactivo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  // Header indicando si es vista filtrada
+  const header = !esDirectorOSup && misClientes.length > 0
+    ? '<div style="padding:10px 14px;background:var(--blue);color:#fff;border-radius:10px;margin-bottom:12px;font-size:13px;font-weight:600;">👤 Mis clientes asignados ('+misClientes.length+')</div>'
+    : (!esDirectorOSup ? '<div style="padding:8px 14px;background:var(--paper2);border-radius:8px;margin-bottom:10px;font-size:12px;color:var(--ink2);">Todos los clientes — no tenés clientes asignados aún</div>' : '');
+  if(!lista.length){ cont.innerHTML=header+'<div class="no-data">No hay clientes activos</div>'; return; }
+  cont.innerHTML = header + lista.map(c => {
     const logoHtml = c.logoUrl
       ? `<img src="${c.logoUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;">`
       : `<div style="width:40px;height:40px;border-radius:8px;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏢</div>`;
@@ -3705,6 +3748,8 @@ function renderEmpClientes(){
       ? `<div style="background:var(--green-bg);color:var(--green);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;margin-top:6px;">${c.esCanje ? '🔄 CANJE' : '$'+Number(c.montoPauta).toLocaleString('es-AR')+'/mes'}</div>` : '';
     const vence = c.fechaVencimiento ? `<div style="font-size:12px;color:var(--ink2);margin-top:4px;">📅 Vence: ${c.fechaVencimiento}</div>` : '';
     const contacto = c.contacto ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">👤 ${c.contacto}</div>` : '';
+    const resps = (c.responsables||[]).map(id => colaboradores.find(x=>x.id===id)?.nombre?.split(' ')[0]).filter(Boolean);
+    const respsHtml = resps.length ? `<div style="font-size:11px;color:var(--blue2);margin-top:4px;">🙋 ${resps.join(', ')}</div>` : '';
     return `<div style="margin-bottom:10px;padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--line);">
       <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
@@ -3716,7 +3761,7 @@ function renderEmpClientes(){
         </div>
         ${estadoBadge}
       </div>
-      ${contacto}${vence}${pautaHtml}
+      ${contacto}${vence}${respsHtml}${pautaHtml}
     </div>`;
   }).join('');
 }
