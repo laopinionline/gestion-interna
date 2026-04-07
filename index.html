@@ -3587,8 +3587,25 @@ function abrirNuevaOrdenEmp(){
 function abrirDetalleOrdenEmp(id){
   const o = ordenes.find(x => x.id === id);
   if(!o) return;
-  // Abrir modal de comentarios que ya tiene título + hilo
-  abrirComentariosOrden(id);
+  // Usar el modal de edición pero solo con campos básicos
+  editandoOrdenId = id;
+  document.getElementById('mOrdenTitle').textContent = o.titulo || o.descripcion || 'Detalle de tarea';
+  document.getElementById('soFecha').value = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
+  document.getElementById('soDesc').value = o.titulo || o.descripcion || o.desc || '';
+  document.getElementById('soNotas').value = o.notas || '';
+  document.getElementById('soEstado').value = o.estado || 'pendiente';
+  document.getElementById('soCliente').value = o.clienteId || '';
+  document.getElementById('btnEliminarOrden').style.display = 'none';
+  // Pre-marcar colaboradores (solo lectura visual)
+  const asignados = o.colaboradoresIds || (o.asignadoA ? [o.asignadoA] : []);
+  document.querySelectorAll('.colab-check').forEach(cb => { cb.checked = asignados.includes(cb.value); });
+  // Pre-cargar equipo y tipo
+  const selEq = document.getElementById('soEquipo');
+  if(selEq) selEq.value = o.equipo || '';
+  if(typeof actualizarTiposTarea === 'function') actualizarTiposTarea();
+  const selTipo = document.getElementById('soTipo');
+  if(selTipo && o.tipo) selTipo.value = o.tipo;
+  abrirModal('mOrden');
 }
 
 function editarOrden(id){
