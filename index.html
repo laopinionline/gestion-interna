@@ -2228,10 +2228,11 @@ async function login(){
 // ══════════ TIPOS DE TAREA POR EQUIPO ══════════
 const DIRECTORES = {
   'emp02': { equipo: 'Administración' },
-  'emp05': { equipo: 'Comercial' },
   'emp07': { equipo: 'Redacción' },
   'emp16': { equipo: 'Digital' },
 };
+// Comercial depende de Administración (Adriana emp02)
+// Carolina Cocconi (emp05) pasó a rango colaborador
 const PUEDE_VER_PAUTA = ['emp01', 'emp02'];
 const TAREAS_POR_EQUIPO = {
   'Redacción': [
