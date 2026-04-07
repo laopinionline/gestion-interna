@@ -2670,10 +2670,13 @@ function cambiarVistaEmpBN(id, bnId){
   if(id==='vEmpClientes') renderEmpClientes();
   // Mantener dash oculto en mobile siempre
   if(window.innerWidth > 768){
-    const dash = document.getElementById('empDashContainer');
-    const lect = document.getElementById('empLecturasContainer');
-    if(dash) dash.style.display = (id==='vEmpKanban') ? '' : 'none';
-    if(lect) lect.style.display = (id==='vEmpKanban') ? '' : 'none';
+    // En mobile el dashboard nunca se muestra (solo desktop)
+    if(window.innerWidth > 768){
+      const dash = document.getElementById('empDashContainer');
+      const lect = document.getElementById('empLecturasContainer');
+      if(dash) dash.style.display = '';
+      if(lect) lect.style.display = '';
+    }
   }
 }
 
