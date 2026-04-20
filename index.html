@@ -57,7 +57,7 @@
 [data-theme="dark"] .week-nav,
 [data-theme="dark"] .herramientas-widget,
 [data-theme="dark"] .colab-grupo-section,
-[data-theme="dark"] #mensajeroPanel { background:#161616 !important; border-color:#2a2a2a !important; color:#e8e8e8 !important; }
+[data-theme="dark"] #mensajeroPanel { background:#161616 !important; border-color:#2a2a2a !important; color:#e8e8e8 !important; --unread-bg:#1a2332; }
 [data-theme="dark"] .modal-overlay,
 [data-theme="dark"] #mensajeroOverlay { background:rgba(0,0,0,0.85) !important; }
 [data-theme="dark"] input,
@@ -435,6 +435,7 @@ header{
 .badge-activo{background:var(--green-bg);color:var(--green);}
 .badge-inactivo{background:#f0f0f0;color:#888;}
 .badge-pausado{background:var(--gold-bg);color:var(--gold);}
+.badge-potencial{background:#e8eaf6;color:#3949ab;}
 .client-rubro{font-size:11px;color:var(--blue2);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;margin-bottom:10px;}
 .ci-row{display:flex;align-items:center;gap:7px;font-size:12px;color:#666;margin-bottom:3px;}
 .card-footer{margin-top:12px;padding-top:10px;border-top:1px solid var(--paper2);display:flex;justify-content:space-between;align-items:center;}
@@ -1112,6 +1113,37 @@ header{
   background: rgba(245,124,0,0.2) !important;
   color: #ffb74d !important;
 }
+
+/* ── CACHO REDES ── */
+.cacho-card{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;}
+.cacho-card:hover{border-color:var(--blue2);box-shadow:var(--shadow);}
+.cacho-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cacho-card-fecha{font-family:'DM Mono',monospace;font-size:12px;color:#999;}
+.cacho-card-cuenta{font-size:12px;font-weight:600;color:var(--blue);}
+.cacho-card-resumen{font-size:14px;color:var(--ink);line-height:1.5;margin-bottom:10px;}
+.cacho-card-metricas{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2);}
+.cacho-card-metricas span{font-weight:600;}
+.cacho-badge-ok{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green);}
+.cacho-badge-pendiente{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--red-bg);color:var(--accent);}
+.cacho-detalle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.cacho-stat{background:var(--paper);border-radius:10px;padding:14px;text-align:center;}
+.cacho-stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:4px;}
+.cacho-stat-value{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--ink);}
+.cacho-stat-delta{font-size:12px;font-weight:600;margin-top:2px;}
+.cacho-stat-delta.up{color:var(--green);}
+.cacho-stat-delta.down{color:var(--accent);}
+.cacho-hallazgo{padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:13px;line-height:1.4;}
+.cacho-hallazgo.pico{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green);}
+.cacho-hallazgo.caida{background:var(--red-bg);color:var(--accent);border-left:3px solid var(--accent);}
+.cacho-hallazgo.alerta{background:var(--gold-bg);color:var(--gold);border-left:3px solid var(--gold);}
+.cacho-hallazgo.tendencia{background:rgba(26,58,92,0.06);color:var(--blue);border-left:3px solid var(--blue);}
+.cacho-narrativa{background:var(--paper);border-radius:10px;padding:16px;font-size:14px;line-height:1.6;color:var(--ink);margin-bottom:16px;border-left:3px solid var(--blue2);}
+.cacho-revisiones{font-size:13px;color:var(--ink2);margin-bottom:16px;}
+.cacho-revisiones li{margin-bottom:4px;}
+.btn-ok-cacho{background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:background 0.2s;}
+.btn-ok-cacho:hover{background:#15633b;}
+.btn-ok-cacho:disabled{background:var(--paper2);color:#999;cursor:default;}
+
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1124,6 +1156,26 @@ header{
 #appColaborador{display:none;}
 #appColaborador.active{display:block;}
 #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+
+/* -- Nota para publicar (Hugo) -- */
+.nota-hugo-view { padding: 16px; }
+.nota-hugo-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.nota-hugo-meta { font-size: 12px; color: #999; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+.nota-hugo-meta span { background: var(--paper2, #f5f5f5); padding: 2px 8px; border-radius: 4px; }
+.nota-hugo-body { font-size: 14px; line-height: 1.7; white-space: pre-wrap; background: var(--paper2, #fafafa); border-radius: 10px; padding: 16px; margin-bottom: 16px; max-height: 400px; overflow-y: auto; }
+.nota-hugo-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.nota-hugo-foto { border-radius: 8px; overflow: hidden; position: relative; border: 2px solid transparent; transition: border-color 0.2s; }
+.nota-hugo-foto:hover { border-color: var(--blue, #1a3a5c); }
+.nota-hugo-foto img { width: 100%; height: 100px; object-fit: cover; display: block; }
+.nota-hugo-foto-info { font-size: 10px; padding: 4px 6px; background: var(--paper2, #f5f5f5); color: #666; }
+.nota-hugo-foto .dl-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.nota-hugo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.nota-hugo-actions button { padding: 10px 18px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; }
+.btn-copiar-nota { background: var(--paper2, #eee); color: var(--ink, #333); }
+.btn-publicar-nota { background: #2e7d32; color: #fff; }
+.btn-publicar-nota:hover { background: #1b5e20; }
+.nota-hugo-badge { font-size: 9px; font-weight: 700; background: #e3f2fd; color: #1565c0; padding: 1px 6px; border-radius: 4px; }
+.email-badge { font-size: 9px; font-weight: 700; background: #f3e5f5; color: #7b1fa2; padding: 1px 6px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -1206,6 +1258,7 @@ header{
       <button class="nav-tab" id="tabColaboradores" onclick="cambiarVista('vcolaboradores',this)">Equipo</button>
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
       <button class="nav-tab" onclick="cambiarVista('vProductividad',this)">Productividad</button>
+      <button class="nav-tab" id="tabCacho" style="display:none" onclick="cambiarVista('vCacho',this)">🦟 Cacho</button>
     </div>
     <div class="header-right">
       <div id="svAvatarWrap" onclick="abrirPerfil()" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:14px;font-weight:700;color:#fff;" title="Mi perfil"><span id="svUserName">?</span></div>
@@ -1325,6 +1378,14 @@ header{
         </div>
       </div>
 
+      <!-- BLOQUE 4.5: Alerta de Inactividad (solo visual, no crea órdenes) -->
+      <div class="dash-cols" id="widgetInactividad" style="display:none;grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">⚠️ Inactividad (+3 días)</div>
+          <div id="dashAlertaInactividad"></div>
+        </div>
+      </div>
+
       <!-- BLOQUE 5: Estado de Claw -->
       <div class="dash-cols" id="widgetEstadoClaw" style="display:none;grid-template-columns:1fr">
         <div class="dash-panel">
@@ -1398,6 +1459,7 @@ header{
         <select class="filter-sel" id="filtroEstado" onchange="filtrarClientes()">
           <option value="">Todos los estados</option>
           <option value="activo" selected>Activo</option>
+          <option value="potencial">Potencial</option>
           <option value="pausado">Pausado</option>
           <option value="inactivo">Inactivo</option>
         </select>
@@ -1507,6 +1569,31 @@ header{
       <div id="proveedoresGrid" class="clients-grid"></div>
     </div>
 
+    <!-- CACHO REDES -->
+    <div class="view" id="vCacho">
+      <div class="toolbar">
+        <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">🦟 Cacho Redes</span>
+        <span class="count-badge" id="cachoCountBadge">0</span>
+        <span class="cacho-badge-pendiente" id="cachoPendienteBadge" style="display:none">0 sin revisar</span>
+      </div>
+      <div id="cachoList" style="margin-top:12px"></div>
+      <div id="cachoEmpty" style="display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px;">
+        Cacho todavía no generó reportes.<br>El primer reporte llega a las 18:00hs.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CACHO DETALLE -->
+<div class="modal-overlay" id="mCacho">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-title" id="mCachoTitle">Reporte de Cacho</div>
+      <button class="modal-close" onclick="cerrarModal('mCacho')">✕</button>
+    </div>
+    <div class="modal-body" id="mCachoBody">
+    </div>
   </div>
 </div>
 
@@ -1570,10 +1657,9 @@ header{
       </div>
     </div>
     <div class="header-right">
-      <label for="inputFotoPerfil" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;display:block;" title="Toca para cambiar tu foto">
+      <div onclick="abrirPerfil()" style="position:relative;width:52px;height:52px;cursor:pointer;flex-shrink:0;" title="Mi perfil">
         <div id="empAvatarWrap" class="avatar-iniciales lg" style="width:52px;height:52px;font-size:18px;">??</div>
-        <div style="position:absolute;bottom:0;right:0;background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,0.3);">✎</div>
-      </label>
+      </div>
       <input type="file" id="inputFotoPerfil" accept="image/*" capture="environment" style="display:none;opacity:0;cursor:pointer;z-index:1;" onchange="subirFotoPerfil(this)">
       <span class="user-badge"><span id="empUserName">—</span></span>
       <button onclick="abrirMensajero()" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 10px;font-size:20px;line-height:1;z-index:10;" title="Mensajes">
@@ -1581,12 +1667,15 @@ header{
         <span id="badgeMensajes" style="display:none;position:absolute;top:0;right:0;background:#e53935;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;align-items:center;justify-content:center;pointer-events:none;"></span>
       </button>
       <button id="darkModeToggleEmp" onclick="toggleDarkMode()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 6px;line-height:1;">🌙</button>
+      <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </header>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="cambiarVistaEmp('vEmpKanban',this)">📋 Mis Tareas</button>
+    <button class="nav-tab" id="tabEmpClientes" style="display:none" onclick="cambiarVistaEmp('vEmpClientes',this)">👥 Clientes</button>
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpReuniones',this)">📅 Reuniones</button>
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpProductividad',this)">📊 Mi Productividad</button>
+    <button class="nav-tab" id="tabCachoEmp" style="display:none" onclick="cambiarVistaEmp('vEmpCacho',this)">🦟 Cacho</button>
   </div>
   <div class="container" style="max-width:1100px">
             <!-- HERRAMIENTAS DE TRABAJO -->
@@ -1624,13 +1713,6 @@ header{
     <div style="height:70px;"></div><!-- spacer header fixed -->
     <!-- TABLERO MÉTRICAS GRUPO (colaborador) - solo para directores -->
     <div id="tableroMetricasGrupoEmp" class="tablero-metricas-grupo" style="display:none;margin-top:18px"></div>
-    <!-- MIS REDES -->
-    <div id="misRedesWidget" style="display:none;margin-bottom:20px;">
-      <div class="dash-panel">
-        <div class="dash-panel-title">📱 Mis Redes</div>
-        <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
-      </div>
-    </div>
     <!-- BOTTOM NAV COLABORADOR -->
     <nav class="bottom-nav" id="bottomNavEmp">
       <div class="bottom-nav-inner">
@@ -1706,6 +1788,13 @@ header{
           <div class="kanban-cards" id="kb-listo"></div>
         </div>
       </div>
+      <!-- MIS REDES — después de tareas -->
+      <div id="misRedesWidget" style="display:none;margin-top:18px;margin-bottom:20px;">
+        <div class="dash-panel">
+          <div class="dash-panel-title">📱 Mis Redes</div>
+          <div id="misRedesContent"><div class="no-data">Cargando...</div></div>
+        </div>
+      </div>
     </div>
     <!-- REUNIONES COLABORADOR -->
     <div class="view" id="vEmpReuniones">
@@ -1714,6 +1803,19 @@ header{
     <!-- PRODUCTIVIDAD COLABORADOR -->
     <div class="view" id="vEmpProductividad">
       <div id="empProductividadContent" style="margin-top:4px"></div>
+    </div>
+
+    <!-- CACHO REDES (colaborador) -->
+    <div class="view" id="vEmpCacho">
+      <div class="toolbar">
+        <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">🦟 Cacho Redes</span>
+        <span class="count-badge" id="cachoCountBadgeEmp">0</span>
+        <span class="cacho-badge-pendiente" id="cachoPendienteBadgeEmp" style="display:none">0 sin revisar</span>
+      </div>
+      <div id="cachoListEmp" style="margin-top:12px"></div>
+      <div id="cachoEmptyEmp" style="display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px;">
+        Cacho todavía no generó reportes.<br>El primer reporte llega a las 18:00hs.
+      </div>
     </div>
   </div>
 </div>
@@ -1739,7 +1841,7 @@ header{
         </div>
         <div class="form-group"><label class="form-label">Rubro *</label><input type="text" class="form-input" id="fRubro" placeholder="Ej: Salud, Comercio..."></div>
         <div class="form-group"><label class="form-label">Estado</label>
-          <select class="form-select" id="fEstado"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select>
+          <select class="form-select" id="fEstado"><option value="activo">Activo</option><option value="potencial">Potencial</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select>
         </div>
         <div class="form-group"><label class="form-label">Grupo empresarial</label>
           <div style="display:flex;gap:6px;">
@@ -1824,8 +1926,10 @@ header{
     <div class="modal-body">
       <div class="tabs">
         <button class="tab-btn active" onclick="cambiarTab('tOrdenes',this)">📋 Órdenes</button>
+        <button class="tab-btn" onclick="cambiarTab('tAcciones',this);renderAccionesCliente()">💼 Acciones</button>
         <button class="tab-btn" onclick="cambiarTab('tInfo',this)">ℹ Info</button>
         <button class="tab-btn" onclick="cambiarTab('tNotas',this)">📝 Notas</button>
+        <button class="tab-btn" id="tabCobranza" style="display:none" onclick="cambiarTab('tCobranza',this);renderCobranzaCliente()">💰 Cobranza</button>
       </div>
       <div class="tab-content active" id="tOrdenes">
         <div class="orders-hdr">
@@ -1852,6 +1956,71 @@ header{
       <div class="tab-content" id="tNotas">
         <textarea class="notes-area" id="dNotasArea"></textarea>
         <button class="btn-blue" style="margin-top:10px" onclick="guardarNotasCliente()">💾 Guardar notas</button>
+      </div>
+      <div class="tab-content" id="tAcciones">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:700;font-size:15px;">Acciones comerciales</div>
+          <button class="btn-blue btn-sm" id="btnNuevaAccion" onclick="toggleFormAccion()">+ Nueva acción</button>
+        </div>
+        <div id="formAccion" style="display:none;background:var(--paper2);border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Tipo *</label>
+              <select id="accTipo" class="form-select" style="width:100%;">
+                <option value="propuesta_comercial">Propuesta comercial</option>
+                <option value="llamada">Llamada</option>
+                <option value="visita">Visita</option>
+                <option value="evento">Evento</option>
+                <option value="ofrecimiento_especial">Ofrecimiento especial</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Fecha *</label>
+              <input type="date" id="accFecha" class="form-input" style="width:100%;"></div>
+            <div style="grid-column:1/-1;"><label style="font-size:11px;font-weight:600;color:var(--ink2);">Descripción *</label>
+              <input type="text" id="accDesc" class="form-input" placeholder="Detalle de la acción..." style="width:100%;"></div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Responsable</label>
+              <select id="accResp" class="form-select" style="width:100%;"></select></div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Estado</label>
+              <select id="accEstado" class="form-select" style="width:100%;">
+                <option value="pendiente">Pendiente</option>
+                <option value="realizada">Realizada</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+            <button class="btn-cancel" onclick="toggleFormAccion()">Cancelar</button>
+            <button class="btn-blue" onclick="guardarAccionCliente()">Guardar</button>
+          </div>
+        </div>
+        <div id="listaAcciones"></div>
+      </div>
+      <div class="tab-content" id="tCobranza">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:700;font-size:15px;">Cobranza</div>
+          <button class="btn-blue btn-sm" onclick="toggleFormCobranza()">+ Nuevo registro</button>
+        </div>
+        <div id="formCobranza" style="display:none;background:var(--paper2);border-radius:10px;padding:14px;margin-bottom:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Monto ($) *</label>
+              <input type="number" id="cobMonto" class="form-input" style="width:100%;"></div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Fecha vencimiento *</label>
+              <input type="date" id="cobFecha" class="form-input" style="width:100%;"></div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Estado</label>
+              <select id="cobEstado" class="form-select" style="width:100%;">
+                <option value="pendiente">Pendiente</option>
+                <option value="pagado">Pagado</option>
+                <option value="vencido">Vencido</option>
+              </select>
+            </div>
+            <div><label style="font-size:11px;font-weight:600;color:var(--ink2);">Notas</label>
+              <input type="text" id="cobNotas" class="form-input" placeholder="Detalle..." style="width:100%;"></div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+            <button class="btn-cancel" onclick="toggleFormCobranza()">Cancelar</button>
+            <button class="btn-blue" onclick="guardarCobranzaCliente()">Guardar</button>
+          </div>
+        </div>
+        <div id="listaCobranza"></div>
       </div>
     </div>
   </div>
@@ -2095,7 +2264,7 @@ let clienteActualId = null, editandoClienteId = null, editandoOrdenId = null;
 function gLS(){ localStorage.setItem('d_clientes',JSON.stringify(clientes)); localStorage.setItem('d_ordenes',JSON.stringify(ordenes)); localStorage.setItem('d_colaboradores',JSON.stringify(colaboradores)); localStorage.setItem('d_reuniones',JSON.stringify(reuniones)); }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function hoy(){ return new Date().toISOString().split('T')[0]; }
-function fmtD(iso){ if(!iso)return'—'; const[y,m,d]=iso.split('-'); return`${d}/${m}/${y}`; }
+function fmtD(iso){ if(!iso)return'—'; if(iso.seconds) iso=new Date(iso.seconds*1000).toISOString(); if(iso._seconds) iso=new Date(iso._seconds*1000).toISOString(); if(typeof iso!=='string') return'—'; iso=iso.slice(0,10); const[y,m,d]=iso.split('-'); return d?`${d}/${m}/${y}`:'—'; }
 
 function diasV(iso){
   if(!iso)return null;
@@ -2202,7 +2371,7 @@ async function login(){
       actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
       cargarTemaUsuario(usuario.id);
       (function(){
-        if(['emp01','emp02','emp07','emp05'].includes(empActualId)){
+        if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
         }
       })();
@@ -2216,8 +2385,9 @@ async function login(){
     }
   }
 
-  // Detectar rol localmente — supervisor es emp01 o quien tenga rol supervisor
-  var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor') ? 'supervisor' : 'colaborador';
+  // Detectar rol localmente — supervisor es emp01, directores, o quien tenga rol supervisor
+  var esDirector = DIRECTORES[usuario.id];
+  var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor' || esDirector) ? 'supervisor' : 'colaborador';
   iniciarSesion(rol);
 
   // Registrar actividad en Firestore
@@ -2229,6 +2399,11 @@ async function login(){
     }, {merge: true}).catch(e=>console.warn('Actividad error:', e));
   }
 
+  // Inyectar jerarquía director si aplica (por si Firestore no lo tiene)
+  if(DIRECTORES[usuario.id] && usuario.jerarquia !== 'director_general'){
+    usuario.jerarquia = 'director';
+    usuario.equipoDir = DIRECTORES[usuario.id].equipo;
+  }
   // Aplicar visibilidad por jerarquía y cargar métricas grupo
   aplicarVisibilidad();
   cargarMetricasGrupo();
@@ -2244,6 +2419,8 @@ const DIRECTORES = {
 // Comercial depende de Administración (Adriana emp02)
 // Carolina Cocconi (emp05) pasó a rango colaborador
 const PUEDE_VER_PAUTA = ['emp01', 'emp02'];
+const PUEDE_ASIGNAR_SEGUIMIENTO = ['emp01','emp02','emp07','emp16','emp00'];
+const EQUIPO_COMERCIAL = ['emp01','emp02','emp05','emp07','emp16','emp32'];
 const TAREAS_POR_EQUIPO = {
   'Redacción': [
     'Subir nota al diario digital',
@@ -2542,6 +2719,7 @@ function cambiarVista(id, btn){
   if(id==='vReuniones'){ filtrarReuniones(); }
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
+  if(id==='vCacho'){ renderCachoReports(); }
 }
 
 // ══ DASHBOARD ══
@@ -2559,36 +2737,58 @@ const DIRECTOR_POR_EQUIPO = {
   'Dirección': 'emp01'
 };
 
-async function checkInactividad(){
-  if(rolActual !== 'supervisor') return;
-  if(typeof db === 'undefined') return;
+// checkInactividad() DISABLED — was creating empty orders in Firestore.
+// Replaced by renderAlertaInactividad() which is visual-only (no Firestore writes).
+
+async function renderAlertaInactividad(){
+  var widget = document.getElementById('widgetInactividad');
+  if(!widget) return;
+  if(rolActual !== 'supervisor'){ widget.style.display='none'; return; }
+  if(typeof db === 'undefined'){ widget.style.display='none'; return; }
+
   try {
-    const snap = await db.collection('actividad').get();
-    const hoyDate = new Date();
-    const tresDiasMs = 3 * 24 * 60 * 60 * 1000;
-    snap.forEach(doc => {
-      const d = doc.data();
+    var snap = await db.collection('actividad').get();
+    var hoyDate = new Date();
+    var tresDiasMs = 3 * 24 * 60 * 60 * 1000;
+    var inactivos = [];
+
+    snap.forEach(function(doc){
+      var d = doc.data();
       if(!d.ultimaActividad) return;
-      const ultima = new Date(d.ultimaActividad);
-      if((hoyDate - ultima) > tresDiasMs){
-        const yaExiste = ordenes.find(o => o.desc === 'Inactividad — ' + d.nombre && o.estado === 'pendiente');
-        if(yaExiste) return;
-        const director = DIRECTOR_POR_EQUIPO[d.equipo] || 'emp01';
-        const nuevaOrden = {
-          id: 'inact_' + doc.id + '_' + Date.now(),
-          desc: 'Inactividad — ' + d.nombre,
-          colaboradoresIds: [director],
-          estado: 'pendiente',
-          fecha: hoy(),
-          clienteId: '',
-          comentarios: []
-        };
-        ordenes.push(nuevaOrden);
-        gLS();
-        db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden).catch(e=>console.warn('Firestore inactividad error:', e));
+      var ultima = d.ultimaActividad.toDate ? d.ultimaActividad.toDate() : new Date(d.ultimaActividad);
+      var diffMs = hoyDate - ultima;
+      if(diffMs > tresDiasMs){
+        var dias = Math.floor(diffMs / 86400000);
+        inactivos.push({ nombre: d.nombre || doc.id, dias: dias, equipo: d.equipo || '' });
       }
     });
-  } catch(e){ console.warn('checkInactividad error:', e); }
+
+    var contenido = document.getElementById('dashAlertaInactividad');
+    if(!inactivos.length){
+      widget.style.display = 'none';
+      return;
+    }
+
+    inactivos.sort(function(a,b){ return b.dias - a.dias; });
+    widget.style.display = '';
+
+    contenido.innerHTML = inactivos.map(function(p){
+      var color = p.dias >= 7 ? '#c62828' : p.dias >= 5 ? '#e65100' : '#f9a825';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line,#f0f0f0);">' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<div style="width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0;"></div>' +
+          '<div>' +
+            '<div style="font-weight:600;font-size:13px;">' + p.nombre + '</div>' +
+            '<div style="font-size:11px;color:#999;">' + p.equipo + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="font-size:12px;font-weight:700;color:' + color + ';">' + p.dias + 'd</div>' +
+      '</div>';
+    }).join('');
+  } catch(e){
+    console.warn('renderAlertaInactividad error:', e);
+    widget.style.display = 'none';
+  }
 }
 
 // ── HAMBURGER MENU MOBILE ──
@@ -2612,6 +2812,7 @@ function cambiarVistaMobile(id){
  if(id==='vReuniones'){ filtrarReuniones(); }
  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
  if(id==='vProveedores'){ renderProveedores(); }
+ if(id==='vCacho'){ renderCachoReports(); }
 }
 
 
@@ -2625,6 +2826,7 @@ function abrirOrden(ordenId){
   var asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
   var html = '<div>';
   html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||'Sin título')+'</div>';
+  if(o.origen==='email') html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="email-badge">📧 email</span>'+(o.emailLink?'<a href="'+o.emailLink+'" target="_blank" style="font-size:12px;color:#7b1fa2;font-weight:600;text-decoration:none;">Ver email original →</a>':'')+'</div>';
   html += '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">';
   if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
   html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Cliente</span><b>'+(c?c.nombre:'—')+'</b></div>';
@@ -2674,6 +2876,7 @@ function cambiarVistaBN(id, bnId){
   if(id==='vReuniones'){ filtrarReuniones(); }
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
+  if(id==='vCacho'){ renderCachoReports(); }
 }
 
 function cambiarVistaEmpBN(id, bnId){
@@ -2735,6 +2938,7 @@ function cambiarVistaDrawer(id, btn){
   if(id==='vReuniones'){ filtrarReuniones(); }
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
+  if(id==='vCacho'){ renderCachoReports(); }
 }
 function puedeCheckOrden(orden){
   if(!empActualId) return false;
@@ -2745,11 +2949,12 @@ function puedeCheckOrden(orden){
   if(!yo) return false;
   // Director general: puede con todos
   if(yo.jerarquia === 'director_general') return true;
-  // Director: puede con su equipo
+  // Director: puede con su equipo (check both reportaA and dependeDe)
   if(yo.jerarquia === 'director'){
     const target = colaboradores.find(c=>c.id===orden.asignadoA);
     if(!target) return false;
-    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : [target.dependeDe];
+    if(target.reportaA === empActualId) return true;
+    const dep = Array.isArray(target.dependeDe) ? target.dependeDe : (target.dependeDe ? [target.dependeDe] : []);
     return dep.includes(empActualId);
   }
   return false;
@@ -2850,7 +3055,7 @@ async function guardarCheckColaborador(){
 
 function cerrarCheckColaborador(){
   const m = document.getElementById('modalCheckColaborador');
-  if(m) m.classList.remove('abierto');
+  if(m) m.classList.remove('active');
 }
 
 function abrirPerfilColaboradorDesdeEquipo(empId){
@@ -2876,7 +3081,7 @@ function renderTareasConReuniones(){
     if(!f) return true; // sin fecha: mostrar siempre
     return f >= hoyStr;
   })
-    .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:o.fechaVencimiento||o.fechaCreacion,titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
+    .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:getFecha(o),titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
   // Reuniones
   reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
     .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
@@ -2901,7 +3106,7 @@ function renderTareasConReuniones(){
 
 
 function renderDashboard(){
-  checkInactividad();
+  renderAlertaInactividad();
   // Contadores de clientes
   document.getElementById('sActivos').textContent = clientes.filter(c=>c.estado==='activo').length;
   document.getElementById('sPausados').textContent = clientes.filter(c=>c.estado==='pausado').length;
@@ -2911,7 +3116,7 @@ function renderDashboard(){
   const fin7 = new Date(); fin7.setDate(fin7.getDate()+7);
   const fin7Str = fin7.toISOString().split('T')[0];
 
-  function getFecha(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
 
   const tareasSemana = ordenes.filter(o=>{
     if(o.estado==='completada'||o.estado==='cancelada') return false;
@@ -2954,26 +3159,27 @@ function dashFiltrarOrdenes(tipo){
 
 // ── BLOQUE 1: GA4 Dashboard ──
 function renderGA4Dashboard(){
-  fetch('http://localhost:3737/ga4/top-notas')
-    .then(r=>r.json())
-    .then(data=>{
-      if(data.lecturasSemanales!=null) document.getElementById('sLecturasSemanales').textContent = Number(data.lecturasSemanales).toLocaleString('es-AR');
-      if(data.variacion!=null) document.getElementById('sLecturasAnterior').textContent = data.variacion;
-      const div = document.getElementById('dashTop5Notas');
-      const listaNotas = data.topNotas || data.top5 || [];
-      if(listaNotas.length){
-        div.innerHTML = listaNotas.map((n,i)=>`<div class="task-today-row">
-          <div style="font-weight:700;color:var(--blue2);min-width:20px">${i+1}</div>
-          <div class="task-today-info">
-            <div class="task-today-desc">${n.titulo||n.title||'Sin título'}</div>
-            <div class="task-today-meta">👁 ${Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
-          </div>
-        </div>`).join('');
-      }
-    })
-    .catch(()=>{
-      document.getElementById('dashTop5Notas').innerHTML='<div class="no-data">Cargando datos GA4...</div>';
-    });
+  var div = document.getElementById('dashTop5Notas');
+  if(div) div.innerHTML='<div class="no-data" style="opacity:.6">Cargando datos GA4…</div>';
+  if(typeof db === 'undefined') { if(div) div.innerHTML='<div class="no-data">Base de datos no disponible</div>'; return; }
+  db.collection('claw_ga4').doc('ultimo').get().then(function(doc){
+    if(!doc.exists){ if(div) div.innerHTML='<div class="no-data">Sin datos GA4</div>'; return; }
+    var data = doc.data();
+    if(data.lecturasSemanales!=null) document.getElementById('sLecturasSemanales').textContent = Number(data.lecturasSemanales).toLocaleString('es-AR');
+    if(data.variacion!=null) document.getElementById('sLecturasAnterior').textContent = data.variacion;
+    var listaNotas = data.topNotas || data.top5 || [];
+    if(div && listaNotas.length){
+      div.innerHTML = listaNotas.map((n,i)=>`<div class="task-today-row">
+        <div style="font-weight:700;color:var(--blue2);min-width:20px">${i+1}</div>
+        <div class="task-today-info">
+          <div class="task-today-desc">${n.titulo||n.title||'Sin título'}</div>
+          <div class="task-today-meta">👁 ${Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')} vistas</div>
+        </div>
+      </div>`).join('');
+    } else if(div && !listaNotas.length){ div.innerHTML='<div class="no-data">Sin notas destacadas</div>'; }
+  }).catch(function(){
+    if(div) div.innerHTML='<div class="no-data">Error cargando datos GA4</div>';
+  });
 }
 
 // ── BLOQUE 4: Redes sociales ──
@@ -3219,8 +3425,51 @@ function renderClientes(lista){
         <div class="orders-count"><strong>${ords.length}</strong> orden${ords.length!==1?'es':''}${pend?` · <strong style="color:var(--gold)">${pend} pend.</strong>`:''}</div>
         ${c.pauta?`<span class="pauta-tag">📢 Pauta</span>`:''}
       </div>
+      ${PUEDE_ASIGNAR_SEGUIMIENTO.includes(empActualId)?`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:8px;display:flex;align-items:center;gap:6px;">
+        <button onclick="event.stopPropagation();toggleAsignarSeguimiento('${c.id}')" style="font-size:11px;padding:5px 10px;background:#7c4dff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Asignar seguimiento</button>
+        <div id="asigSeg_${c.id}" style="display:none;">
+          <select id="selSeg_${c.id}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);">
+            ${colaboradores.filter(x=>x.estado!=='inactivo'&&x.jerarquia!=='externo').map(x=>'<option value="'+x.id+'"'+(( c.seguimientoA||[]).includes(x.id)?' selected':'')+'>'+x.nombre.split(' ').slice(0,2).join(' ')+'</option>').join('')}
+          </select>
+          <button onclick="event.stopPropagation();guardarSeguimiento('${c.id}')" style="font-size:11px;padding:5px 8px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;">✓</button>
+        </div>
+        ${(c.seguimientoA||[]).length?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+( c.seguimientoA||[]).map(id=>{const n=colaboradores.find(x=>x.id===id)?.nombre?.split(' ')[0]||id; return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;background:var(--paper2);color:var(--blue2);padding:2px 6px;border-radius:10px;">👤 '+n+'<button onclick="event.stopPropagation();quitarSeguimiento(\''+c.id+'\',\''+id+'\')" style="background:none;border:none;color:#c62828;font-size:13px;cursor:pointer;padding:0 2px;line-height:1;" title="Quitar">&times;</button></span>';}).join('')+'</div>':''}
+      </div>`:''}
     </div>`;
   }).join('');
+}
+
+function toggleAsignarSeguimiento(clienteId){
+  var el = document.getElementById('asigSeg_'+clienteId);
+  if(el) el.style.display = el.style.display==='none'?'flex':'none';
+}
+
+function guardarSeguimiento(clienteId){
+  var sel = document.getElementById('selSeg_'+clienteId);
+  if(!sel) return;
+  var empId = sel.value;
+  var c = clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  if(!c.seguimientoA) c.seguimientoA = [];
+  if(!c.seguimientoA.includes(empId)) c.seguimientoA.push(empId);
+  gLS();
+  if(typeof db!=='undefined'){
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(e=>console.warn(e));
+  }
+  toast('Seguimiento asignado a '+( colaboradores.find(x=>x.id===empId)?.nombre?.split(' ')[0]||empId),'ok');
+  if(typeof filtrarClientes==='function') filtrarClientes();
+}
+
+function quitarSeguimiento(clienteId, empId){
+  var c = clientes.find(x=>x.id===clienteId);
+  if(!c || !c.seguimientoA) return;
+  c.seguimientoA = c.seguimientoA.filter(x=>x!==empId);
+  gLS();
+  if(typeof db!=='undefined'){
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(e=>console.warn(e));
+  }
+  toast('Seguimiento removido','ok');
+  if(typeof filtrarClientes==='function') filtrarClientes();
 }
 
 function abrirModalCliente(id){
@@ -3347,11 +3596,29 @@ function abrirDetalle(id){
   `;
   document.getElementById('dNotasArea').value=c.notas||'';
   renderOrdenesCliente(c);
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelector('.tab-btn').classList.add('active');
+  // Show/hide tabs by role
+  var tabCob = document.getElementById('tabCobranza');
+  if(tabCob) tabCob.style.display = PUEDE_VER_PAUTA.includes(empActualId) ? '' : 'none';
+  var btnAccion = document.getElementById('btnNuevaAccion');
+  if(btnAccion) btnAccion.style.display = (EQUIPO_COMERCIAL.includes(empActualId)||PUEDE_ASIGNAR_SEGUIMIENTO.includes(empActualId)) ? '' : 'none';
+  // Populate accResp dropdown
+  var accResp = document.getElementById('accResp');
+  if(accResp){
+    accResp.innerHTML = colaboradores.filter(x=>x.estado!=='inactivo').map(x=>'<option value="'+x.id+'"'+(x.id===empActualId?' selected':'')+'>'+x.nombre.split(' ').slice(0,2).join(' ')+'</option>').join('');
+  }
+  // Default date
+  var accFecha = document.getElementById('accFecha');
+  if(accFecha) accFecha.value = new Date().toISOString().slice(0,10);
+  var cobFecha = document.getElementById('cobFecha');
+  if(cobFecha) cobFecha.value = new Date().toISOString().slice(0,10);
+  // Reset tabs
+  document.querySelectorAll('#mDetalle .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#mDetalle .tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelector('#mDetalle .tab-btn').classList.add('active');
   document.getElementById('tOrdenes').classList.add('active');
   document.getElementById('orderForm').classList.remove('open');
+  document.getElementById('formAccion').style.display='none';
+  document.getElementById('formCobranza').style.display='none';
   abrirModal('mDetalle');
 }
 
@@ -3420,9 +3687,135 @@ function cambiarEstadoOrden(ordenId,estado){
 }
 
 function cambiarTab(tabId,btn){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#mDetalle .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#mDetalle .tab-content').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active'); document.getElementById(tabId).classList.add('active');
+}
+
+// ══ ACCIONES COMERCIALES ══
+function toggleFormAccion(){
+  var f = document.getElementById('formAccion');
+  f.style.display = f.style.display==='none'?'block':'none';
+}
+
+function renderAccionesCliente(){
+  var lista = document.getElementById('listaAcciones');
+  if(!lista || !clienteActualId) return;
+  lista.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Cargando...</div>';
+  db.collection('clientes').doc(clienteActualId).collection('acciones').orderBy('fecha','desc').get().then(function(snap){
+    if(snap.empty){ lista.innerHTML='<div style="text-align:center;color:#999;padding:20px;">Sin acciones registradas.</div>'; return; }
+    var tipoLabels = {propuesta_comercial:'Propuesta comercial',llamada:'Llamada',visita:'Visita',evento:'Evento',ofrecimiento_especial:'Ofrecimiento especial',otro:'Otro'};
+    var tipoIcons = {propuesta_comercial:'📄',llamada:'📞',visita:'🚗',evento:'🎪',ofrecimiento_especial:'🎁',otro:'📌'};
+    lista.innerHTML = snap.docs.map(function(d){
+      var a = d.data();
+      var resp = colaboradores.find(function(x){return x.id===a.responsable;});
+      var estadoColor = a.estado==='realizada'?'#2e7d32':'#e65100';
+      var estadoBg = a.estado==='realizada'?'#e8f5ee':'#fff3e0';
+      var puedeEditar = EQUIPO_COMERCIAL.includes(empActualId)||PUEDE_ASIGNAR_SEGUIMIENTO.includes(empActualId);
+      return '<div style="padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--card);">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;">'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:18px;">'+(tipoIcons[a.tipo]||'📌')+'</span>'
+        + '<div><div style="font-weight:700;font-size:14px;">'+(tipoLabels[a.tipo]||a.tipo)+'</div>'
+        + '<div style="font-size:12px;color:var(--ink2);">'+((a.fecha||'').slice(0,10))+' · '+(resp?resp.nombre.split(' ')[0]:'')+'</div></div>'
+        + '</div>'
+        + '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:'+estadoBg+';color:'+estadoColor+';">'+a.estado+'</span>'
+        + '</div>'
+        + '<div style="margin-top:6px;font-size:13px;color:var(--ink);">'+(a.descripcion||'')+'</div>'
+        + (puedeEditar && a.estado==='pendiente' ? '<button onclick="marcarAccionRealizada(\''+d.id+'\')" style="margin-top:8px;font-size:11px;padding:4px 10px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;">Marcar realizada</button>' : '')
+        + '</div>';
+    }).join('');
+  }).catch(function(e){ lista.innerHTML='<div style="color:#c62828;padding:10px;">Error: '+e.message+'</div>'; });
+}
+
+function guardarAccionCliente(){
+  var tipo = document.getElementById('accTipo').value;
+  var fecha = document.getElementById('accFecha').value;
+  var desc = document.getElementById('accDesc').value.trim();
+  var resp = document.getElementById('accResp').value;
+  var estado = document.getElementById('accEstado').value;
+  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
+  var accion = {tipo:tipo,fecha:fecha,descripcion:desc,responsable:resp,estado:estado,creadoPor:empActualId,creadoEn:new Date().toISOString()};
+  db.collection('clientes').doc(clienteActualId).collection('acciones').add(accion).then(function(){
+    toast('Acción registrada','ok');
+    document.getElementById('accDesc').value='';
+    toggleFormAccion();
+    renderAccionesCliente();
+  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+}
+
+function marcarAccionRealizada(accionId){
+  db.collection('clientes').doc(clienteActualId).collection('acciones').doc(accionId).update({estado:'realizada',fechaRealizada:new Date().toISOString()}).then(function(){
+    toast('Acción marcada como realizada','ok');
+    renderAccionesCliente();
+  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+}
+
+// ══ COBRANZA ══
+function toggleFormCobranza(){
+  var f = document.getElementById('formCobranza');
+  f.style.display = f.style.display==='none'?'block':'none';
+}
+
+function renderCobranzaCliente(){
+  var lista = document.getElementById('listaCobranza');
+  if(!lista || !clienteActualId) return;
+  lista.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">Cargando...</div>';
+  db.collection('clientes').doc(clienteActualId).collection('cobranza').orderBy('fechaVencimiento','desc').get().then(function(snap){
+    if(snap.empty){ lista.innerHTML='<div style="text-align:center;color:#999;padding:20px;">Sin registros de cobranza.</div>'; return; }
+    var totalPend = 0, totalPagado = 0, totalVencido = 0;
+    var rows = snap.docs.map(function(d){
+      var r = d.data();
+      var monto = Number(r.monto)||0;
+      if(r.estado==='pendiente') totalPend += monto;
+      if(r.estado==='pagado') totalPagado += monto;
+      if(r.estado==='vencido') totalVencido += monto;
+      var estadoColor = r.estado==='pagado'?'#2e7d32':r.estado==='vencido'?'#c62828':'#e65100';
+      var estadoBg = r.estado==='pagado'?'#e8f5ee':r.estado==='vencido'?'#fde8e8':'#fff3e0';
+      var estadoIcon = r.estado==='pagado'?'✅':r.estado==='vencido'?'🔴':'⏳';
+      return '<div style="padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--card);display:flex;justify-content:space-between;align-items:center;">'
+        + '<div>'
+        + '<div style="font-weight:700;font-size:16px;color:var(--ink);">$'+monto.toLocaleString('es-AR')+'</div>'
+        + '<div style="font-size:12px;color:var(--ink2);">Vence: '+(r.fechaVencimiento||'—')+(r.notas?' · '+r.notas:'')+'</div>'
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:'+estadoBg+';color:'+estadoColor+';">'+estadoIcon+' '+r.estado+'</span>'
+        + (r.estado!=='pagado'?'<button onclick="actualizarCobranza(\''+d.id+'\',\'pagado\')" style="font-size:11px;padding:4px 8px;background:#2e7d32;color:#fff;border:none;border-radius:6px;cursor:pointer;">Pagado</button>':'')
+        + (r.estado==='pendiente'?'<button onclick="actualizarCobranza(\''+d.id+'\',\'vencido\')" style="font-size:11px;padding:4px 8px;background:#c62828;color:#fff;border:none;border-radius:6px;cursor:pointer;">Vencido</button>':'')
+        + '</div></div>';
+    }).join('');
+    var summary = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">'
+      + '<div style="background:#fff3e0;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:#e65100;font-weight:700;">PENDIENTE</div><div style="font-size:18px;font-weight:700;">$'+totalPend.toLocaleString('es-AR')+'</div></div>'
+      + '<div style="background:#e8f5ee;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:#2e7d32;font-weight:700;">PAGADO</div><div style="font-size:18px;font-weight:700;">$'+totalPagado.toLocaleString('es-AR')+'</div></div>'
+      + '<div style="background:#fde8e8;border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:#c62828;font-weight:700;">VENCIDO</div><div style="font-size:18px;font-weight:700;">$'+totalVencido.toLocaleString('es-AR')+'</div></div>'
+      + '</div>';
+    lista.innerHTML = summary + rows;
+  }).catch(function(e){ lista.innerHTML='<div style="color:#c62828;padding:10px;">Error: '+e.message+'</div>'; });
+}
+
+function guardarCobranzaCliente(){
+  var monto = document.getElementById('cobMonto').value;
+  var fecha = document.getElementById('cobFecha').value;
+  var estado = document.getElementById('cobEstado').value;
+  var notas = document.getElementById('cobNotas').value.trim();
+  if(!monto||!fecha){ toast('Completá monto y fecha','err'); return; }
+  var registro = {monto:Number(monto),fechaVencimiento:fecha,estado:estado,notas:notas,creadoPor:empActualId,creadoEn:new Date().toISOString()};
+  db.collection('clientes').doc(clienteActualId).collection('cobranza').add(registro).then(function(){
+    toast('Registro de cobranza guardado','ok');
+    document.getElementById('cobMonto').value='';
+    document.getElementById('cobNotas').value='';
+    toggleFormCobranza();
+    renderCobranzaCliente();
+  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+}
+
+function actualizarCobranza(regId, nuevoEstado){
+  var update = {estado:nuevoEstado};
+  if(nuevoEstado==='pagado') update.fechaPago = new Date().toISOString();
+  db.collection('clientes').doc(clienteActualId).collection('cobranza').doc(regId).update(update).then(function(){
+    toast('Estado actualizado','ok');
+    renderCobranzaCliente();
+  }).catch(function(e){ toast('Error: '+e.message,'err'); });
 }
 
 // ══ ÓRDENES STANDALONE ══
@@ -3475,7 +3868,7 @@ function filtrarOrdenes(){
   var fEquipo = document.getElementById('filtroOrdenEquipo') ? document.getElementById('filtroOrdenEquipo').value : '';
   var h = hoy();
   var inicioSemana = typeof lunesDeSemana === 'function' ? lunesDeSemana(h) : h;
-  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   var yoFilt = colaboradores.find(function(c){ return c.id===empActualId; });
   var esDGFilt = empActualId==='emp01' || (yoFilt && yoFilt.jerarquia==='director_general');
   var esAdminFilt = empActualId==='emp02';
@@ -3522,12 +3915,39 @@ function renderOrdenes(lista){
     html += '</div>';
     html += '<span class="osel osel-' + estado + '">' + estadoLabel + '</span>';
     html += '</div>';
+    var esHugo = o.tipo==='nota_para_publicar' || o.origen==='borrador-hugo' || o.categoria==='borrador-hugo';
+    if(esHugo) html += '<span style="font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;">HUGO</span>';
+    if(o.origen==='email') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
     html += '<div class="order-desc">' + desc + '</div>';
+    if(esHugo) html += '<button onclick="event.stopPropagation();abrirNotaHugo(\'' + o.id + '\')" style="margin-top:6px;padding:6px 12px;background:#7c4dff;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>';
+    if(o.origen==='email' && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
+    if(puedeCheckOrden(o)){
+      var comentCount = (o.comentarios||[]).length;
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">';
+      if(estado !== 'completada' && estado !== 'cancelada'){
+        html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green,#2e7d32);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓ Completar</button>';
+        html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'cancelada\')" style="padding:5px 12px;background:#fde8e8;color:#c62828;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>';
+      } else if(estado === 'completada'){
+        html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:#e8f5ee;color:#2e7d32;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
+      } else if(estado === 'cancelada'){
+        html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'pendiente\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
+      }
+      html += '<button onclick="event.stopPropagation();abrirComentariosOrden(\'' + o.id + '\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;cursor:pointer;">💬 Comentar' + (comentCount > 0 ? ' (' + comentCount + ')' : '') + '</button>';
+      html += '</div>';
+    }
     html += '</div>';
   });
   div.innerHTML = html;
   Array.from(div.querySelectorAll('[data-oid]')).forEach(function(el){
-    el.addEventListener('click', function(){ editarOrden(this.getAttribute('data-oid')); });
+    el.addEventListener('click', function(){
+      var oid = this.getAttribute('data-oid');
+      var ord = ordenes.find(function(x){return x.id===oid;});
+      if(ord && (ord.tipo==='nota_para_publicar' || ord.origen==='borrador-hugo' || ord.categoria==='borrador-hugo')){
+        abrirNotaHugo(oid);
+      } else {
+        editarOrden(oid);
+      }
+    });
   });
 }
 function abrirNuevaOrden(){
@@ -3584,6 +4004,9 @@ function abrirNuevaOrdenEmp(){
 function abrirDetalleOrdenEmp(id){
   const o = ordenes.find(x => x.id === id);
   if(!o) return;
+  if(o.tipo === 'nota_para_publicar' || o.origen === 'borrador-hugo' || o.categoria === 'borrador-hugo'){
+    return abrirNotaHugo(o);
+  }
   // Usar el modal de edición pero solo con campos básicos
   editandoOrdenId = id;
   document.getElementById('mOrdenTitle').textContent = o.titulo || o.descripcion || 'Detalle de tarea';
@@ -3674,26 +4097,27 @@ function eliminarOrden(){
 
 // ══ VISTA COLABORADOR ══
 function renderGA4Colaborador(){
-  fetch('http://localhost:3737/ga4/top-notas')
-    .then(r=>r.json())
-    .then(data=>{
-      if(data.lecturasSemanales!=null){
-        var el=document.getElementById('empDashLecturas');
-        if(el) el.textContent=Number(data.lecturasSemanales).toLocaleString('es-AR');
-      }
-      if(data.variacion!=null){
-        var el=document.getElementById('empDashVar');
-        if(el) el.textContent=data.variacion;
-      }
-      var div=document.getElementById('empDashTop5');
-      var lista=data.topNotas||data.top5||[];
-      if(div && lista.length){
-        div.innerHTML=lista.map((n,i)=>'<div class="task-today-row"><div style="font-weight:700;color:var(--blue2);min-width:20px">'+(i+1)+'</div><div class="task-today-info"><div class="task-today-desc">'+(n.titulo||n.title||'Sin título')+'</div><div class="task-today-meta">👁 '+Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')+' vistas</div></div></div>').join('');
-      } else if(div){ div.innerHTML='<div class="no-data">Sin datos</div>'; }
-    }).catch(function(){ 
-      var div=document.getElementById('empDashTop5');
-      if(div) div.innerHTML='<div class="no-data">Sin conexión al backend</div>';
-    });
+  var div=document.getElementById('empDashTop5');
+  if(div) div.innerHTML='<div class="no-data" style="opacity:.6">Cargando datos GA4…</div>';
+  if(typeof db === 'undefined') { if(div) div.innerHTML='<div class="no-data">Base de datos no disponible</div>'; return; }
+  db.collection('claw_ga4').doc('ultimo').get().then(function(doc){
+    if(!doc.exists){ if(div) div.innerHTML='<div class="no-data">Sin datos GA4</div>'; return; }
+    var data=doc.data();
+    if(data.lecturasSemanales!=null){
+      var el=document.getElementById('empDashLecturas');
+      if(el) el.textContent=Number(data.lecturasSemanales).toLocaleString('es-AR');
+    }
+    if(data.variacion!=null){
+      var el2=document.getElementById('empDashVar');
+      if(el2) el2.textContent=data.variacion;
+    }
+    var lista=data.topNotas||data.top5||[];
+    if(div && lista.length){
+      div.innerHTML=lista.map((n,i)=>'<div class="task-today-row"><div style="font-weight:700;color:var(--blue2);min-width:20px">'+(i+1)+'</div><div class="task-today-info"><div class="task-today-desc">'+(n.titulo||n.title||'Sin título')+'</div><div class="task-today-meta">👁 '+Number(n.pageviews||n.vistas||n.views||0).toLocaleString('es-AR')+' vistas</div></div></div>').join('');
+    } else if(div){ div.innerHTML='<div class="no-data">Sin datos</div>'; }
+  }).catch(function(){
+    if(div) div.innerHTML='<div class="no-data">Error cargando datos GA4</div>';
+  });
 }
 
 function rendercolaborador(usuarioActual){
@@ -3735,29 +4159,32 @@ function rendercolaborador(usuarioActual){
   const esDir = DIRECTORES[empActualId] || empActualId === 'emp01';
   const tabClDir = document.getElementById('bne-clientes-dir');
   if(tabClDir) tabClDir.style.display = esDir ? '' : 'none';
-  // Ocultar dashboard en mobile ANTES de cambiar vista
+  const tabEmpCl = document.getElementById('tabEmpClientes');
+  if(tabEmpCl) tabEmpCl.style.display = esDir ? '' : 'none';
+  const drawerEmpCl = document.getElementById('drawerEmpClientes');
+  if(drawerEmpCl) drawerEmpCl.style.display = esDir ? '' : 'none';
+  // Ocultar dashboard en mobile — pero directores ven lecturas GA4
   if(window.innerWidth <= 768){
-    ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
+    var mobileHide = esDir ? ['empDashContainer'] : ['empDashContainer','empLecturasContainer'];
+    mobileHide.forEach(function(id){
       var el = document.getElementById(id);
       if(el) el.style.setProperty('display','none','important');
     });
   }
   // Vista inicial: tareas
   cambiarVistaEmpBN('vEmpKanban', 'bne-tareas');
-  // Reocutar por si acaso (cambiarVistaEmpBN puede haber revertido)
-  if(window.innerWidth <= 768){
-    ['empDashContainer','empLecturasContainer','misRedesWidget'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) el.style.setProperty('display','none','important');
-    });
-  }
 
 }
 
 function renderEmpMisClientes(){
   const cont = document.getElementById('empMisClientesList');
   if(!cont) return;
-  const misClientes = clientes.filter(c => (c.responsables||[]).includes(empActualId) && c.estado !== 'inactivo');
+  const misClientes = clientes.filter(c => {
+    if(c.estado === 'inactivo') return false;
+    if((c.responsables||[]).includes(empActualId)) return true;
+    if((c.seguimientoA||[]).includes(empActualId)) return true;
+    return false;
+  });
   if(!misClientes.length){
     cont.innerHTML = '<div class="no-data" style="padding:40px 0;text-align:center;">No tenés clientes asignados todavía.</div>';
     return;
@@ -3768,28 +4195,59 @@ function renderEmpMisClientes(){
       : `<div style="width:44px;height:44px;border-radius:8px;background:var(--paper2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🏢</div>`;
     const estadoBadge = c.estado === 'pausado'
       ? `<span class="status-badge badge-pausado">PAUSADO</span>`
+      : c.estado === 'potencial'
+      ? `<span class="status-badge badge-potencial">POTENCIAL</span>`
       : `<span class="status-badge badge-activo">ACTIVO</span>`;
-    const vence = c.fechaVencimiento || c.pautaVence ? `<div style="font-size:12px;color:var(--ink2);margin-top:4px;">📅 Vence: ${c.fechaVencimiento||c.pautaVence}</div>` : '';
     const contacto = c.contacto ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">👤 ${c.contacto}</div>` : '';
     const tel = c.telefono ? `<div style="font-size:12px;color:var(--blue2);margin-top:2px;">📞 ${c.telefono}</div>` : '';
-    // Otros responsables
-    const otrosResp = (c.responsables||[]).filter(id => id !== empActualId)
-      .map(id => colaboradores.find(x=>x.id===id)?.nombre?.split(' ')[0]).filter(Boolean);
-    const respHtml = otrosResp.length ? `<div style="font-size:11px;color:var(--ink2);margin-top:4px;">👥 También: ${otrosResp.join(', ')}</div>` : '';
+    const email = c.email ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">✉ ${c.email}</div>` : '';
+    const esSeguimiento = (c.seguimientoA||[]).includes(empActualId);
+    const badge = esSeguimiento ? '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:2px 6px;border-radius:4px;font-weight:700;">SEGUIMIENTO</span>' : '';
+    const historial = (c.seguimientoHistorial||[]).filter(h => !esSeguimiento || true).slice(-5).reverse();
+    const histHtml = historial.length ? '<div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:4px;">Últimas notas de seguimiento</div>'
+      + historial.map(h => '<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--line);">'
+        + '<span style="color:var(--ink2);">' + (h.fecha||'').slice(0,10) + '</span> '
+        + '<span style="font-weight:600;">' + (colaboradores.find(x=>x.id===h.autor)?.nombre?.split(' ')[0]||'') + ':</span> '
+        + (h.texto||'') + '</div>').join('') + '</div>' : '';
     return `<div style="margin-bottom:12px;padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--line);">
       <div style="display:flex;align-items:center;gap:10px;justify-content:space-between;">
         <div style="display:flex;align-items:center;gap:10px;">
           ${logoHtml}
           <div>
-            <div style="font-weight:700;font-size:15px;">${c.nombre||'Sin nombre'}</div>
+            <div style="font-weight:700;font-size:15px;">${c.nombre||'Sin nombre'} ${badge}</div>
             <div class="client-rubro">${c.rubro||''}</div>
           </div>
         </div>
         ${estadoBadge}
       </div>
-      ${contacto}${tel}${vence}${respHtml}
+      ${contacto}${tel}${email}
+      <div style="margin-top:10px;display:flex;gap:6px;">
+        <input type="text" id="segNota_${c.id}" placeholder="Registrar llamada o nota de seguimiento..." style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+        <button onclick="guardarNotaSeguimiento('${c.id}')" style="padding:8px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Guardar</button>
+      </div>
+      ${histHtml}
     </div>`;
   }).join('');
+}
+
+function guardarNotaSeguimiento(clienteId){
+  var input = document.getElementById('segNota_'+clienteId);
+  if(!input) return;
+  var texto = input.value.trim();
+  if(!texto){ toast('Escribí una nota de seguimiento','err'); return; }
+  var c = clientes.find(x=>x.id===clienteId);
+  if(!c) return;
+  if(!c.seguimientoHistorial) c.seguimientoHistorial = [];
+  var nota = { texto: texto, autor: empActualId, fecha: new Date().toISOString(), tipo: 'nota' };
+  c.seguimientoHistorial.push(nota);
+  gLS();
+  if(typeof db!=='undefined'){
+    db.collection('clientes').doc(clienteId).update({seguimientoHistorial: c.seguimientoHistorial}).catch(e=>console.warn(e));
+  }
+  input.value = '';
+  toast('Nota de seguimiento guardada','ok');
+  renderEmpMisClientes();
 }
 
 function renderEmpClientes(){
@@ -3798,7 +4256,7 @@ function renderEmpClientes(){
   // Si el colaborador tiene clientes asignados, mostrar solo los suyos
   // Si es director (emp02, emp07, emp16) o supervisor, mostrar todos
   const esDirectorOSup = rolActual === 'supervisor' || ['emp02','emp07','emp16'].includes(empActualId);
-  const misClientes = clientes.filter(c => (c.responsables||[]).includes(empActualId));
+  const misClientes = clientes.filter(c => (c.responsables||[]).includes(empActualId) || (c.seguimientoA||[]).includes(empActualId));
   const lista = esDirectorOSup
     ? clientes.filter(c => c.estado !== 'inactivo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''))
     : misClientes.length > 0
@@ -3843,21 +4301,40 @@ async function renderMisRedes(){
   const content = document.getElementById('misRedesContent');
   if(!widget || !content) return;
 
-  const cfg = REDES_POR_COLABORADOR[empActualId];
-  if(!cfg){ widget.style.display='none'; return; }
+  // Leer redes_asignadas del colaborador en Firestore (prioridad) o fallback a config hardcodeada
+  const colData = colaboradores.find(c => c.id === empActualId);
+  const redesAsignadas = colData && colData.redes_asignadas && colData.redes_asignadas.length ? colData.redes_asignadas : null;
+  const cfgLegacy = REDES_POR_COLABORADOR[empActualId];
+
+  if(!redesAsignadas && !cfgLegacy){ widget.style.display='none'; return; }
 
   widget.style.display='block';
   content.innerHTML='<div class="no-data">Cargando...</div>';
 
   try {
-    let redes;
-    if(cfg === 'all'){
+    let redes = [];
+
+    if(redesAsignadas){
+      // Cada valor es un doc ID en metricas_redes (ej: "laopinionline_instagram")
+      const promises = redesAsignadas.map(id => db.collection('metricas_redes').doc(id).get());
+      const docs = await Promise.all(promises);
+      redes = docs.map((doc, i) => {
+        if(doc.exists){
+          return { id: doc.id, ...doc.data() };
+        } else {
+          const parts = redesAsignadas[i].split('_');
+          const plat = parts.pop();
+          const marca = parts.join('_');
+          return { id: redesAsignadas[i], marca, plataforma: plat, sinDatos: true };
+        }
+      });
+    } else if(cfgLegacy === 'all'){
       const snap = await db.collection('metricas_redes').get();
       redes = snap.docs.map(d=>({id:d.id,...d.data()}));
-    } else {
-      const promises = cfg.map(r=>db.collection('metricas_redes').where('marca','==',r.marca).where('plataforma','==',r.plataforma).get());
+    } else if(cfgLegacy){
+      const promises = cfgLegacy.map(r=>db.collection('metricas_redes').where('marca','==',r.marca).where('plataforma','==',r.plataforma).get());
       const snaps = await Promise.all(promises);
-      redes = cfg.map((r,i)=>{
+      redes = cfgLegacy.map((r,i)=>{
         const docs = snaps[i].docs;
         return docs.length ? {nombre:r.nombre,...docs[0].data()} : {nombre:r.nombre, plataforma:r.plataforma, sinDatos:true};
       });
@@ -3867,21 +4344,29 @@ async function renderMisRedes(){
 
     content.innerHTML = redes.map(r=>{
       const emoji = EMOJI_PLATAFORMA[r.plataforma] || '🌐';
-      const nombre = r.nombre || `${r.marca} ${r.plataforma}`;
-      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border-radius:8px;margin-bottom:6px;"><span style="font-size:18px">${emoji}</span><span style="font-weight:500">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
+      const nombre = r.nombre || (r.marca + ' ' + r.plataforma).replace(/(^|\s)\w/g, c=>c.toUpperCase());
+      if(r.sinDatos) return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper);border-radius:10px;margin-bottom:8px;border:1px solid var(--line)"><span style="font-size:20px">${emoji}</span><span style="font-weight:600;font-size:14px">${nombre}</span><span style="color:#999;font-size:13px;margin-left:auto">Sin datos aún</span></div>`;
 
       const seguidores = r.seguidores != null ? Number(r.seguidores).toLocaleString('es-AR') : '—';
-      const eng = r.engagement != null ? r.engagement+'%' : '';
+      const variacion = r.variacion != null ? r.variacion : null;
+      const varColor = variacion > 0 ? 'var(--green)' : variacion < 0 ? 'var(--accent)' : 'var(--ink2)';
+      const varIcon = variacion > 0 ? '▲' : variacion < 0 ? '▼' : '';
+      const varText = variacion != null ? `<div style="font-size:13px;font-weight:700;color:${varColor}">${varIcon} ${variacion > 0 ? '+' : ''}${variacion} vs ayer</div>` : '<div style="font-size:12px;color:var(--ink2)">—</div>';
       const notif = r.notificaciones_pendientes || 0;
-      const badge = notif > 0 ? `<span style="background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;margin-left:6px">${notif}</span>` : '';
-      const fecha = r.fecha_actualizacion ? `<div style="font-size:11px;color:#999;margin-top:2px">Actualizado: ${r.fecha_actualizacion}</div>` : '';
+      const notifBadge = notif > 0
+        ? `<div style="display:inline-flex;align-items:center;gap:4px;background:var(--red-bg);color:var(--accent);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700">🔔 ${notif} pendiente${notif>1?'s':''}</div>`
+        : `<div style="font-size:12px;color:var(--ink2)">✔ Sin notificaciones</div>`;
 
-      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border-radius:8px;margin-bottom:6px;flex-wrap:wrap">
-        <span style="font-size:18px">${emoji}</span>
-        <span style="font-weight:500">${nombre}</span>${badge}
-        <span style="margin-left:auto;font-weight:600;color:var(--blue)">${seguidores}</span>
-        ${eng ? `<span style="font-size:12px;color:var(--green)">eng ${eng}</span>` : ''}
-        ${fecha}
+      return `<div style="padding:12px 14px;background:var(--paper);border-radius:10px;margin-bottom:8px;border:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:22px">${emoji}</span>
+          <span style="font-weight:700;font-size:14px;flex:1">${nombre}</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;padding-left:32px">
+          <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-bottom:2px">Seguidores</div><div style="font-size:20px;font-weight:800;color:var(--blue)">${seguidores}</div></div>
+          <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-bottom:2px">Variación</div>${varText}</div>
+          <div style="margin-left:auto"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-bottom:2px">Notificaciones</div>${notifBadge}</div>
+        </div>
       </div>`;
     }).join('');
 
@@ -4251,8 +4736,11 @@ function cambiarVistaEmp(id, btn){
     if(el){ window.scrollTo({top: el.offsetTop - 97, behavior:'instant'}); }
   }, 20);
   if(id==='vEmpKanban') renderKanban();
+  if(id==='vEmpClientes') renderEmpClientes();
+  if(id==='vEmpMisClientes') renderEmpMisClientes();
   if(id==='vEmpReuniones') renderEmpReuniones();
   if(id==='vEmpProductividad') renderProductividadEmp();
+  if(id==='vEmpCacho') renderCachoReports('emp');
 }
 
 // ══ PRODUCTIVIDAD COLABORADOR ══
@@ -4262,7 +4750,7 @@ async function renderProductividadEmp(){
   if(!empActualId){ ct.innerHTML='<div class="no-data">Sin datos disponibles todavía</div>'; return; }
 
   const hoyStr = hoy();
-  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
   function misOrdenes(){ return ordenes.filter(o=>getIds(o).includes(empActualId)); }
 
@@ -4328,7 +4816,7 @@ async function renderProductividadEmp(){
 function mostrarOrdenesEmp(filtro){
   const hoyStr = hoy();
   const lunes = lunesDeSemana(hoyStr);
-  function getFecha(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
   const misTotal = ordenes.filter(o=>getIds(o).includes(empActualId));
   let lista = [], titulo = '';
@@ -4362,7 +4850,7 @@ function mostrarOrdenesEmp(filtro){
   }
   const btnGuardar = document.querySelector('[onclick="guardarCheckColaborador()"]');
   if(btnGuardar) btnGuardar.style.display='none';
-  document.getElementById('modalCheckColaborador').style.display='flex';
+  abrirModal('modalCheckColaborador');
 }
 
 // ══ KANBAN ══
@@ -4425,13 +4913,15 @@ function renderKanban(){
     return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}" onclick="abrirDetalleOrdenEmp('${o.id}')" style="cursor:pointer;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
-        <div class="kc-title" style="flex:1;">${o.titulo||o.desc||'Sin título'}</div>
+        <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${o.origen==="email"?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'Sin título'}</div>
       </div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
       <div class="kc-move">${botones}</div>
       <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
+        ${(o.tipo==="nota_para_publicar"||o.origen==="borrador-hugo"||o.categoria==="borrador-hugo") ? `<button onclick="event.stopPropagation();abrirNotaHugo('${o.id}')" style="flex:1;padding:7px 10px;background:#7c4dff;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>` : ""}
+        ${(o.origen==="email"&&o.emailLink) ? `<button onclick="event.stopPropagation();window.open('${o.emailLink}','_blank')" style="padding:7px 10px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>` : ""}
         ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
           ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
         ${comentBtn}
@@ -4754,8 +5244,14 @@ function renderProductividad(){
   const {inicio, fin, label} = semanaRango(semanaOffset);
   document.getElementById('semanaLabel').textContent = semanaOffset===0 ? 'Esta semana ('+label+')' : label;
   const hoyStr = hoy();
-  const internos = colaboradores.filter(function(e){ return e.jerarquia !== 'externo' && e.equipo !== 'Externo'; });
-  function getFechaO(o){ return o.fechaVencimiento || o.fechaCreacion || o.fecha || ''; }
+  var internos = colaboradores.filter(function(e){ return e.jerarquia !== 'externo' && e.equipo !== 'Externo'; });
+  // Filter by scope: emp01 sees all, directors see only their direct reports
+  if(empActualId && empActualId !== 'emp01'){
+    var misReportes = internos.filter(function(e){ return e.reportaA === empActualId; });
+    // If the user has direct reports, show only those. Otherwise show all (fallback for non-directors).
+    if(misReportes.length > 0) internos = misReportes;
+  }
+  function getFechaO(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   function getIds(o){ return o.colaboradoresIds && o.colaboradoresIds.length ? o.colaboradoresIds : (o.asignadoA ? [o.asignadoA] : (o.colaboradorId ? [o.colaboradorId] : [])); }
   const tareasRango = ordenes.filter(function(o){ var f=getFechaO(o); return !f||(f>=inicio&&f<=fin); });
   const datos = internos.map(function(e){
@@ -4774,7 +5270,7 @@ function renderProductividad(){
   const cards = datos.map(function(d){
     var e=d.e, comp=d.comp, pend=d.pend, total=d.total, atrasadas=d.atrasadas;
     var pctComp = total ? Math.round(comp/total*100) : 0;
-    var html = '<div class="prod-card '+(atrasadas>0?'atrasado':'')+'">';
+    var html = '<div class="prod-card '+(atrasadas>0?'atrasado':'')+'" data-empid="'+e.id+'" data-nombre="'+(e.nombre||'')+'" style="cursor:pointer">';
     html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
     html += '<div><div class="prod-name">'+(e.nombre||'Sin nombre')+'</div><div class="prod-puesto">'+(e.puesto||e.equipo||'')+'</div></div>';
     if(atrasadas>0) html += '<span class="atras-badge">'+atrasadas+' atrasada'+(atrasadas>1?'s':'')+'</span>';
@@ -4799,15 +5295,150 @@ function renderProductividad(){
 
 
 // ══ ÓRDENES POR COLABORADOR (desde Productividad) ══
+
+function cerrarHugoViewer(){
+  var el = document.getElementById('hugoNoteViewer');
+  if(el) el.remove();
+}
+
+function abrirNotaHugo(input){
+  if(typeof input === 'string'){ input = ordenes.find(function(x){ return x.id === input; }); }
+  var o = input;
+  if(!o) return;
+  cerrarHugoViewer();
+
+  var rawCuerpo = o.cuerpo || o.descripcion || '';
+  var cuerpo = rawCuerpo;
+  var bajada = '';
+  var tituloParseado = '';
+  try {
+    var parsed = typeof rawCuerpo === 'string' ? JSON.parse(rawCuerpo) : rawCuerpo;
+    if(parsed && typeof parsed === 'object'){
+      cuerpo = parsed.cuerpo || parsed.texto || parsed.contenido || rawCuerpo;
+      bajada = parsed.bajada || parsed.subtitulo || '';
+      tituloParseado = parsed.titulo || '';
+    }
+  } catch(e){}
+  var titulo = (tituloParseado || o.titulo || o.desc || 'Sin titulo').replace('[Hugo] ', '');
+  var categoria = o.categoria || o.seccion || '';
+  var fotos = o.fotos || [];
+  var asig = colaboradores.find(function(c){ return c.id === o.asignadoA; });
+  var asigNombre = asig ? asig.nombre : '';
+  var fechaLimite = o.fechaLimite || o.fechaVencimiento || '';
+  var estado = o.estado || 'pendiente';
+
+  var estadoLabel = estado === 'publicada' ? 'Publicada' : estado === 'en-curso' ? 'En curso' : 'Pendiente';
+  var estadoColor = estado === 'publicada' ? '#2e7d32' : estado === 'en-curso' ? '#e65100' : '#1565c0';
+  var estadoBg = estado === 'publicada' ? '#e8f5ee' : estado === 'en-curso' ? '#fff3e0' : '#e3f2fd';
+
+  var fotosHtml = '';
+  if(fotos.length){
+    fotosHtml = '<div style="margin-top:20px;"><div style="font-weight:700;font-size:15px;margin-bottom:10px;">Fotos disponibles (' + fotos.length + ')</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">';
+    for(var i = 0; i < fotos.length; i++){
+      var f = fotos[i];
+      var url = f.url || f.url_thumb || '';
+      var thumb = f.url_thumb || f.url || '';
+      var desc = (f.descripcion || '').slice(0, 80);
+      var fotog = f.fotografo || f.atribucion || '';
+      fotosHtml += '<div style="border-radius:10px;overflow:hidden;border:1px solid #ddd;background:#fafafa;">' +
+        '<img src="' + thumb + '" alt="Foto ' + (i+1) + '" style="width:100%;height:120px;object-fit:cover;display:block;">' +
+        '<div style="padding:8px;font-size:11px;color:#666;">' + desc + (fotog ? '<br><i>' + fotog + '</i>' : '') + '</div>' +
+        '<a href="' + url + '" download target="_blank" style="display:block;text-align:center;padding:8px;background:#1a3a5c;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">Descargar foto</a>' +
+      '</div>';
+    }
+    fotosHtml += '</div></div>';
+  }
+
+  var actionsHtml = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid #eee;">';
+  actionsHtml += '<button onclick="copiarNotaHugo()" style="padding:12px 20px;background:#f5f5f5;color:#333;border:1px solid #ccc;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Copiar nota</button>';
+  if(estado !== 'publicada'){
+    actionsHtml += '<button onclick="marcarNotaPublicada(\'' + o.id + '\')" style="padding:12px 20px;background:#2e7d32;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Marcar como publicada</button>';
+  }
+  if(estado === 'pendiente'){
+    actionsHtml += '<button onclick="moverNotaHugo(\'' + o.id + '\',\'en-curso\')" style="padding:12px 20px;background:#fff3e0;color:#e65100;border:1px solid #e65100;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;">Mover a En curso</button>';
+  }
+  actionsHtml += '</div>';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'hugoNoteViewer';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;overflow-y:auto;padding:0;';
+
+  overlay.innerHTML =
+    '<div style="max-width:720px;margin:0 auto;padding:20px 20px 40px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #7c4dff;">' +
+        '<div style="font-size:13px;font-weight:700;color:#7c4dff;text-transform:uppercase;letter-spacing:1px;">Nota de Hugo</div>' +
+        '<button onclick="cerrarHugoViewer()" style="background:#f5f5f5;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#333;">✕</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">' +
+        '<span style="background:' + estadoBg + ';color:' + estadoColor + ';padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700;">' + estadoLabel + '</span>' +
+        (categoria ? '<span style="background:#f5f5f5;padding:3px 10px;border-radius:4px;font-size:12px;">' + categoria + '</span>' : '') +
+        (asigNombre ? '<span style="background:#f5f5f5;padding:3px 10px;border-radius:4px;font-size:12px;">Asignado: ' + asigNombre + '</span>' : '') +
+        '<span style="background:#f5f5f5;padding:3px 10px;border-radius:4px;font-size:12px;">Hugo (emp34)</span>' +
+      '</div>' +
+      '<h1 style="font-family:Playfair Display,serif;font-size:24px;font-weight:700;margin-bottom:8px;color:#1a1a2e;">' + titulo + '</h1>' +
+      (bajada ? '<p style="font-size:16px;color:#555;line-height:1.5;margin-bottom:20px;font-style:italic;">' + bajada.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>' : '') +
+      '<textarea id="notaHugoCuerpo" readonly style="width:100%;min-height:300px;padding:16px;font-size:14px;line-height:1.8;border:1px solid #ddd;border-radius:10px;background:#fafafa;color:#333;resize:vertical;font-family:inherit;">' + cuerpo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>' +
+      fotosHtml +
+      actionsHtml +
+    '</div>';
+
+  document.body.appendChild(overlay);
+}
+
+function copiarNotaHugo(){
+  var el = document.getElementById('notaHugoCuerpo');
+  if(!el) return;
+  var text = el.value || el.innerText || el.textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(function(){ toast('Nota copiada al portapapeles', 'ok'); });
+  } else {
+    el.select();
+    document.execCommand('copy');
+    toast('Nota copiada', 'ok');
+  }
+}
+
+function marcarNotaPublicada(id){
+  var i = ordenes.findIndex(function(x){ return x.id === id; });
+  if(i < 0) return;
+  ordenes[i].estado = 'publicada';
+  ordenes[i].fechaPublicacion = new Date().toISOString();
+  ordenes[i].publicadaPor = empActualId;
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({
+      estado: 'publicada', fechaPublicacion: new Date().toISOString(), publicadaPor: empActualId
+    }).catch(function(e){ console.warn(e); });
+  }
+  toast('Nota marcada como publicada', 'ok');
+  cerrarHugoViewer();
+  if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
+  if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
+}
+
+function moverNotaHugo(id, nuevoEstado){
+  var i = ordenes.findIndex(function(x){ return x.id === id; });
+  if(i < 0) return;
+  ordenes[i].estado = nuevoEstado;
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); });
+  }
+  toast('Estado actualizado', 'ok');
+  cerrarHugoViewer();
+  if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
+  if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
+}
+
 function abrirOrdenesColaborador(empId, nombre){
   const modal = document.getElementById('modalCheckColaborador');
   if(!modal) return;
+  window._ordColabEmpId = empId;
+  window._ordColabNombre = nombre;
   document.getElementById('mchkNombre').textContent = '📋 Tareas de ' + nombre;
   document.getElementById('mchkEmpId').value = empId;
   // Reusar el modal pero mostrar órdenes en lugar del check
   const body = document.getElementById('mchkBody');
   const hoyStr = hoy();
-  function getFechaO(o){ return o.fechaVencimiento||o.fechaCreacion||o.fecha||''; }
+  function getFechaO(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   function getIds(o){ return o.colaboradoresIds?.length ? o.colaboradoresIds : (o.asignadoA?[o.asignadoA]:(o.colaboradorId?[o.colaboradorId]:[])); }
   const mis = ordenes.filter(o => getIds(o).includes(empId))
     .sort((a,b) => getFechaO(b).localeCompare(getFechaO(a)));
@@ -4817,16 +5448,32 @@ function abrirOrdenesColaborador(empId, nombre){
       const fecha = getFechaO(o);
       const atrasada = fecha && fecha < hoyStr && o.estado !== 'completada' && o.estado !== 'cancelada';
       const estadoColor = o.estado==='completada' ? 'var(--green)' : atrasada ? 'var(--accent)' : 'var(--ink2)';
+      const yaCompleta = o.estado === 'completada';
+      const numComents = (o.comentarios||[]).length;
       return `<div style="padding:10px 0;border-bottom:1px solid var(--line);">
         <div style="font-weight:600;font-size:14px;">${o.titulo||o.desc||o.descripcion||'Sin descripción'}</div>
         <div style="font-size:12px;color:${estadoColor};margin-top:3px;">${o.estado||''} ${fecha ? '· '+fecha : ''}</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          ${(o.tipo==="nota_para_publicar"||o.origen==="borrador-hugo"||o.categoria==="borrador-hugo") ? `<button onclick="event.stopPropagation();abrirNotaHugo('${o.id}')" style="font-size:12px;padding:5px 10px;border-radius:5px;border:2px solid #7c4dff;background:#7c4dff;color:#fff;font-weight:700;cursor:pointer;">📄 Ver nota</button>` : ""}
+          ${yaCompleta ? '' : `<button onclick="_completarDesdeColab('${o.id}')" style="font-size:12px;padding:5px 10px;border-radius:5px;border:1px solid var(--green,#2e7d32);background:var(--green,#2e7d32);color:#fff;cursor:pointer;">✓ Completar</button>`}
+          <button onclick="_comentarDesdeColab('${o.id}')" style="font-size:12px;padding:5px 10px;border-radius:5px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;">💬 Comentar${numComents?' ('+numComents+')':''}</button>
+        </div>
       </div>`;
     }).join('');
   }
   // Ocultar boton guardar check — no aplica aqui
   const btnGuardar = modal.querySelector('[onclick="guardarCheckColaborador()"]');
   if(btnGuardar) btnGuardar.style.display = 'none';
-  modal.style.display = 'flex';
+  modal.classList.add('active');
+}
+
+function _completarDesdeColab(ordenId){
+  cambiarEstadoOrden(ordenId, 'completada');
+  if(window._ordColabEmpId) abrirOrdenesColaborador(window._ordColabEmpId, window._ordColabNombre);
+}
+function _comentarDesdeColab(ordenId){
+  abrirComentarioOrden(ordenId);
+  if(window._ordColabEmpId) abrirOrdenesColaborador(window._ordColabEmpId, window._ordColabNombre);
 }
 
 // ══ PERFIL ══
@@ -5199,6 +5846,15 @@ function aplicarVisibilidad(){
     tabProv.style.display = '';
   }
 
+  // Mostrar tab Cacho para emp01, emp02, emp16, emp18 (ambos shells + drawers)
+  const cachoIds = ['emp01','emp02','emp16','emp18'];
+  if(cachoIds.includes(empActualId)){
+    ['tabCacho','tabCachoEmp','drawerCacho','drawerCachoEmp'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.style.display = '';
+    });
+  }
+
   if(j === 'director_general'){
     // Ve todo — sin restricciones
     return;
@@ -5452,6 +6108,12 @@ function renderContactos(){
           if(snap.size > 0){
             const badge = document.getElementById('badge_'+convId);
             if(badge){ badge.textContent = snap.size>9?'9+':snap.size; badge.style.display='flex'; }
+            const row = document.querySelector('[data-conv-id="'+convId+'"]');
+            if(row){
+              row.style.background='var(--unread-bg, #f0f7ff)';
+              var nameEl = row.querySelector('div[style*="font-weight"]');
+              if(nameEl) nameEl.style.fontWeight='700';
+            }
           }
         }).catch(()=>{});
     });
@@ -5482,12 +6144,13 @@ function cargarMensajes(convId, destId){
   
   if(typeof db === 'undefined') { hilo.innerHTML = '<div style="text-align:center;color:#ccc;font-size:13px;padding:20px;">Sin conexión</div>'; return; }
   
-  // Marcar como leídos
+  // Marcar como leídos + limpiar noLeidoPor del doc padre
   db.collection('mensajes').doc(convId).collection('msgs')
     .where('para', '==', empActualId)
     .where('leido', '==', false)
     .get().then(snap => {
       snap.forEach(doc => doc.ref.update({leido: true}));
+      db.collection('mensajes').doc(convId).update({noLeidoPor: null}).catch(e => console.warn(e));
       actualizarBadge();
     });
 
@@ -5508,7 +6171,7 @@ function renderHiloChat(msgs){
   hilo.innerHTML = msgs.map(m => {
     const esYo = m.de === empActualId;
     const fecha = m.fecha ? new Date(m.fecha.seconds ? m.fecha.seconds*1000 : m.fecha).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
-    return '<div style="display:flex;justify-content:'+(esYo?'flex-end':'flex-start')+';">'+
+    return '<div data-msg-de="'+m.de+'" data-msg-texto="'+(m.texto||'').replace(/"/g,'&quot;').slice(0,500)+'" style="display:flex;justify-content:'+(esYo?'flex-end':'flex-start')+';">'+
       '<div style="max-width:75%;background:'+(esYo?'var(--blue,#1a3a5c)':'#f0f0f0')+';color:'+(esYo?'#fff':'#333')+';border-radius:'+(esYo?'16px 16px 4px 16px':'16px 16px 16px 4px')+';padding:8px 12px;font-size:14px;">'+
         '<div>'+m.texto+'</div>'+
         '<div style="font-size:10px;opacity:0.6;text-align:right;margin-top:2px;">'+fecha+(esYo&&m.leido?' ✓✓':esYo?' ✓':'')+'</div>'+
@@ -5522,7 +6185,7 @@ function enviarMensaje(){
   const input = document.getElementById('chatInput');
   const texto = input.value.trim();
   if(!texto || !_chatConId) return;
-  
+
   const destId = _chatConId.split('_').find(id=>id!==empActualId);
   const msg = {
     de: empActualId,
@@ -5532,17 +6195,104 @@ function enviarMensaje(){
     fecha: new Date(),
     leido: false
   };
-  
+
   input.value = '';
   if(typeof db !== 'undefined'){
     db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(e=>console.warn(e));
-    // Actualizar metadata de la conversación
     db.collection('mensajes').doc(_chatConId).set({
       participantes: [empActualId, destId],
       ultimoMensaje: texto,
       ultimaFecha: new Date(),
       noLeidoPor: destId
     }, {merge:true});
+
+    // If messaging Claw (emp00), get automatic AI response
+    console.log('[Claw] destId =', destId, '| empActualId =', empActualId, '| convId =', _chatConId);
+    if(destId === 'emp00'){
+      _clawPedirRespuesta(_chatConId, texto, empActualId, empActualNombre);
+    } else if(destId === 'emp34'){
+      _hugoAutoReply(_chatConId, empActualId);
+    }
+  }
+}
+
+function _clawPedirRespuesta(convId, texto, empId, empNombre){
+  console.log('[Claw] Pidiendo respuesta...', {convId, texto, empId, empNombre});
+  // Show typing indicator
+  var hilo = document.getElementById('chatHilo');
+  var typing = document.createElement('div');
+  typing.id = 'claw-typing';
+  typing.style.cssText = 'display:flex;justify-content:flex-start;';
+  typing.innerHTML = '<div style="max-width:75%;background:#f0f0f0;border-radius:16px 16px 16px 4px;padding:8px 12px;font-size:14px;color:#999;">🐾 Claw está pensando...</div>';
+  if(hilo){ hilo.appendChild(typing); hilo.scrollTop = hilo.scrollHeight; }
+
+  // Collect last 5 messages as {role, content} pairs for conversation memory
+  var historial = [];
+  var hiloEl = document.getElementById('chatHilo');
+  if(hiloEl){
+    var msgEls = hiloEl.querySelectorAll('[data-msg-de]');
+    var arr = Array.from(msgEls).slice(-10);
+    arr.forEach(function(el){
+      var de = el.getAttribute('data-msg-de');
+      var txt = el.getAttribute('data-msg-texto') || '';
+      if(txt) historial.push({ role: de === 'emp00' ? 'assistant' : 'user', content: txt });
+    });
+    historial = historial.slice(-5);
+  }
+
+  fetch('/api/claw/chat', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({mensaje: texto, empId: empId, empNombre: empNombre, historial: historial})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    console.log('[Claw] Respuesta recibida:', data);
+    var el = document.getElementById('claw-typing');
+    if(el) el.remove();
+    if(!data.ok || !data.respuesta){ console.warn('[Claw] Respuesta vacía o error:', data); return; }
+    var respMsg = {
+      de: 'emp00',
+      deNombre: 'Claw',
+      para: empId,
+      texto: data.respuesta,
+      fecha: new Date(),
+      leido: true
+    };
+    if(typeof db !== 'undefined'){
+      db.collection('mensajes').doc(convId).collection('msgs').add(respMsg).catch(function(e){ console.warn(e); });
+      db.collection('mensajes').doc(convId).set({
+        participantes: [empId, 'emp00'],
+        ultimoMensaje: data.respuesta,
+        ultimaFecha: new Date(),
+        noLeidoPor: empId
+      }, {merge:true});
+    }
+  })
+  .catch(function(e){
+    console.warn('Claw chat error:', e);
+    var el = document.getElementById('claw-typing');
+    if(el) el.innerHTML = '<div style="max-width:75%;background:#fff3f3;border-radius:16px 16px 16px 4px;padding:8px 12px;font-size:14px;color:#c62828;">🐾 Claw no pudo responder. Intentá de nuevo.</div>';
+  });
+}
+
+function _hugoAutoReply(convId, empId){
+  var texto = 'Hola. Soy Hugo, editor de noticias internacionales. No proceso mensajes \u2014 genero borradores autom\u00e1ticamente en 6 ciclos diarios (07:30, 09:30, 11:30, 13:30, 15:30, 17:30). Si necesit\u00e1s coordinar algo, escribile a Claw (emp00).';
+  if(typeof db !== 'undefined'){
+    db.collection('mensajes').doc(convId).collection('msgs').add({
+      de: 'emp34',
+      deNombre: 'Hugo',
+      para: empId,
+      texto: texto,
+      fecha: new Date(),
+      leido: true
+    }).catch(function(e){ console.warn(e); });
+    db.collection('mensajes').doc(convId).set({
+      participantes: [empId, 'emp34'],
+      ultimoMensaje: texto,
+      ultimaFecha: new Date(),
+      noLeidoPor: empId
+    }, {merge: true});
   }
 }
 
@@ -5805,6 +6555,7 @@ function navSidebar(vistaId, el){
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)"><span>📅</span> Reuniones</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
     <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
+    <button class="nav-drawer-item" id="drawerCacho" style="display:none" onclick="cambiarVistaDrawer('vCacho',this)"><span>🦟</span> Cacho</button>
     <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
@@ -5820,6 +6571,8 @@ function navSidebar(vistaId, el){
     <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
     <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
     <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📊</span> Mi Productividad</button>
+    <button class="nav-drawer-item" id="drawerEmpClientes" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpClientes',this)"><span>👥</span> Clientes</button>
+    <button class="nav-drawer-item" id="drawerCachoEmp" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpCacho',this)"><span>🦟</span> Cacho</button>
     <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
     <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
@@ -5932,6 +6685,167 @@ function navSidebar(vistaId, el){
 <!-- Overlay mensajero -->
 <div id="mensajeroOverlay" onclick="cerrarMensajero()" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:99996;"></div>
 
+<script>
+// ══ CACHO REDES ══
+
+let cachoReports = [];
+
+async function renderCachoReports(shell){
+  try {
+    const snap = await db.collection('cacho_reports').orderBy('createdAt','desc').limit(50).get();
+    cachoReports = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e){ console.error('[cacho] load error:', e.message); }
+
+  const suffix = shell === 'emp' ? 'Emp' : '';
+  const badge = document.getElementById('cachoCountBadge' + suffix);
+  const pendBadge = document.getElementById('cachoPendienteBadge' + suffix);
+  const empty = document.getElementById('cachoEmpty' + suffix);
+  const list = document.getElementById('cachoList' + suffix);
+
+  badge.textContent = cachoReports.length;
+
+  if(!cachoReports.length){
+    empty.style.display = '';
+    list.innerHTML = '';
+    pendBadge.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const sinRevisar = cachoReports.filter(r => !r.revisiones || !r.revisiones.length).length;
+  if(sinRevisar > 0){
+    pendBadge.style.display = '';
+    pendBadge.textContent = sinRevisar + ' sin revisar';
+  } else {
+    pendBadge.style.display = 'none';
+  }
+
+  const nombresMap = {};
+  colaboradores.forEach(c => { nombresMap[c.id] = c.nombre ? c.nombre.split(' ')[0] : c.id; });
+
+  list.innerHTML = cachoReports.map(r => {
+    const m = r.metricas || {};
+    const cuenta = r.cuenta || {};
+    const revisado = r.revisiones && r.revisiones.length > 0;
+    const badgeHtml = revisado
+      ? `<span class="cacho-badge-ok">OK — ${nombresMap[r.revisiones[0].empId] || r.revisiones[0].empId}</span>`
+      : `<span class="cacho-badge-pendiente">Sin revisar</span>`;
+
+    const variacion = m.followersVariacion;
+    const varStr = variacion != null
+      ? (variacion >= 0 ? `<span style="color:var(--green)">+${variacion}</span>` : `<span style="color:var(--accent)">${variacion}</span>`)
+      : '';
+
+    return `<div class="cacho-card" onclick="abrirDetalleCacho('${r.id}')">
+      <div class="cacho-card-hdr">
+        <div>
+          <span class="cacho-card-cuenta">${cuenta.plataforma || '?'} @${cuenta.handle || '?'}</span>
+          <span class="cacho-card-fecha" style="margin-left:12px">${r.fechaReporte || '—'}</span>
+        </div>
+        ${badgeHtml}
+      </div>
+      <div class="cacho-card-resumen">${(r.resumen || '').slice(0, 180)}${(r.resumen||'').length > 180 ? '...' : ''}</div>
+      <div class="cacho-card-metricas">
+        <div>Followers: <span>${(m.followers||0).toLocaleString('es-AR')}</span> ${varStr}</div>
+        <div>Posts hoy: <span>${m.postsHoy ?? '—'}</span></div>
+        ${(r.hallazgos||[]).length ? `<div>Hallazgos: <span>${r.hallazgos.length}</span></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirDetalleCacho(id){
+  const r = cachoReports.find(x => x.id === id);
+  if(!r) return;
+
+  const m = r.metricas || {};
+  const cuenta = r.cuenta || {};
+  const nombresMap = {};
+  colaboradores.forEach(c => { nombresMap[c.id] = c.nombre ? c.nombre.split(' ')[0] : c.id; });
+
+  document.getElementById('mCachoTitle').textContent = `${cuenta.plataforma || '?'} @${cuenta.handle || '?'} — ${r.fechaReporte || ''}`;
+
+  const variacion = m.followersVariacion;
+  const varClass = variacion >= 0 ? 'up' : 'down';
+  const varSign = variacion >= 0 ? '+' : '';
+
+  let html = '';
+
+  html += `<div class="cacho-detalle-grid">
+    <div class="cacho-stat">
+      <div class="cacho-stat-label">Followers</div>
+      <div class="cacho-stat-value">${(m.followers||0).toLocaleString('es-AR')}</div>
+      ${variacion != null ? `<div class="cacho-stat-delta ${varClass}">${varSign}${variacion}</div>` : ''}
+    </div>
+    <div class="cacho-stat">
+      <div class="cacho-stat-label">Posts hoy</div>
+      <div class="cacho-stat-value">${m.postsHoy ?? '—'}</div>
+    </div>
+    <div class="cacho-stat">
+      <div class="cacho-stat-label">Media total</div>
+      <div class="cacho-stat-value">${(m.mediaCount||0).toLocaleString('es-AR')}</div>
+    </div>
+  </div>`;
+
+  if(r.hallazgos && r.hallazgos.length){
+    html += `<div style="margin-bottom:16px">`;
+    r.hallazgos.forEach(h => {
+      const tipo = h.tipo || 'alerta';
+      html += `<div class="cacho-hallazgo ${tipo}">${h.descripcion || JSON.stringify(h)}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if(r.resumen){
+    html += `<div class="cacho-narrativa">${r.resumen}</div>`;
+  }
+
+  if(r.revisiones && r.revisiones.length){
+    html += `<div class="cacho-revisiones"><strong>Revisado por:</strong><ul>`;
+    r.revisiones.forEach(rev => {
+      const nombre = nombresMap[rev.empId] || rev.empId;
+      const fecha = rev.fecha ? new Date(rev.fecha).toLocaleString('es-AR') : '?';
+      html += `<li>${nombre} — ${fecha}</li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  const responsable = cuenta.responsable;
+  const yaReviso = (r.revisiones || []).some(rev => rev.empId === empActualId);
+
+  if(empActualId === responsable && !yaReviso){
+    html += `<button class="btn-ok-cacho" onclick="darOkCacho('${r.id}')">OK / Entendido</button>`;
+  } else if(empActualId === responsable && yaReviso){
+    html += `<button class="btn-ok-cacho" disabled>Ya revisaste este reporte</button>`;
+  } else {
+    const revisado = (r.revisiones || []).length > 0;
+    if(revisado){
+      html += `<div style="text-align:center;padding:12px;color:var(--green);font-weight:600;font-size:14px">Revisado por ${nombresMap[(r.revisiones||[])[0]?.empId] || '?'}</div>`;
+    } else {
+      html += `<div style="text-align:center;padding:12px;color:#999;font-size:13px">Pendiente de revisión por ${nombresMap[responsable] || responsable || '?'}</div>`;
+    }
+  }
+
+  document.getElementById('mCachoBody').innerHTML = html;
+  document.getElementById('mCacho').classList.add('active');
+}
+
+async function darOkCacho(reportId){
+  try {
+    await db.collection('cacho_reports').doc(reportId).update({
+      revisiones: firebase.firestore.FieldValue.arrayUnion({
+        empId: empActualId,
+        fecha: new Date().toISOString()
+      })
+    });
+    cerrarModal('mCacho');
+    renderCachoReports();
+  } catch(e){
+    console.error('[cacho] OK error:', e.message);
+    alert('Error al registrar revisión: ' + e.message);
+  }
+}
+</script>
 
 </body>
 </html>
