@@ -1585,18 +1585,6 @@ header{
   </div>
 </div>
 
-<!-- MODAL CACHO DETALLE -->
-<div class="modal-overlay" id="mCacho">
-  <div class="modal" style="max-width:580px">
-    <div class="modal-header">
-      <div class="modal-title" id="mCachoTitle">Reporte de Cacho</div>
-      <button class="modal-close" onclick="cerrarModal('mCacho')">✕</button>
-    </div>
-    <div class="modal-body" id="mCachoBody">
-    </div>
-  </div>
-</div>
-
 <!-- MODAL PROVEEDOR -->
 <div class="modal-overlay" id="mProveedor">
   <div class="modal">
@@ -1626,6 +1614,18 @@ header{
         <button class="btn-cancel" onclick="cerrarModal('mProveedor')">Cancelar</button>
         <button class="btn-blue" onclick="guardarProveedor()">Guardar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CACHO DETALLE (fuera de ambos shells — accesible globalmente) -->
+<div class="modal-overlay" id="mCacho">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-title" id="mCachoTitle">Reporte de Cacho</div>
+      <button class="modal-close" onclick="cerrarModal('mCacho')">✕</button>
+    </div>
+    <div class="modal-body" id="mCachoBody">
     </div>
   </div>
 </div>
