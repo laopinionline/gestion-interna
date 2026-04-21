@@ -6839,10 +6839,12 @@ async function darOkCacho(reportId){
       })
     });
     cerrarModal('mCacho');
-    renderCachoReports();
+    var shell = document.getElementById('vEmpCacho')?.classList.contains('active') ? 'emp' : undefined;
+    renderCachoReports(shell);
+    toast('Revisado correctamente', 'ok');
   } catch(e){
     console.error('[cacho] OK error:', e.message);
-    alert('Error al registrar revisión: ' + e.message);
+    toast('Error al registrar revisión: ' + e.message, 'err');
   }
 }
 </script>
