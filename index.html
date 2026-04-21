@@ -4863,7 +4863,7 @@ function renderKanban(){
   const estados = ['pendiente','en-curso','listo'];
   const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
   const tareas = ordenes.filter(o => {
-    if(!empActualId) return true;
+    if(!empActualId) return false;
     const yo = colaboradores.find(c=>c.id===empActualId);
     // Director general ve todo
     if(yo && yo.jerarquia==='director_general') return true;
