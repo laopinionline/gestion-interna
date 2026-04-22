@@ -2829,7 +2829,7 @@ function abrirOrden(ordenId){
   var asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
   var html = '<div>';
   html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||'Sin título')+'</div>';
-  if(o.origen==='email') html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="email-badge">📧 email</span>'+(o.emailLink?'<a href="'+o.emailLink+'" target="_blank" style="font-size:12px;color:#7b1fa2;font-weight:600;text-decoration:none;">Ver email original →</a>':'')+'</div>';
+  if(o.origen==='email'||o.origen==='gmail') html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="email-badge">📧 email</span>'+(o.emailLink?'<a href="'+o.emailLink+'" target="_blank" style="font-size:12px;color:#7b1fa2;font-weight:600;text-decoration:none;">Ver email original →</a>':'')+'</div>';
   html += '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">';
   if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
   html += '<div style="display:flex;justify-content:space-between;"><span style="color:#999;">Cliente</span><b>'+(c?c.nombre:'—')+'</b></div>';
@@ -3920,10 +3920,10 @@ function renderOrdenes(lista){
     html += '</div>';
     var esHugo = o.tipo==='nota_para_publicar' || o.origen==='borrador-hugo' || o.categoria==='borrador-hugo';
     if(esHugo) html += '<span style="font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;">HUGO</span>';
-    if(o.origen==='email') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
+    if(o.origen==='email'||o.origen==='gmail') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
     html += '<div class="order-desc">' + desc + '</div>';
     if(esHugo) html += '<button onclick="event.stopPropagation();abrirNotaHugo(\'' + o.id + '\')" style="margin-top:6px;padding:6px 12px;background:#7c4dff;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>';
-    if(o.origen==='email' && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
+    if((o.origen==='email'||o.origen==='gmail') && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
     if(puedeCheckOrden(o)){
       var comentCount = (o.comentarios||[]).length;
       html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">';
@@ -4916,7 +4916,7 @@ function renderKanban(){
     return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}" onclick="abrirDetalleOrdenEmp('${o.id}')" style="cursor:pointer;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
-        <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${o.origen==="email"?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'Sin título'}</div>
+        <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${(o.origen==="email"||o.origen==="gmail")?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'Sin título'}</div>
       </div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
@@ -4924,7 +4924,7 @@ function renderKanban(){
       <div class="kc-move">${botones}</div>
       <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
         ${(o.tipo==="nota_para_publicar"||o.origen==="borrador-hugo"||o.categoria==="borrador-hugo") ? `<button onclick="event.stopPropagation();abrirNotaHugo('${o.id}')" style="flex:1;padding:7px 10px;background:#7c4dff;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>` : ""}
-        ${(o.origen==="email"&&o.emailLink) ? `<button onclick="event.stopPropagation();window.open('${o.emailLink}','_blank')" style="padding:7px 10px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>` : ""}
+        ${((o.origen==="email"||o.origen==="gmail")&&o.emailLink) ? `<button onclick="event.stopPropagation();window.open('${o.emailLink}','_blank')" style="padding:7px 10px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>` : ""}
         ${puedeCheckOrden(o) ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
           ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
         ${comentBtn}
@@ -5470,8 +5470,8 @@ function abrirOrdenesColaborador(empId, nombre){
   modal.classList.add('active');
 }
 
-function _completarDesdeColab(ordenId){
-  cambiarEstadoOrden(ordenId, 'completada');
+async function _completarDesdeColab(ordenId){
+  await marcarOrdenCompletada(ordenId);
   if(window._ordColabEmpId) abrirOrdenesColaborador(window._ordColabEmpId, window._ordColabNombre);
 }
 function _comentarDesdeColab(ordenId){
