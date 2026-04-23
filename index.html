@@ -6412,6 +6412,7 @@ function navSidebar(vistaId, el){
   if(vistaId==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
+  if(vistaId==='vCacho'){ renderCachoReports(); }
 }
 
 // Asegurar que vDash y aws están dentro del smc
