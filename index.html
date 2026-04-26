@@ -1144,6 +1144,41 @@ header{
 .btn-ok-cacho:hover{background:#15633b;}
 .btn-ok-cacho:disabled{background:var(--paper2);color:#999;cursor:default;}
 
+/* ══ PIPELINE COMERCIAL ══ */
+.pipeline-board{display:flex;gap:12px;overflow-x:auto;padding:8px 0 16px;min-height:400px;}
+.pipeline-col{flex:0 0 220px;background:var(--paper2);border-radius:12px;padding:10px;display:flex;flex-direction:column;min-height:300px;}
+.pipeline-col-header{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.pipeline-col-count{background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.pipeline-col-body{flex:1;min-height:60px;display:flex;flex-direction:column;gap:8px;}
+.pipeline-col-body.drag-over{background:rgba(46,109,164,0.08);border-radius:8px;}
+.pipeline-card{background:#fff;border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);cursor:pointer;border-left:4px solid var(--line);transition:box-shadow 0.15s;}
+.pipeline-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.pipeline-card.draggable{cursor:grab;}
+.pipeline-card.dragging{opacity:0.5;transform:rotate(2deg);}
+.pipeline-card .pc-name{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.pipeline-card .pc-rubro{font-size:11px;color:var(--ink2);margin-bottom:6px;}
+.pipeline-card .pc-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.pipeline-card .pc-chip{font-size:10px;background:var(--paper2);color:var(--ink2);padding:1px 6px;border-radius:4px;}
+.pipeline-card .pc-deadline{font-size:10px;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.pipeline-card.dl-verde{border-left-color:var(--green);}
+.pipeline-card.dl-amarillo{border-left-color:var(--gold);}
+.pipeline-card.dl-rojo{border-left-color:var(--accent);}
+.pipeline-card .pc-deadline.dl-rojo{color:var(--accent);font-weight:700;}
+.pipeline-card .pc-deadline.dl-amarillo{color:var(--gold);}
+.pipeline-card .pc-deadline.dl-verde{color:var(--green);}
+.desviaciones-panel{margin-top:20px;background:var(--red-bg);border-radius:12px;padding:16px;}
+.desviaciones-panel h3{font-size:14px;color:var(--accent);margin:0 0 10px;}
+.desviaciones-list{display:flex;flex-direction:column;gap:8px;}
+.desv-card{background:#fff;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-left:4px solid var(--accent);}
+.desv-card .desv-info{font-size:13px;font-weight:600;color:var(--ink);}
+.desv-card .desv-meta{font-size:11px;color:var(--ink2);}
+.desv-card .desv-badge{font-size:10px;font-weight:700;color:var(--accent);background:var(--red-bg);padding:2px 8px;border-radius:4px;}
+[data-theme="dark"] .pipeline-col{background:#1a1a1a;}
+[data-theme="dark"] .pipeline-card{background:#222;border-left-color:#333;}
+[data-theme="dark"] .desviaciones-panel{background:#2a1a1a;}
+[data-theme="dark"] .desv-card{background:#222;}
+@media(max-width:768px){.pipeline-col{flex:0 0 180px;}}
+
 </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1254,6 +1289,7 @@ header{
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="cambiarVista('vDash',this)">Dashboard</button>
       <button class="nav-tab" onclick="cambiarVista('vClientes',this)">Clientes</button>
+      <button class="nav-tab" id="tabPipeline" onclick="cambiarVista('vPipeline',this)">Pipeline</button>
       <button class="nav-tab" onclick="cambiarVista('vOrdenes',this)">Órdenes</button>
       <button class="nav-tab" id="tabColaboradores" onclick="cambiarVista('vcolaboradores',this)">Equipo</button>
       <button class="nav-tab" onclick="cambiarVista('vReuniones',this)">Reuniones</button>
@@ -1585,6 +1621,34 @@ header{
       </div>
     </div>
 
+    <!-- PIPELINE COMERCIAL -->
+    <div class="view" id="vPipeline">
+      <div class="toolbar">
+        <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
+        <span class="count-badge" id="pipelineCountBadge">0</span>
+      </div>
+      <div class="pipeline-board" id="pipelineBoard"></div>
+      <div id="desviacionesPanel"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL MOVER ETAPA -->
+<div class="modal-overlay" id="mMoverEtapa">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title" id="mMoverEtapaTitle">Mover etapa</div>
+      <button class="modal-close" onclick="cerrarModal('mMoverEtapa')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="mMoverEtapaCliente" style="font-size:15px;font-weight:600;margin-bottom:12px;"></div>
+      <div id="mMoverEtapaFields"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="cerrarModal('mMoverEtapa')" style="padding:8px 16px;border:1px solid var(--line);background:transparent;border-radius:8px;cursor:pointer;">Cancelar</button>
+      <button id="btnConfirmarMoverEtapa" onclick="confirmarMoverEtapa()" style="padding:8px 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Confirmar</button>
+    </div>
   </div>
 </div>
 
@@ -1676,6 +1740,7 @@ header{
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="cambiarVistaEmp('vEmpKanban',this)">📋 Mis Tareas</button>
     <button class="nav-tab" id="tabEmpClientes" style="display:none" onclick="cambiarVistaEmp('vEmpClientes',this)">👥 Clientes</button>
+    <button class="nav-tab" id="tabEmpPipeline" style="display:none" onclick="cambiarVistaEmp('vEmpPipeline',this)">Pipeline</button>
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpReuniones',this)">📅 Reuniones</button>
     <button class="nav-tab" onclick="cambiarVistaEmp('vEmpProductividad',this)">📊 Mi Productividad</button>
     <button class="nav-tab" id="tabCachoEmp" style="display:none" onclick="cambiarVistaEmp('vEmpCacho',this)">🦟 Cacho</button>
@@ -1731,6 +1796,9 @@ header{
         <button class="bn-item" id="bne-mis-clientes" onclick="cambiarVistaEmpBN('vEmpMisClientes','bne-mis-clientes')">
           <span class="bn-icon">⭐</span>Mis Clientes
         </button>
+        <button class="bn-item" id="bne-pipeline" style="display:none" onclick="cambiarVistaEmpBN('vEmpPipeline','bne-pipeline')">
+          <span class="bn-icon">🎯</span>Pipeline
+        </button>
         <button class="bn-item" id="bne-mensajes" onclick="cerrarDrawer();abrirMensajero()">
           <span class="bn-icon">💬</span>Mensajes
         </button>
@@ -1744,6 +1812,15 @@ header{
     <div class="view" id="vEmpMisClientes"><div id="empMisClientesList" style="margin-top:4px;padding:0 4px;"></div></div>
     <!-- CLIENTES DIRECTOR -->
     <div class="view" id="vEmpClientes"><div id="empClientesList" style="margin-top:4px"></div></div>
+    <!-- PIPELINE COLABORADOR -->
+    <div class="view" id="vEmpPipeline">
+      <div class="toolbar">
+        <span style="font-size:16px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
+        <span class="count-badge" id="pipelineEmpCountBadge">0</span>
+      </div>
+      <div class="pipeline-board" id="pipelineBoardEmp"></div>
+      <div id="desviacionesPanelEmp"></div>
+    </div>
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
       <div class="emp-header">
@@ -2723,6 +2800,7 @@ function cambiarVista(id, btn){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
   if(id==='vCacho'){ renderCachoReports(); }
+  if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge'); }
 }
 
 // ══ DASHBOARD ══
@@ -4166,6 +4244,12 @@ function rendercolaborador(usuarioActual){
   if(tabEmpCl) tabEmpCl.style.display = esDir ? '' : 'none';
   const drawerEmpCl = document.getElementById('drawerEmpClientes');
   if(drawerEmpCl) drawerEmpCl.style.display = esDir ? '' : 'none';
+  // Pipeline: visible para EQUIPO_COMERCIAL y directores
+  const puedeVerPipeline = EQUIPO_COMERCIAL.includes(empActualId) || esDir;
+  const tabEmpPipe = document.getElementById('tabEmpPipeline');
+  if(tabEmpPipe) tabEmpPipe.style.display = puedeVerPipeline ? '' : 'none';
+  const bnePipe = document.getElementById('bne-pipeline');
+  if(bnePipe) bnePipe.style.display = puedeVerPipeline ? '' : 'none';
   // Ocultar dashboard en mobile — pero directores ven lecturas GA4
   if(window.innerWidth <= 768){
     var mobileHide = esDir ? ['empDashContainer'] : ['empDashContainer','empLecturasContainer'];
@@ -4744,6 +4828,7 @@ function cambiarVistaEmp(id, btn){
   if(id==='vEmpReuniones') renderEmpReuniones();
   if(id==='vEmpProductividad') renderProductividadEmp();
   if(id==='vEmpCacho') renderCachoReports('emp');
+  if(id==='vEmpPipeline') renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge');
 }
 
 // ══ PRODUCTIVIDAD COLABORADOR ══
@@ -6851,6 +6936,246 @@ async function darOkCacho(reportId){
     toast('Error al registrar revisión: ' + e.message, 'err');
   }
 }
+// ══ PIPELINE COMERCIAL ══
+const ETAPAS_PIPELINE = ['contacto','negociacion','activo','pausado','inactivo'];
+const ETAPA_LABELS = {contacto:'Contacto',negociacion:'Negociación',activo:'Activo',pausado:'Pausado',inactivo:'Inactivo'};
+const ETAPA_COLORS = {contacto:'var(--blue2)',negociacion:'var(--gold)',activo:'var(--green)',pausado:'var(--ink2)',inactivo:'var(--accent)'};
+
+let _pipelineDragClienteId = null;
+
+function calcularEstadoDeadline(deadlineISO){
+  if(!deadlineISO) return null;
+  const ahora = new Date();
+  const dl = new Date(deadlineISO);
+  const diffMs = dl - ahora;
+  const diffH = diffMs / (1000*60*60);
+  if(diffH < 0) return 'rojo';
+  if(diffH <= 48) return 'amarillo';
+  return 'verde';
+}
+
+function formatDeadline(deadlineISO){
+  if(!deadlineISO) return '';
+  const dl = new Date(deadlineISO);
+  const hoy = new Date();
+  const diffMs = dl - hoy;
+  const diffDias = Math.ceil(diffMs / (1000*60*60*24));
+  if(diffDias < 0) return 'Vencido hace ' + Math.abs(diffDias) + 'd';
+  if(diffDias === 0) return 'Vence hoy';
+  if(diffDias === 1) return 'Vence mañana';
+  return 'Vence en ' + diffDias + 'd';
+}
+
+function puedeMoverEtapa(cliente){
+  if(!empActualId) return false;
+  if(empActualId === 'emp01') return true;
+  if(DIRECTORES[empActualId]) return true;
+  if(Array.isArray(cliente.responsables) && cliente.responsables.includes(empActualId)) return true;
+  return false;
+}
+
+function renderPipeline(boardId, desvPanelId, badgeId){
+  const board = document.getElementById(boardId);
+  const desvPanel = document.getElementById(desvPanelId);
+  const badge = document.getElementById(badgeId);
+  if(!board) return;
+
+  const porEtapa = {};
+  ETAPAS_PIPELINE.forEach(e => porEtapa[e] = []);
+  clientes.forEach(c => {
+    const et = c.etapa || 'activo';
+    if(porEtapa[et]) porEtapa[et].push(c);
+  });
+
+  if(badge) badge.textContent = clientes.length;
+
+  let html = '';
+  ETAPAS_PIPELINE.forEach(etapa => {
+    const lista = porEtapa[etapa];
+    html += `<div class="pipeline-col" data-etapa="${etapa}">
+      <div class="pipeline-col-header">
+        <span style="color:${ETAPA_COLORS[etapa]}">${ETAPA_LABELS[etapa]}</span>
+        <span class="pipeline-col-count" style="background:${ETAPA_COLORS[etapa]}">${lista.length}</span>
+      </div>
+      <div class="pipeline-col-body" data-etapa="${etapa}"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handlePipelineDrop(event,'${etapa}')">`;
+    lista.forEach(c => {
+      const dlEstado = calcularEstadoDeadline(c.deadlineEtapa);
+      const dlClass = dlEstado ? ' dl-'+dlEstado : '';
+      const draggable = puedeMoverEtapa(c);
+      const responsables = (c.responsables||[]).map(rid => {
+        const col = colaboradores.find(x=>x.id===rid);
+        return col ? (col.nombre||'').split(' ')[0] : rid;
+      });
+      html += `<div class="pipeline-card${dlClass}${draggable?' draggable':''}"
+        ${draggable?'draggable="true" ondragstart="startPipelineDrag(event,\''+c.id+'\')" ondragend="endPipelineDrag(event)"':''}
+        onclick="abrirDetalle('${c.id}')">
+        <div class="pc-name">${c.nombre||'Sin nombre'}</div>
+        <div class="pc-rubro">${c.rubro||''}</div>
+        ${responsables.length ? '<div class="pc-chips">'+responsables.map(r=>'<span class="pc-chip">'+r+'</span>').join('')+'</div>' : ''}
+        ${dlEstado ? '<div class="pc-deadline dl-'+dlEstado+'">'+(dlEstado==='rojo'?'⚠ ':'')+(dlEstado==='amarillo'?'⏰ ':'')+formatDeadline(c.deadlineEtapa)+'</div>' : ''}
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  board.innerHTML = html;
+
+  // Desviaciones
+  if(desvPanel) renderDesviaciones(desvPanel);
+}
+
+function renderDesviaciones(container){
+  const esDirector = empActualId === 'emp01' || !!DIRECTORES[empActualId];
+  const desviados = clientes.filter(c => {
+    if(c.etapa !== 'contacto' && c.etapa !== 'negociacion') return false;
+    if(!c.deadlineEtapa) return false;
+    const estado = calcularEstadoDeadline(c.deadlineEtapa);
+    if(estado !== 'rojo' && estado !== 'amarillo') return false;
+    if(!esDirector){
+      if(!Array.isArray(c.responsables) || !c.responsables.includes(empActualId)) return false;
+    }
+    return true;
+  }).sort((a,b) => new Date(a.deadlineEtapa) - new Date(b.deadlineEtapa));
+
+  if(!desviados.length){
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = '<div class="desviaciones-panel"><h3>⚠ Clientes con deadline vencido o próximo ('+desviados.length+')</h3><div class="desviaciones-list">';
+  desviados.forEach(c => {
+    const dlEstado = calcularEstadoDeadline(c.deadlineEtapa);
+    html += `<div class="desv-card" onclick="abrirDetalle('${c.id}')">
+      <div>
+        <div class="desv-info">${c.nombre}</div>
+        <div class="desv-meta">${ETAPA_LABELS[c.etapa]||c.etapa} — ${c.rubro||''}</div>
+      </div>
+      <span class="desv-badge">${dlEstado==='rojo'?'VENCIDO':formatDeadline(c.deadlineEtapa)}</span>
+    </div>`;
+  });
+  html += '</div></div>';
+  container.innerHTML = html;
+}
+
+function startPipelineDrag(ev, clienteId){
+  _pipelineDragClienteId = clienteId;
+  ev.target.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+}
+function endPipelineDrag(ev){
+  ev.target.classList.remove('dragging');
+}
+function handlePipelineDrop(ev, etapaNueva){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  if(!_pipelineDragClienteId) return;
+  const cliente = clientes.find(c=>c.id===_pipelineDragClienteId);
+  if(!cliente) return;
+  if(cliente.etapa === etapaNueva){ _pipelineDragClienteId=null; return; }
+  if(!puedeMoverEtapa(cliente)){ toast('Sin permiso para mover este cliente','err'); _pipelineDragClienteId=null; return; }
+  abrirModalMoverEtapa(_pipelineDragClienteId, etapaNueva);
+  _pipelineDragClienteId = null;
+}
+
+function abrirModalMoverEtapa(clienteId, etapaNueva){
+  const cliente = clientes.find(c=>c.id===clienteId);
+  if(!cliente) return;
+  document.getElementById('mMoverEtapaCliente').textContent = cliente.nombre + ' → ' + ETAPA_LABELS[etapaNueva];
+  const fields = document.getElementById('mMoverEtapaFields');
+  window._moverEtapaData = { clienteId, etapaNueva };
+
+  if(etapaNueva === 'contacto' || etapaNueva === 'negociacion'){
+    fields.innerHTML = `<label style="font-size:13px;color:var(--ink2);display:block;margin-bottom:4px;">Deadline (días desde hoy)</label>
+      <input type="number" id="inputDeadlineDias" min="1" max="365" value="7" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;">
+      <div style="font-size:11px;color:var(--ink2);margin-top:4px;">Fecha tope para promover a la siguiente etapa</div>`;
+  } else if(etapaNueva === 'pausado' || etapaNueva === 'inactivo'){
+    fields.innerHTML = `<label style="font-size:13px;color:var(--ink2);display:block;margin-bottom:4px;">Motivo (requerido)</label>
+      <textarea id="inputMotivoEtapa" rows="3" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;resize:vertical;" placeholder="Describí brevemente por qué..."></textarea>`;
+  } else {
+    fields.innerHTML = '<div style="font-size:13px;color:var(--ink2);">Sin campos adicionales requeridos.</div>';
+  }
+
+  document.getElementById('mMoverEtapa').classList.add('active');
+}
+
+async function confirmarMoverEtapa(){
+  const data = window._moverEtapaData;
+  if(!data) return;
+  const { clienteId, etapaNueva } = data;
+
+  let deadlineDias = null;
+  let motivo = '';
+
+  if(etapaNueva === 'contacto' || etapaNueva === 'negociacion'){
+    deadlineDias = parseInt(document.getElementById('inputDeadlineDias')?.value);
+    if(!deadlineDias || deadlineDias < 1){ toast('Ingresá un deadline válido','err'); return; }
+  } else if(etapaNueva === 'pausado' || etapaNueva === 'inactivo'){
+    motivo = (document.getElementById('inputMotivoEtapa')?.value||'').trim();
+    if(!motivo){ toast('El motivo es requerido','err'); return; }
+  }
+
+  await moverEtapa(clienteId, etapaNueva, deadlineDias, motivo);
+  cerrarModal('mMoverEtapa');
+  window._moverEtapaData = null;
+}
+
+async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
+  const cliente = clientes.find(c=>c.id===clienteId);
+  if(!cliente) return;
+
+  const ahora = new Date().toISOString();
+  let deadlineEtapa = null;
+  if(deadlineDias){
+    const dl = new Date();
+    dl.setDate(dl.getDate() + deadlineDias);
+    dl.setHours(23,59,59,999);
+    deadlineEtapa = dl.toISOString();
+  }
+
+  // Cerrar entrada anterior en historial
+  const historial = Array.isArray(cliente.historialEtapas) ? [...cliente.historialEtapas] : [];
+  if(historial.length > 0){
+    const ultima = historial[historial.length - 1];
+    if(!ultima.fechaSalida){
+      historial[historial.length - 1] = { ...ultima, fechaSalida: ahora };
+    }
+  }
+
+  // Nueva entrada
+  historial.push({
+    etapa: etapaNueva,
+    fechaIngreso: ahora,
+    deadlineComprometido: deadlineEtapa,
+    fechaSalida: null,
+    dadoDeAltaPor: empActualId,
+    motivo: motivo || null
+  });
+
+  const update = {
+    etapa: etapaNueva,
+    deadlineEtapa: deadlineEtapa,
+    historialEtapas: historial
+  };
+
+  try {
+    await db.collection('clientes').doc(clienteId).update(update);
+    // Actualizar local
+    cliente.etapa = etapaNueva;
+    cliente.deadlineEtapa = deadlineEtapa;
+    cliente.historialEtapas = historial;
+    gLS();
+    toast('Movido a ' + ETAPA_LABELS[etapaNueva], 'ok');
+    // Re-render pipeline en ambos shells
+    renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge');
+    renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge');
+  } catch(e){
+    console.error('[pipeline] moverEtapa error:', e.message);
+    toast('Error al mover etapa: ' + e.message, 'err');
+  }
+}
+
 </script>
 
 </body>
