@@ -2468,6 +2468,14 @@ async function login(){
   // Detectar rol localmente — supervisor es emp01, directores, o quien tenga rol supervisor
   var esDirector = DIRECTORES[usuario.id];
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor' || esDirector) ? 'supervisor' : 'colaborador';
+  console.group('[login-debug] Routing shell para', usuario.nombre);
+  console.log('usuario.id ===', JSON.stringify(usuario.id), 'es emp01?', usuario.id === 'emp01');
+  console.log('usuario.nombre ===', JSON.stringify(usuario.nombre), 'es Lucas?', usuario.nombre === 'Lucas Marino Aguirre');
+  console.log('usuario.rol ===', JSON.stringify(usuario.rol), 'es supervisor?', usuario.rol === 'supervisor');
+  console.log('DIRECTORES[id]:', DIRECTORES[usuario.id]);
+  console.log('jerarquia (Firestore):', usuario.jerarquia);
+  console.log('rol calculado:', rol);
+  console.groupEnd();
   iniciarSesion(rol);
 
   // Registrar actividad en Firestore
