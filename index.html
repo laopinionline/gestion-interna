@@ -2435,8 +2435,7 @@ async function login(){
   usuarioLogueado = usuario;
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
-  try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
-  // Persistir sesión en localStorage
+  // Persistir sesión — pisa cualquier sesión anterior de otro usuario
   try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
 
   function iniciarSesion(rol){
@@ -2776,7 +2775,6 @@ function etiquetaJerarquia(j){
 function irAlHome(){ if(rolActual==="supervisor") cambiarVistaBN("vDash","bn-dash"); else cambiarVistaEmpBN("vEmpKanban","bne-tareas"); window.scrollTo(0,0); }
 
 function logout(){
-  try { localStorage.removeItem('gestion_session'); } catch(e){}
   try { localStorage.removeItem('gestion_session'); } catch(e){}
   rolActual=null; usuarioLogueado=null; empActualId=null; empActualNombre='';
   document.querySelectorAll('.app').forEach(a=>a.classList.remove('active'));
@@ -5991,18 +5989,23 @@ function aplicarVisibilidad(){
   // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
   cargarDatosFirestore().then(() => {
     console.log('Datos cargados desde Firestore');
-    // Restaurar sesión si existe
+    // Restaurar sesión si existe — triple validación (id + tel + pass)
     try {
       var sess = localStorage.getItem('gestion_session');
       if(sess){
         var s = JSON.parse(sess);
+        var sessTel = (s.tel||'').replace(/[^0-9]/g,'');
         var u = colaboradores.find(function(c){
-          return c.id===s.id && (c.telLogin||'').replace(/[^0-9]/g,'')===s.tel && c.password===s.pass;
+          var tl = (c.telLogin||'').replace(/[^0-9]/g,'');
+          var ta = (c.telefono||'').replace(/[^0-9]/g,'');
+          return c.id===s.id && (tl===sessTel || ta===sessTel) && c.password===s.pass;
         });
         if(u){
           document.getElementById('loginTel').value = s.tel;
           document.getElementById('loginPass').value = s.pass;
           login();
+        } else {
+          localStorage.removeItem('gestion_session');
         }
       }
     } catch(e){}
