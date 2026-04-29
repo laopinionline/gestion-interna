@@ -2345,6 +2345,7 @@ function gLS(){ localStorage.setItem('d_clientes',JSON.stringify(clientes)); loc
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
 function hoy(){ return new Date().toISOString().split('T')[0]; }
 function fmtD(iso){ if(!iso)return'—'; if(iso.seconds) iso=new Date(iso.seconds*1000).toISOString(); if(iso._seconds) iso=new Date(iso._seconds*1000).toISOString(); if(typeof iso!=='string') return'—'; iso=iso.slice(0,10); const[y,m,d]=iso.split('-'); return d?`${d}/${m}/${y}`:'—'; }
+function sortFecha(v){ if(!v) return ''; if(v.seconds) return new Date(v.seconds*1000).toISOString(); if(v._seconds) return new Date(v._seconds*1000).toISOString(); if(v instanceof Date) return v.toISOString(); if(typeof v==='string') return v; return ''; }
 
 function diasV(iso){
   if(!iso)return null;
@@ -2468,14 +2469,6 @@ async function login(){
   // Detectar rol localmente — supervisor es emp01, directores, o quien tenga rol supervisor
   var esDirector = DIRECTORES[usuario.id];
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor' || esDirector) ? 'supervisor' : 'colaborador';
-  console.group('[login-debug] Routing shell para', usuario.nombre);
-  console.log('usuario.id ===', JSON.stringify(usuario.id), 'es emp01?', usuario.id === 'emp01');
-  console.log('usuario.nombre ===', JSON.stringify(usuario.nombre), 'es Lucas?', usuario.nombre === 'Lucas Marino Aguirre');
-  console.log('usuario.rol ===', JSON.stringify(usuario.rol), 'es supervisor?', usuario.rol === 'supervisor');
-  console.log('DIRECTORES[id]:', DIRECTORES[usuario.id]);
-  console.log('jerarquia (Firestore):', usuario.jerarquia);
-  console.log('rol calculado:', rol);
-  console.groupEnd();
   iniciarSesion(rol);
 
   // Registrar actividad en Firestore
@@ -3174,7 +3167,7 @@ function renderTareasConReuniones(){
   // Reuniones
   reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
     .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
-  items.sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  items.sort((a,b)=>sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)));
   if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
   div.innerHTML = items.map(i=>{
     const onclick = i.tipo==='orden'
@@ -3712,7 +3705,7 @@ function abrirDetalle(id){
 }
 
 function renderOrdenesCliente(c){
-  const ords=ordenes.filter(o=>o.clienteId===c.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const ords=ordenes.filter(o=>o.clienteId===c.id).sort((a,b)=>sortFecha(b.fecha).localeCompare(sortFecha(a.fecha)));
   const lista=document.getElementById('dOrdenesList');
   if(!ords.length){ lista.innerHTML='<div class="no-orders"><div>📋</div><p>Sin órdenes vinculadas.</p></div>'; return; }
   lista.innerHTML=ords.map(o=>`
@@ -4979,7 +4972,7 @@ function renderKanban(){
       || (o.copiaA||[]).includes(empActualId)
       || (o.colaboradoresIds||[]).includes(empActualId)
       || o.colaboradorId === empActualId;
-  }).sort((a,b)=>(a.fechaCreacion||a.fecha||'').localeCompare(b.fechaCreacion||b.fecha||''));
+  }).sort((a,b)=>sortFecha(a.fechaCreacion||a.fecha).localeCompare(sortFecha(b.fechaCreacion||b.fecha)));
 
   const pend = tareas.filter(o=>o.estado==='pendiente');
   const enCurso = tareas.filter(o=>o.estado==='en-curso');
@@ -5214,8 +5207,8 @@ function filtrarReuniones(){
     const pasadaB = (sB==='pasada'||sB==='realizada') ? 1 : 0;
     if(pasadaA !== pasadaB) return pasadaA - pasadaB;
     // Próximas: más cercana primero (ASC); pasadas: más reciente primero (DESC)
-    if(pasadaA === 1) return (b.fecha||'').localeCompare(a.fecha||'');
-    return (a.fecha||'').localeCompare(b.fecha||'');
+    if(pasadaA === 1) return sortFecha(b.fecha).localeCompare(sortFecha(a.fecha));
+    return sortFecha(a.fecha).localeCompare(sortFecha(b.fecha));
   });
   // Filtrar por participante — colaboradores solo ven sus reuniones
   if(rolActual !== 'supervisor'){
@@ -5315,8 +5308,8 @@ function renderEmpReuniones(){
     const stA = statusReunion(a), stB = statusReunion(b);
     const ord = {hoy:0, proxima:1, pasada:2};
     if(ord[stA] !== ord[stB]) return ord[stA] - ord[stB];
-    if(stA === 'pasada') return (b.fecha||'').localeCompare(a.fecha||''); // pasadas: más reciente primero
-    return (a.fecha||'').localeCompare(b.fecha||''); // próximas: más cercana primero
+    if(stA === 'pasada') return sortFecha(b.fecha).localeCompare(sortFecha(a.fecha)); // pasadas: más reciente primero
+    return sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)); // próximas: más cercana primero
   });
   cont.innerHTML = '<div style="margin-bottom:12px;font-family:Playfair Display,serif;font-size:20px;color:var(--ink)">Reuniones</div>' + lista.map(r=>renderReunionCard(r,false)).join('');
 }
