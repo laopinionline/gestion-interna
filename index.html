@@ -2501,6 +2501,7 @@ const DIRECTORES = {
 const PUEDE_VER_PAUTA = ['emp01', 'emp02'];
 const PUEDE_ASIGNAR_SEGUIMIENTO = ['emp01','emp02','emp07','emp16','emp00'];
 const EQUIPO_COMERCIAL = ['emp01','emp02','emp05','emp07','emp16','emp28','emp29','emp32','emp33'];
+const PIPELINE_SUPERVISOR = ['emp01','emp02','emp07','emp16'];
 const TAREAS_POR_EQUIPO = {
   'Redacción': [
     'Subir nota al diario digital',
@@ -6978,20 +6979,31 @@ function puedeMoverEtapa(cliente){
   return false;
 }
 
+function esClientePropio(c){
+  return c.creadoPor === empActualId
+    || (c.responsables||[]).includes(empActualId)
+    || (c.seguimientoA||[]).includes(empActualId);
+}
+
 function renderPipeline(boardId, desvPanelId, badgeId){
   const board = document.getElementById(boardId);
   const desvPanel = document.getElementById(desvPanelId);
   const badge = document.getElementById(badgeId);
   if(!board) return;
 
+  const esSupPipeline = PIPELINE_SUPERVISOR.includes(empActualId);
+  const clientesVisibles = esSupPipeline
+    ? clientes
+    : clientes.filter(c => esClientePropio(c));
+
   const porEtapa = {};
   ETAPAS_PIPELINE.forEach(e => porEtapa[e] = []);
-  clientes.forEach(c => {
+  clientesVisibles.forEach(c => {
     const et = c.etapa || 'activo';
     if(porEtapa[et]) porEtapa[et].push(c);
   });
 
-  if(badge) badge.textContent = clientes.length;
+  if(badge) badge.textContent = clientesVisibles.length;
 
   let html = '';
   ETAPAS_PIPELINE.forEach(etapa => {
@@ -7031,15 +7043,13 @@ function renderPipeline(boardId, desvPanelId, badgeId){
 }
 
 function renderDesviaciones(container){
-  const esDirector = empActualId === 'emp01' || !!DIRECTORES[empActualId];
+  const esSupPipeline = PIPELINE_SUPERVISOR.includes(empActualId);
   const desviados = clientes.filter(c => {
     if(c.etapa !== 'contacto' && c.etapa !== 'negociacion') return false;
     if(!c.deadlineEtapa) return false;
     const estado = calcularEstadoDeadline(c.deadlineEtapa);
     if(estado !== 'rojo' && estado !== 'amarillo') return false;
-    if(!esDirector){
-      if(!Array.isArray(c.responsables) || !c.responsables.includes(empActualId)) return false;
-    }
+    if(!esSupPipeline && !esClientePropio(c)) return false;
     return true;
   }).sort((a,b) => new Date(a.deadlineEtapa) - new Date(b.deadlineEtapa));
 
