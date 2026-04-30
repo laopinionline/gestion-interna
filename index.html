@@ -2317,6 +2317,20 @@ let colaboradores = [];
 let reuniones = [];
 let rolActual = null;
 
+// Polling de visibilidad post-login (cubre todos los entry points)
+(function(){
+  var intentos = 0;
+  var iv = setInterval(function(){
+    intentos++;
+    if(empActualId && !window._visibilidadAplicada){
+      window._visibilidadAplicada = true;
+      if(typeof aplicarVisibilidad === 'function') aplicarVisibilidad();
+      clearInterval(iv);
+    }
+    if(intentos >= 50) clearInterval(iv);
+  }, 100);
+})();
+
 // ══ ALERTAS YOUTUBE ══
 // Se cargan desde Firestore — Claw las escribe, el panel las lee
 let alertasYouTube = JSON.parse(localStorage.getItem('d_alertas_youtube') || '[]');
