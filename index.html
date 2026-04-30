@@ -2457,8 +2457,6 @@ async function login(){
         if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
         }
-        var sbPipe=document.getElementById('sidebarPipeline');
-        if(sbPipe) sbPipe.style.display=PIPELINE_SUPERVISOR.includes(empActualId)?'flex':'none';
       })();
 
     } else {
@@ -5947,6 +5945,10 @@ function aplicarVisibilidad(){
       if(el) el.style.display = '';
     });
   }
+
+  // Sidebar Pipeline: visible para PIPELINE_SUPERVISOR
+  var sbPipe = document.getElementById('sidebarPipeline');
+  if(sbPipe) sbPipe.style.display = (typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId)) ? 'flex' : 'none';
 
   if(j === 'director_general'){
     // Ve todo — sin restricciones
