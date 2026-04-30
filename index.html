@@ -2490,6 +2490,8 @@ async function login(){
   // Aplicar visibilidad por jerarquía y cargar métricas grupo
   aplicarVisibilidad();
   cargarMetricasGrupo();
+  // Redundante: re-aplicar visibilidad después del render cycle para cubrir race conditions
+  setTimeout(aplicarVisibilidad, 0);
 }
 
 
