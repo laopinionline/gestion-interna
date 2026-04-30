@@ -1460,6 +1460,9 @@ header{
      <div class="sidebar-item" onclick="navSidebar('vClientes',this)">
        <span class="sidebar-icon" style="background:#e8f5ee;color:#1a7a4a;">◇</span> Clientes
      </div>
+     <div class="sidebar-item" id="sidebarPipeline" style="display:none" onclick="navSidebar('vPipeline',this)">
+       <span class="sidebar-icon" style="background:#fdf6e3;color:#b8860b;">🎯</span> Pipeline
+     </div>
      <div class="sidebar-item" onclick="navSidebar('vcolaboradores',this)">
        <span class="sidebar-icon" style="background:#ede8e0;color:#555;">◎</span> Equipo
      </div>
@@ -2454,6 +2457,8 @@ async function login(){
         if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
           var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
         }
+        var sbPipe=document.getElementById('sidebarPipeline');
+        if(sbPipe) sbPipe.style.display=PIPELINE_SUPERVISOR.includes(empActualId)?'':'none';
       })();
 
     } else {
@@ -6503,6 +6508,7 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
   if(vistaId==='vCacho'){ renderCachoReports(); }
+  if(vistaId==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge'); }
 }
 
 // Asegurar que vDash y aws están dentro del smc
