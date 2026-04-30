@@ -6011,7 +6011,9 @@ function aplicarVisibilidad(){
         if(u){
           document.getElementById('loginTel').value = s.tel;
           document.getElementById('loginPass').value = s.pass;
-          login();
+          login().then(function(){
+            aplicarVisibilidad();
+          });
         } else {
           localStorage.removeItem('gestion_session');
         }
