@@ -2485,24 +2485,30 @@ async function login(){
     // Limpiar ambos panels antes de activar el correcto
     document.getElementById('appSupervisor').classList.remove('active');
     document.getElementById('appcolaborador').classList.remove('active');
-    if(rolActual==='supervisor'){
-      document.getElementById('appSupervisor').classList.add('active');
-      document.getElementById('svUserName').textContent = usuario.nombre.split(' ')[0];
-      actualizarAvatarHeader(usuario);
-      actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
-      cargarTemaUsuario(usuario.id);
-      (function(){
-        if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
-          var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
-        }
-      })();
+    try {
+      if(rolActual==='supervisor'){
+        document.getElementById('appSupervisor').classList.add('active');
+        var svName = document.getElementById('svUserName');
+        if(svName) svName.textContent = usuario.nombre.split(' ')[0];
+        actualizarAvatarHeader(usuario);
+        actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
+        cargarTemaUsuario(usuario.id);
+        (function(){
+          if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
+            var w=document.getElementById('widgetAlertasPauta'); if(w) w.style.display='';
+          }
+        })();
 
-    } else {
-      document.getElementById('appcolaborador').classList.add('active');
-      document.getElementById('empUserName').textContent = usuario.nombre.split(' ')[0];
-      actualizarAvatarColaborador(usuario);
-      rendercolaborador(usuario);
-      cargarTemaUsuario(usuario.id);
+      } else {
+        document.getElementById('appcolaborador').classList.add('active');
+        var empName = document.getElementById('empUserName');
+        if(empName) empName.textContent = usuario.nombre.split(' ')[0];
+        actualizarAvatarColaborador(usuario);
+        rendercolaborador(usuario);
+        cargarTemaUsuario(usuario.id);
+      }
+    } catch(e){
+      console.error('[iniciarSesion] Error post-login (no interrumpe login):', e.message);
     }
   }
 
@@ -2511,25 +2517,25 @@ async function login(){
   var rol = (usuario.id === 'emp01' || usuario.nombre === 'Lucas Marino Aguirre' || usuario.rol === 'supervisor' || esDirector) ? 'supervisor' : 'colaborador';
   iniciarSesion(rol);
 
-  // Registrar actividad en Firestore
-  if(typeof db !== 'undefined'){
-    db.collection('actividad').doc(empActualId).set({
-      ultimaActividad: new Date().toISOString(),
-      nombre: usuario.nombre,
-      equipo: usuario.equipo || ''
-    }, {merge: true}).catch(e=>console.warn('Actividad error:', e));
+  // Post-login: actividad, jerarquía, visibilidad — no debe interrumpir el login
+  try {
+    if(typeof db !== 'undefined'){
+      db.collection('actividad').doc(empActualId).set({
+        ultimaActividad: new Date().toISOString(),
+        nombre: usuario.nombre,
+        equipo: usuario.equipo || ''
+      }, {merge: true}).catch(e=>console.warn('Actividad error:', e));
+    }
+    if(DIRECTORES[usuario.id] && usuario.jerarquia !== 'director_general'){
+      usuario.jerarquia = 'director';
+      usuario.equipoDir = DIRECTORES[usuario.id].equipo;
+    }
+    aplicarVisibilidad();
+    cargarMetricasGrupo();
+    setTimeout(aplicarVisibilidad, 0);
+  } catch(e){
+    console.error('[login] Error post-login (no interrumpe sesión):', e.message);
   }
-
-  // Inyectar jerarquía director si aplica (por si Firestore no lo tiene)
-  if(DIRECTORES[usuario.id] && usuario.jerarquia !== 'director_general'){
-    usuario.jerarquia = 'director';
-    usuario.equipoDir = DIRECTORES[usuario.id].equipo;
-  }
-  // Aplicar visibilidad por jerarquía y cargar métricas grupo
-  aplicarVisibilidad();
-  cargarMetricasGrupo();
-  // Redundante: re-aplicar visibilidad después del render cycle para cubrir race conditions
-  setTimeout(aplicarVisibilidad, 0);
 }
 
 
