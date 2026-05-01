@@ -3203,6 +3203,7 @@ function renderTareasConReuniones(){
   const finStr = fin.toISOString().split('T')[0];
   const div = document.getElementById('dashTareas');
   if(!div) return;
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
   let items = [];
   // Órdenes — guardar id para poder clickear
   ordenes.filter(o=>{
