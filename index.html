@@ -1508,6 +1508,10 @@ header{
         <select class="filter-sel" id="filtroRubro" onchange="filtrarClientes()">
           <option value="">Todos los rubros</option>
         </select>
+        <select class="filter-sel" id="filtroResponsableGrid" onchange="filtrarClientes()">
+          <option value="">Todos los responsables</option>
+          <option value="_sin">Sin responsable asignado</option>
+        </select>
         <span class="count-badge" id="countBadge">0</span>
         <button class="btn-primary" onclick="abrirModalCliente()">+ Nuevo cliente</button>
       </div>
@@ -1630,6 +1634,7 @@ header{
         <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
         <span class="count-badge" id="pipelineCountBadge">0</span>
       </div>
+      <div id="pipelineChips" style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px;"></div>
       <div class="pipeline-board" id="pipelineBoard"></div>
       <div id="desviacionesPanel"></div>
     </div>
@@ -1821,6 +1826,7 @@ header{
         <span style="font-size:16px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
         <span class="count-badge" id="pipelineEmpCountBadge">0</span>
       </div>
+      <div id="pipelineChipsEmp" style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px;"></div>
       <div class="pipeline-board" id="pipelineBoardEmp"></div>
       <div id="desviacionesPanelEmp"></div>
     </div>
@@ -2819,7 +2825,7 @@ function cambiarVista(id, btn){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
   if(id==='vCacho'){ renderCachoReports(); }
-  if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge'); }
+  if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 
 // ══ DASHBOARD ══
@@ -3486,6 +3492,7 @@ function actualizarFiltroRubros(){
   const val=sel.value;
   sel.innerHTML='<option value="">Todos los rubros</option>'+rubros.map(r=>`<option value="${r}">${r}</option>`).join('');
   sel.value=val;
+  actualizarFiltroResponsableGrid();
 }
 
 function filtrarClientes(){
@@ -3493,11 +3500,35 @@ function filtrarClientes(){
   const q=document.getElementById('searchInput')?.value.toLowerCase()||'';
   const est=document.getElementById('filtroEstado').value;
   const rub=document.getElementById('filtroRubro').value;
+  const resp=document.getElementById('filtroResponsableGrid')?.value||'';
   const lista=clientes.filter(c=>{
-    return(!q||c.nombre.toLowerCase().includes(q)||c.rubro.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
-      &&(!est||c.estado===est)&&(!rub||c.rubro===rub);
+    if(q && !c.nombre.toLowerCase().includes(q) && !c.rubro.toLowerCase().includes(q) && !(c.email||'').toLowerCase().includes(q)) return false;
+    if(est && c.estado!==est) return false;
+    if(rub && c.rubro!==rub) return false;
+    if(resp==='_sin' && Array.isArray(c.responsables) && c.responsables.length>0) return false;
+    if(resp==='_sin' && !Array.isArray(c.responsables)) return true;
+    if(resp && resp!=='_sin' && !(Array.isArray(c.responsables) && c.responsables.includes(resp))) return false;
+    return true;
   }).sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
   renderClientes(lista);
+}
+
+function actualizarFiltroResponsableGrid(){
+  const sel=document.getElementById('filtroResponsableGrid');
+  if(!sel) return;
+  const val=sel.value;
+  const respMap={};
+  clientes.forEach(c=>{
+    (c.responsables||[]).forEach(rid=>{ respMap[rid]=(respMap[rid]||0)+1; });
+  });
+  let html='<option value="">Todos los responsables</option><option value="_sin">Sin responsable asignado</option>';
+  Object.entries(respMap).sort((a,b)=>b[1]-a[1]).forEach(([rid,n])=>{
+    const col=colaboradores.find(x=>x.id===rid);
+    const nombre=col?(col.nombre||'').split(' ')[0]:rid;
+    html+=`<option value="${rid}">${nombre} (${n})</option>`;
+  });
+  sel.innerHTML=html;
+  sel.value=val;
 }
 
 function renderClientes(lista){
@@ -4847,7 +4878,7 @@ function cambiarVistaEmp(id, btn){
   if(id==='vEmpReuniones') renderEmpReuniones();
   if(id==='vEmpProductividad') renderProductividadEmp();
   if(id==='vEmpCacho') renderCachoReports('emp');
-  if(id==='vEmpPipeline') renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge');
+  if(id==='vEmpPipeline') renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
 }
 
 // ══ PRODUCTIVIDAD COLABORADOR ══
@@ -6528,7 +6559,7 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
   if(vistaId==='vCacho'){ renderCachoReports(); }
-  if(vistaId==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge'); }
+  if(vistaId==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 
 // Asegurar que vDash y aws están dentro del smc
@@ -7011,25 +7042,68 @@ function esClientePropio(c){
     || (c.seguimientoA||[]).includes(empActualId);
 }
 
-function renderPipeline(boardId, desvPanelId, badgeId){
+function tieneResponsable(c){
+  return Array.isArray(c.responsables) && c.responsables.length > 0;
+}
+
+var _pipelineFiltroResp = null;
+
+function setPipelineFiltroResp(empId){
+  _pipelineFiltroResp = (_pipelineFiltroResp === empId) ? null : empId;
+  renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips');
+  renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
+}
+
+function renderPipeline(boardId, desvPanelId, badgeId, chipsId){
   const board = document.getElementById(boardId);
   const desvPanel = document.getElementById(desvPanelId);
   const badge = document.getElementById(badgeId);
+  const chipsContainer = document.getElementById(chipsId||'');
   if(!board) return;
 
   const esSupPipeline = PIPELINE_SUPERVISOR.includes(empActualId);
+
+  // Solo clientes con responsable asignado entran al pipeline
+  const conResponsable = clientes.filter(c => tieneResponsable(c));
+
   const clientesVisibles = esSupPipeline
-    ? clientes
-    : clientes.filter(c => esClientePropio(c));
+    ? conResponsable
+    : conResponsable.filter(c => esClientePropio(c));
+
+  // Aplicar filtro por responsable si activo
+  const clientesFiltrados = _pipelineFiltroResp
+    ? clientesVisibles.filter(c => (c.responsables||[]).includes(_pipelineFiltroResp))
+    : clientesVisibles;
+
+  // Render chips de responsable (solo para PIPELINE_SUPERVISOR)
+  if(chipsContainer){
+    if(esSupPipeline){
+      const respMap = {};
+      clientesVisibles.forEach(c => {
+        (c.responsables||[]).forEach(rid => { respMap[rid] = (respMap[rid]||0) + 1; });
+      });
+      const entries = Object.entries(respMap).sort((a,b) => b[1]-a[1]);
+      let chipsHtml = `<button onclick="setPipelineFiltroResp(null)" style="padding:4px 10px;border-radius:16px;border:1px solid var(--line);font-size:11px;font-weight:600;cursor:pointer;background:${!_pipelineFiltroResp?'var(--blue)':'transparent'};color:${!_pipelineFiltroResp?'#fff':'var(--ink2)'};">Todos (${clientesVisibles.length})</button>`;
+      entries.forEach(([rid, n]) => {
+        const col = colaboradores.find(x=>x.id===rid);
+        const nombre = col ? (col.nombre||'').split(' ')[0] : rid;
+        const activo = _pipelineFiltroResp === rid;
+        chipsHtml += `<button onclick="setPipelineFiltroResp('${rid}')" style="padding:4px 10px;border-radius:16px;border:1px solid var(--line);font-size:11px;font-weight:600;cursor:pointer;background:${activo?'var(--blue)':'transparent'};color:${activo?'#fff':'var(--ink2)'};">${nombre} (${n})</button>`;
+      });
+      chipsContainer.innerHTML = chipsHtml;
+    } else {
+      chipsContainer.innerHTML = '';
+    }
+  }
 
   const porEtapa = {};
   ETAPAS_PIPELINE.forEach(e => porEtapa[e] = []);
-  clientesVisibles.forEach(c => {
+  clientesFiltrados.forEach(c => {
     const et = c.etapa || 'activo';
     if(porEtapa[et]) porEtapa[et].push(c);
   });
 
-  if(badge) badge.textContent = clientesVisibles.length;
+  if(badge) badge.textContent = clientesFiltrados.length;
 
   let html = '';
   ETAPAS_PIPELINE.forEach(etapa => {
@@ -7071,11 +7145,13 @@ function renderPipeline(boardId, desvPanelId, badgeId){
 function renderDesviaciones(container){
   const esSupPipeline = PIPELINE_SUPERVISOR.includes(empActualId);
   const desviados = clientes.filter(c => {
+    if(!tieneResponsable(c)) return false;
     if(c.etapa !== 'contacto' && c.etapa !== 'negociacion') return false;
     if(!c.deadlineEtapa) return false;
     const estado = calcularEstadoDeadline(c.deadlineEtapa);
     if(estado !== 'rojo' && estado !== 'amarillo') return false;
     if(!esSupPipeline && !esClientePropio(c)) return false;
+    if(_pipelineFiltroResp && !(c.responsables||[]).includes(_pipelineFiltroResp)) return false;
     return true;
   }).sort((a,b) => new Date(a.deadlineEtapa) - new Date(b.deadlineEtapa));
 
@@ -7208,8 +7284,8 @@ async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
     gLS();
     toast('Movido a ' + ETAPA_LABELS[etapaNueva], 'ok');
     // Re-render pipeline en ambos shells
-    renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge');
-    renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge');
+    renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips');
+    renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
   } catch(e){
     console.error('[pipeline] moverEtapa error:', e.message);
     toast('Error al mover etapa: ' + e.message, 'err');
