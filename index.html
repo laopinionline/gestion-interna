@@ -2456,10 +2456,16 @@ async function actualizarAvatarHeader(usuario){
 }
 
 async function loginWithRetry(){
-  try { await login(); } catch(e){ console.warn('[loginWithRetry] primer intento falló:', e.message); }
-  if(!empActualId){
-    try { await login(); } catch(e){ console.warn('[loginWithRetry] segundo intento falló:', e.message); }
+  for(var i=0;i<3;i++){
+    try { await login(); } catch(e){ console.warn('[loginWithRetry] intento '+(i+1)+' falló:', e.message); }
+    await new Promise(function(r){ setTimeout(r, 300); });
+    var sup=document.getElementById('appSupervisor');
+    var col=document.getElementById('appcolaborador');
+    var supVisible=sup&&getComputedStyle(sup).display!=='none';
+    var colVisible=col&&getComputedStyle(col).display!=='none';
+    if(supVisible||colVisible){ console.log('[loginWithRetry] login OK en intento '+(i+1)); return; }
   }
+  console.warn('[loginWithRetry] login falló tras 3 intentos');
 }
 
 async function login(){
