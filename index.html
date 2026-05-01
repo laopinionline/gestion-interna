@@ -2253,8 +2253,24 @@ document.addEventListener('DOMContentLoaded', function(){
   let firestoreReady = false;
 
   async function cargarDatosFirestore() {
+    // Baseline desde localStorage — disponible inmediatamente para login
+    const cols = ['colaboradores','clientes','ordenes','reuniones'];
+    cols.forEach(function(col){
+      try {
+        var cached = localStorage.getItem('d_' + col);
+        if(cached){
+          var datos = JSON.parse(cached);
+          if(col === 'colaboradores' && !colaboradores.length) colaboradores = datos;
+          if(col === 'clientes' && !clientes.length) clientes = datos;
+          if(col === 'ordenes' && !ordenes.length) ordenes = datos;
+          if(col === 'reuniones' && !reuniones.length) reuniones = datos;
+          console.log('[baseline] ' + col + ': ' + datos.length + ' docs desde localStorage');
+        }
+      } catch(e){ /* cache corrupto, ignorar */ }
+    });
+
+    // Luego cargar datos frescos de Firestore (sobreescribe baseline)
     try {
-      const cols = ['colaboradores','clientes','ordenes','reuniones'];
       for (const col of cols) {
         const snap = await db.collection(col).get();
         if (!snap.empty) {
@@ -2262,7 +2278,6 @@ document.addEventListener('DOMContentLoaded', function(){
           localStorage.setItem('d_' + col, JSON.stringify(datos));
           if (col === 'colaboradores') colaboradores = datos;
           if (col === 'clientes') clientes = datos;
-              if (col === 'd_alertas_youtube') { alertasYouTube = datos; localStorage.setItem('d_alertas_youtube', JSON.stringify(datos)); }
           if (col === 'ordenes') ordenes = datos;
           if (col === 'reuniones') reuniones = datos;
         } else {
@@ -2453,7 +2468,10 @@ async function login(){
     return (telGuardado===telInput || telAlt===telInput) && c.password===pass;
   });
   
-  if(!usuario){ err.textContent='Teléfono o contraseña incorrectos'; return; }
+  if(!usuario){
+    if(colaboradores.length===0){ err.textContent='Cargando datos, esperá unos segundos...'; return; }
+    err.textContent='Teléfono o contraseña incorrectos'; return;
+  }
 
   usuarioLogueado = usuario;
   empActualId = usuario.id;
