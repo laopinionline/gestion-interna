@@ -1267,9 +1267,9 @@ header{
     </div>
     <div class="form-group" style="margin-bottom:20px;text-align:left">
       <label class="form-label" style="color:#888">Contraseña</label>
-      <input type="password" class="pin-field" id="loginPass" placeholder="••••••" style="letter-spacing:4px;font-size:18px" onkeydown="if(event.key==='Enter')login()">
+      <input type="password" class="pin-field" id="loginPass" placeholder="••••••" style="letter-spacing:4px;font-size:18px" onkeydown="if(event.key==='Enter')loginWithRetry()">
     </div>
-    <button class="btn-login" onclick="login()">Ingresar</button>
+    <button class="btn-login" onclick="loginWithRetry()">Ingresar</button>
     <div class="login-error" id="loginError"></div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line);">
       <div style="font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Acceso rápido</div>
@@ -2452,6 +2452,13 @@ async function actualizarAvatarHeader(usuario){
   } else {
     var ini = usuario ? (usuario.nombre||'?').charAt(0).toUpperCase() : '?';
     wrap.innerHTML = '<span style="font-size:15px;font-weight:700;color:#fff;">'+ini+'</span>';
+  }
+}
+
+async function loginWithRetry(){
+  try { await login(); } catch(e){ console.warn('[loginWithRetry] primer intento falló:', e.message); }
+  if(!empActualId){
+    try { await login(); } catch(e){ console.warn('[loginWithRetry] segundo intento falló:', e.message); }
   }
 }
 
@@ -6089,7 +6096,7 @@ function aplicarVisibilidad(){
         if(u){
           document.getElementById('loginTel').value = s.tel;
           document.getElementById('loginPass').value = s.pass;
-          login().then(function(){
+          loginWithRetry().then(function(){
             aplicarVisibilidad();
           });
         } else {
