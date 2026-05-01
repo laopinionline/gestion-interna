@@ -3188,9 +3188,13 @@ function renderTareasConReuniones(){
     return f >= hoyStr;
   })
     .forEach(o=>items.push({tipo:'orden',id:o.id,fecha:getFecha(o),titulo:o.titulo||o.descripcion||'Sin título',desc:o.descripcion?.substring(0,80),color:'var(--blue2)'}));
-  // Reuniones
-  reuniones.filter(r=>r.fecha>=hoyStr&&r.fecha<=finStr)
-    .forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
+  // Reuniones — solo emp01 ve todas, el resto solo donde es participante
+  reuniones.filter(r=>{
+    if(r.fecha<hoyStr||r.fecha>finStr) return false;
+    if(empActualId==='emp01') return true;
+    const parts = Array.isArray(r.participantes) ? r.participantes : [];
+    return parts.includes(empActualId);
+  }).forEach(r=>items.push({tipo:'reunion',id:r.id,fecha:r.fecha,hora:r.hora||'',titulo:r.titulo||'Reunión',desc:(r.participantes_externos||[]).map(p=>p.nombre).join(', '),color:'#6c757d'}));
   items.sort((a,b)=>sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)));
   if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
   div.innerHTML = items.map(i=>{
@@ -5213,6 +5217,8 @@ function guardarReunion(){
   const tipo2 = document.getElementById('rTipo').value;
   if(!titulo||(tipo2==='unica'&&!fecha)){ toast('Completá título y fecha','err'); return; }
   const participantes = [...document.querySelectorAll('#rParticipantes input:checked')].map(i=>i.value);
+  // Auto-incluir al creador si no se incluyó
+  if(empActualId && !participantes.includes(empActualId)) participantes.push(empActualId);
   const tipo = document.getElementById('rTipo').value;
   const datos = {
     titulo, fecha: tipo==='semanal' ? '' : fecha,
@@ -5259,8 +5265,8 @@ function filtrarReuniones(){
     if(pasadaA === 1) return sortFecha(b.fecha).localeCompare(sortFecha(a.fecha));
     return sortFecha(a.fecha).localeCompare(sortFecha(b.fecha));
   });
-  // Filtrar por participante — colaboradores solo ven sus reuniones
-  if(rolActual !== 'supervisor'){
+  // Filtrar por participante — solo emp01 ve todas, el resto solo las suyas
+  if(empActualId !== 'emp01'){
     listaR = listaR.filter(r => {
       const parts = r.participantes || r.participantes_internos || [];
       return parts.includes(empActualId);
