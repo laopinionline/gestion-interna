@@ -3325,6 +3325,21 @@ function renderDashboard(){
   renderCachoResumen();
   renderCobranzaVencidaDash();
   renderPipelineSinAvance();
+
+  // Event delegation for all dashboard widget items (robust against re-renders)
+  const dashContainer = document.getElementById('vDash');
+  if(dashContainer && !dashContainer._delegated){
+    dashContainer._delegated = true;
+    dashContainer.addEventListener('click', function(e){
+      const row = e.target.closest('.task-today-row');
+      if(!row) return;
+      if(row.dataset.oid) return abrirOrden(row.dataset.oid);
+      if(row.dataset.id && row.dataset.tipo==='orden') return abrirOrden(row.dataset.id);
+      if(row.dataset.id && row.dataset.tipo==='reunion') return cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
+      if(row.dataset.cid) return abrirDetalle(row.dataset.cid);
+      if(row.dataset.tipo==='reunion') return cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
+    });
+  }
 }
 
 
@@ -3632,7 +3647,7 @@ function renderReunionesHoy(){
     return `<div class="task-today-row" data-tipo="reunion" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
       <div style="width:8px;height:8px;border-radius:50%;background:#6c757d;flex-shrink:0;margin-top:5px"></div>
       <div class="task-today-info">
-        <div class="task-today-desc"><strong>${r.hora||''}</strong> ${r.titulo||'Reunión'} <span style="font-size:11px;color:#999;">· ${fechaLabel}</span></div>
+        <div class="task-today-desc"><strong>${r.hora||''}</strong> ${r.titulo||'Reunión'} <span style="font-size:11px;color:var(--ink2);">· ${fechaLabel}</span></div>
         ${partsNombres?'<div class="task-today-meta">👥 '+partsNombres+'</div>':''}
         ${externos?'<div class="task-today-meta">🏢 '+externos+'</div>':''}
       </div>
