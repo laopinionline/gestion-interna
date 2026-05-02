@@ -1364,45 +1364,62 @@ header{
         </div>
       </div>
 
+      <!-- ROW 1: Tareas vencidas + Reuniones de hoy + Cacho resumen -->
+      <div class="dash-cols" style="grid-template-columns:1fr 1fr 1fr">
+        <!-- Widget: Tareas Vencidas Hoy -->
+        <div class="dash-panel">
+          <div class="dash-panel-actions">
+            <div class="dash-panel-title" style="margin-bottom:0">🔴 Tareas vencidas</div>
+            <button class="btn-blue btn-sm" onclick="cambiarVista('vOrdenes',document.querySelectorAll('.nav-tab')[2]);setTimeout(abrirNuevaOrden,100)">+ Asignar</button>
+          </div>
+          <div id="dashTareasVencidas" style="margin-top:14px"><div class="no-data">Cargando...</div></div>
+        </div>
+        <!-- Widget: Reuniones de Hoy -->
+        <div class="dash-panel">
+          <div class="dash-panel-title">📅 Reuniones de hoy</div>
+          <div id="dashReunionesHoy" style="margin-top:8px"><div class="no-data">Cargando...</div></div>
+        </div>
+        <!-- Widget: Resumen Cacho -->
+        <div class="dash-panel">
+          <div class="dash-panel-title">🤖 Último reporte Cacho</div>
+          <div id="dashCachoResumen" style="margin-top:8px"><div class="no-data">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Tareas próximos 7 días + Cobranza vencida -->
       <div class="dash-cols">
-        <!-- Tareas del día -->
+        <!-- Widget: Tareas próximos 7 días (existente) -->
         <div class="dash-panel">
           <div class="dash-panel-actions">
             <div class="dash-panel-title" style="margin-bottom:0">📋 Tareas — próximos 7 días</div>
-            <button class="btn-blue btn-sm" onclick="cambiarVista('vOrdenes',document.querySelectorAll('.nav-tab')[2]);setTimeout(abrirNuevaOrden,100)">+ Asignar</button>
           </div>
           <div id="dashTareas" style="margin-top:14px"><div class="no-data">No hay tareas para los próximos 7 días</div></div>
         </div>
-        <!-- Alertas pauta -->
-        <div class="dash-panel" id="widgetAlertasPauta" style="display:none">
-          <div class="dash-panel-title">🔔 Alertas de vencimiento de pauta</div>
-          <div id="dashAlertas"><div class="no-data">Sin alertas</div></div>
+        <!-- Widget: Cobranza Vencida -->
+        <div class="dash-panel">
+          <div class="dash-panel-title">💰 Cobranza vencida</div>
+          <div id="dashCobranzaVencida" style="margin-top:8px"><div class="no-data">Cargando...</div></div>
         </div>
-        <!-- Alertas YouTube -->
+      </div>
+
+      <!-- ROW 3: Pipeline sin avance -->
+      <div class="dash-cols" style="grid-template-columns:1fr">
+        <div class="dash-panel">
+          <div class="dash-panel-title">🎯 Pipeline sin avance (+14 días)</div>
+          <div id="dashPipelineSinAvance" style="margin-top:8px"><div class="no-data">Cargando...</div></div>
+        </div>
+      </div>
+
+      <!-- Alertas YouTube (existente) -->
+      <div class="dash-cols">
         <div class="dash-panel" id="dashYouTubeCard" style="display:none">
           <div class="dash-panel-title">▶️ Alertas YouTube — Monetización</div>
           <div id="dashYouTube"><div class="no-data">✅ Sin alertas de YouTube</div></div>
         </div>
-      </div>
-
-      <div class="dash-cols">
-        <!-- Gráfico rubros -->
+        <!-- Gráfico rubros (existente) -->
         <div class="dash-panel" id="widgetClientesRubro" style="display:none">
           <div class="dash-panel-title">📊 Clientes por rubro</div>
           <div class="chart-bars" id="dashChart"><div class="no-data">Sin datos</div></div>
-        </div>
-        <!-- Resumen tareas por cliente -->
-        <div class="dash-panel" id="widgetTareasPorCliente">
-          <div class="dash-panel-title">📌 Tareas acumuladas por cliente</div>
-          <div class="chart-bars" id="dashTareasPorCliente"><div class="no-data">Sin datos</div></div>
-        </div>
-      </div>
-
-      <!-- BLOQUE 3: Reuniones de la semana -->
-      <div class="dash-cols" style="grid-template-columns:1fr">
-        <div class="dash-panel">
-          <div class="dash-panel-title">📅 Reuniones esta semana</div>
-          <div id="dashReunionesSemana"><div class="no-data">Sin reuniones esta semana</div></div>
         </div>
       </div>
 
@@ -2504,7 +2521,7 @@ async function login(){
         var svName = document.getElementById('svUserName');
         if(svName) svName.textContent = usuario.nombre.split(' ')[0];
         actualizarAvatarHeader(usuario);
-        actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones();
+        actualizarFiltroRubros(); filtrarClientes(); actualizarFiltroOrdenes(); filtrarOrdenes(); filtrarcolaboradores(); renderDashboard(); renderAlertasYouTube(); filtrarReuniones(); renderEstadoEquipo();
         cargarTemaUsuario(usuario.id);
         (function(){
           if(['emp01','emp02','emp07','emp16','emp05'].includes(empActualId)){
@@ -2854,7 +2871,7 @@ function cambiarVista(id, btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById(id).classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
   if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
@@ -2968,7 +2985,7 @@ function abrirOrden(ordenId){
   var c = clientes.find(function(x){return x.id===o.clienteId;});
   var asig = colaboradores.find(function(x){return x.id===o.asignadoA;});
   var html = '<div>';
-  html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||'Sin título')+'</div>';
+  html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">'+(o.titulo||o.descripcion||'<span style="color:#aaa;font-style:italic">(Sin título)</span>')+'</div>';
   if(o.origen==='email'||o.origen==='gmail') html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span class="email-badge">📧 email</span>'+(o.emailLink?'<a href="'+o.emailLink+'" target="_blank" style="font-size:12px;color:#7b1fa2;font-weight:600;text-decoration:none;">Ver email original →</a>':'')+'</div>';
   html += '<div style="display:flex;flex-direction:column;gap:10px;font-size:14px;">';
   if(o.prioridad==='urgente') html += '<div style="background:#fde8e8;color:#c62828;padding:6px 10px;border-radius:6px;font-weight:700;font-size:12px;">⚡ URGENTE</div>';
@@ -3012,7 +3029,7 @@ function cambiarVistaBN(id, bnId){
   document.querySelectorAll('#appSupervisor .view').forEach(v=>v.classList.remove('active'));
   const vista = document.getElementById(id);
   if(vista) vista.classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
   if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
@@ -3074,7 +3091,7 @@ function cambiarVistaDrawer(id, btn){
     var el = document.getElementById(id);
     if(el) window.scrollTo({top: el.offsetTop - 62, behavior:'instant'});
   }, 20);
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); }
+  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
   if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
@@ -3236,20 +3253,29 @@ function renderTareasConReuniones(){
   items.sort((a,b)=>sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)));
   if(!items.length){ div.innerHTML='<div class="no-data">No hay tareas ni reuniones para los próximos 7 días</div>'; return; }
   div.innerHTML = items.map(i=>{
-    const onclick = i.tipo==='orden'
-      ? `abrirOrden('${i.id}')`
-      : `cambiarVista('vReuniones',document.querySelector('.nav-tab[onclick*=vReuniones]'))`;
     const fechaLabel = i.fecha===hoyStr ? '📅 Hoy' : '📅 '+fmtD(i.fecha);
-    return '<div class="task-today-row" onclick="'+onclick+'" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">'+
-      '<div style="width:8px;height:8px;border-radius:50%;background:'+i.color+';flex-shrink:0;margin-top:5px"></div>'+
-      '<div class="task-today-info">'+
-        '<div class="task-today-desc">'+(i.tipo==='reunion'?'🗓 ':'')+'<strong>'+i.titulo+'</strong></div>'+
-        '<div class="task-today-meta">'+fechaLabel+(i.hora?' · '+i.hora:'')+'</div>'+
-        (i.desc?'<div class="task-today-meta">'+i.desc+'</div>':'')+
-      '</div>'+
-      '<span style="font-size:11px;color:#bbb;flex-shrink:0;">'+( i.tipo==='orden'?'→':'')+'</span>'+
-    '</div>';
+    const tituloHtml = i.titulo && i.titulo!=='Sin título'
+      ? `<strong>${i.titulo}</strong>`
+      : `<strong style="color:#aaa;font-style:italic">(Sin título)</strong>`;
+    return `<div class="task-today-row" data-tipo="${i.tipo}" data-id="${i.id}" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:${i.color};flex-shrink:0;margin-top:5px"></div>
+      <div class="task-today-info">
+        <div class="task-today-desc">${i.tipo==='reunion'?'🗓 ':''}${tituloHtml}</div>
+        <div class="task-today-meta">${fechaLabel}${i.hora?' · '+i.hora:''}</div>
+        ${i.desc?'<div class="task-today-meta">'+i.desc+'</div>':''}
+      </div>
+      <span style="font-size:11px;color:#bbb;flex-shrink:0;">${i.tipo==='orden'?'→':''}</span>
+    </div>`;
   }).join('');
+  // Bind click handlers post-insert (robust — no inline onclick escaping issues)
+  div.querySelectorAll('.task-today-row[data-id]').forEach(function(row){
+    row.addEventListener('click', function(){
+      var tipo = this.dataset.tipo;
+      var id = this.dataset.id;
+      if(tipo==='orden') abrirOrden(id);
+      else cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
+    });
+  });
 }
 
 
@@ -3283,9 +3309,15 @@ function renderDashboard(){
   });
   document.getElementById('sVencidas').textContent = vencidas.length;
 
-  // GA4 y tareas
+  // GA4, tareas, equipo y widgets nuevos
   renderGA4Dashboard();
   renderTareasConReuniones();
+  renderEstadoEquipo();
+  renderTareasVencidas();
+  renderReunionesHoy();
+  renderCachoResumen();
+  renderCobranzaVencidaDash();
+  renderPipelineSinAvance();
 }
 
 
@@ -3525,6 +3557,253 @@ function lunesDeSemana(fechaStr){
   const diff = (day===0) ? -6 : 1-day;
   d.setDate(d.getDate()+diff);
   return d.toISOString().slice(0,10);
+}
+
+// ══ WIDGETS NUEVOS DASHBOARD SUPERVISOR ══
+
+// ── Widget: Tareas Vencidas Hoy ──
+function renderTareasVencidas(){
+  const div = document.getElementById('dashTareasVencidas');
+  if(!div) return;
+  const hoyStr = hoy();
+  function getFecha(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
+  const vencidas = ordenes.filter(o=>{
+    if(o.estado==='completada'||o.estado==='cancelada') return false;
+    const f = getFecha(o);
+    return f && f <= hoyStr;
+  }).sort((a,b)=>sortFecha(getFecha(a)).localeCompare(sortFecha(getFecha(b))));
+  if(!vencidas.length){
+    div.innerHTML='<div style="text-align:center;padding:18px;color:var(--green);font-weight:600;">✅ Sin tareas vencidas</div>';
+    return;
+  }
+  div.innerHTML = `<div style="font-size:12px;color:var(--accent);font-weight:700;margin-bottom:8px">${vencidas.length} tarea${vencidas.length>1?'s':''} vencida${vencidas.length>1?'s':''}</div>` +
+    vencidas.slice(0,15).map(o=>{
+      const f = getFecha(o);
+      const dias = Math.floor((new Date(hoyStr) - new Date(f))/(86400000));
+      const diasLabel = dias===0 ? 'Vence hoy' : dias+' día'+(dias>1?'s':'')+' atrás';
+      const asig = o.asignadoA ? colaboradores.find(c=>c.id===o.asignadoA) : null;
+      const titulo = o.titulo||o.descripcion||o.desc||'<span style="color:#aaa;font-style:italic">(Sin título)</span>';
+      return `<div class="task-today-row" data-oid="${o.id}" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px"></div>
+        <div class="task-today-info">
+          <div class="task-today-desc"><strong>${titulo}</strong></div>
+          <div class="task-today-meta" style="color:var(--accent)">${diasLabel}${asig?' · '+asig.nombre.split(' ')[0]:''}</div>
+        </div>
+        <span style="font-size:11px;color:#bbb;flex-shrink:0;">→</span>
+      </div>`;
+    }).join('') +
+    (vencidas.length>15?'<div style="font-size:11px;color:#999;text-align:center;margin-top:6px;">+'+(vencidas.length-15)+' más</div>':'');
+  div.querySelectorAll('.task-today-row[data-oid]').forEach(function(row){
+    row.addEventListener('click', function(){ abrirOrden(this.dataset.oid); });
+  });
+}
+
+// ── Widget: Reuniones de Hoy ──
+function renderReunionesHoy(){
+  const div = document.getElementById('dashReunionesHoy');
+  if(!div) return;
+  const hoyStr = hoy();
+  const misReuniones = reuniones.filter(r=>{
+    if(r.fecha!==hoyStr) return false;
+    if(empActualId==='emp01') return true;
+    const parts = Array.isArray(r.participantes) ? r.participantes : [];
+    return parts.includes(empActualId);
+  }).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  if(!misReuniones.length){
+    div.innerHTML='<div style="text-align:center;padding:18px;color:#999;">Sin reuniones hoy</div>';
+    return;
+  }
+  div.innerHTML = misReuniones.map(r=>{
+    const partsNombres = (Array.isArray(r.participantes)?r.participantes:[]).map(pid=>{
+      const c = colaboradores.find(x=>x.id===pid);
+      return c ? c.nombre.split(' ')[0] : pid;
+    }).join(', ');
+    const externos = (r.participantes_externos||[]).map(p=>p.nombre).join(', ');
+    return `<div class="task-today-row" data-tipo="reunion" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:#6c757d;flex-shrink:0;margin-top:5px"></div>
+      <div class="task-today-info">
+        <div class="task-today-desc"><strong>${r.hora||''}</strong> ${r.titulo||'Reunión'}</div>
+        ${partsNombres?'<div class="task-today-meta">👥 '+partsNombres+'</div>':''}
+        ${externos?'<div class="task-today-meta">🏢 '+externos+'</div>':''}
+      </div>
+    </div>`;
+  }).join('');
+  div.querySelectorAll('.task-today-row[data-tipo="reunion"]').forEach(function(row){
+    row.addEventListener('click', function(){
+      cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
+    });
+  });
+}
+
+// ── Widget: Resumen Cacho último reporte ──
+function renderCachoResumen(){
+  const div = document.getElementById('dashCachoResumen');
+  if(!div) return;
+  if(typeof db === 'undefined'){ div.innerHTML='<div class="no-data">Base de datos no disponible</div>'; return; }
+  db.collection('cacho_reports').orderBy('createdAt','desc').limit(1).get().then(function(snap){
+    if(snap.empty){ div.innerHTML='<div class="no-data" style="color:#999">Sin reportes de Cacho</div>'; return; }
+    const r = {id:snap.docs[0].id, ...snap.docs[0].data()};
+    const m = r.metricas || {};
+    const cuenta = r.cuenta || {};
+    const hallazgos = r.hallazgos || [];
+    const spikes = hallazgos.filter(h=>h.tipo==='spike'||h.tipo==='drop');
+    const variacion = m.followersVariacion;
+    const varHtml = variacion!=null
+      ? (variacion>=0 ? `<span style="color:var(--green);font-weight:700">+${variacion}</span>` : `<span style="color:var(--accent);font-weight:700">${variacion}</span>`)
+      : '';
+    let html = `<div style="cursor:pointer" id="dashCachoClick">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:700;font-size:13px;">${cuenta.plataforma||'?'} @${cuenta.handle||'?'}</span>
+        <span style="font-size:11px;color:#999;">${r.fechaReporte||'—'}</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-bottom:8px;">
+        <div><div style="font-size:11px;color:#999;">Followers</div><div style="font-size:16px;font-weight:700;">${(m.followers||0).toLocaleString('es-AR')} ${varHtml}</div></div>
+        <div><div style="font-size:11px;color:#999;">Posts hoy</div><div style="font-size:16px;font-weight:700;">${m.postsHoy??'—'}</div></div>
+        ${hallazgos.length?'<div><div style="font-size:11px;color:#999;">Hallazgos</div><div style="font-size:16px;font-weight:700;">'+hallazgos.length+'</div></div>':''}
+      </div>`;
+    if(spikes.length){
+      html += spikes.map(h=>`<div style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:4px;background:${h.tipo==='spike'?'#e8f5ee':'#fde8e8'};color:${h.tipo==='spike'?'var(--green)':'var(--accent)'};">${h.tipo==='spike'?'📈':'📉'} ${(h.descripcion||'').slice(0,80)}</div>`).join('');
+    }
+    html += '</div>';
+    div.innerHTML = html;
+    document.getElementById('dashCachoClick').addEventListener('click', function(){
+      cambiarVista('vCacho', document.querySelector('.nav-tab[onclick*=vCacho]'));
+    });
+  }).catch(function(e){ div.innerHTML='<div class="no-data">Error cargando reporte</div>'; });
+}
+
+// ── Widget: Cobranza Vencida ──
+function renderCobranzaVencidaDash(){
+  const div = document.getElementById('dashCobranzaVencida');
+  if(!div) return;
+  if(typeof db === 'undefined'){ div.innerHTML='<div class="no-data">Base de datos no disponible</div>'; return; }
+  // Cobranza is a subcollection of each client — need to query across all active clients
+  const clientesActivos = clientes.filter(c=>c.estado==='activo'||c.estado==='pausado');
+  if(!clientesActivos.length){ div.innerHTML='<div style="text-align:center;padding:18px;color:#999;">Sin vencimientos pendientes</div>'; return; }
+  const hoyStr = hoy();
+  let items = [];
+  let loaded = 0;
+  const total = clientesActivos.length;
+  clientesActivos.forEach(function(c){
+    db.collection('clientes').doc(c.id).collection('cobranza').where('estado','==','pendiente').get().then(function(snap){
+      snap.docs.forEach(function(d){
+        const r = d.data();
+        if(r.fechaVencimiento && r.fechaVencimiento < hoyStr){
+          const dias = Math.floor((new Date(hoyStr) - new Date(r.fechaVencimiento))/(86400000));
+          items.push({clienteId:c.id, clienteNombre:c.nombre, monto:Number(r.monto)||0, fechaVencimiento:r.fechaVencimiento, dias:dias});
+        }
+      });
+      loaded++;
+      if(loaded>=total) finalizarCobranza();
+    }).catch(function(){
+      loaded++;
+      if(loaded>=total) finalizarCobranza();
+    });
+  });
+  // Also check 'vencido' estado items
+  clientesActivos.forEach(function(c){
+    db.collection('clientes').doc(c.id).collection('cobranza').where('estado','==','vencido').get().then(function(snap){
+      snap.docs.forEach(function(d){
+        const r = d.data();
+        const dias = r.fechaVencimiento ? Math.floor((new Date(hoyStr) - new Date(r.fechaVencimiento))/(86400000)) : 0;
+        items.push({clienteId:c.id, clienteNombre:c.nombre, monto:Number(r.monto)||0, fechaVencimiento:r.fechaVencimiento||'—', dias:Math.max(dias,0)});
+      });
+    }).catch(function(){});
+  });
+  function finalizarCobranza(){
+    // Deduplicate by removing items with same client+fecha+monto
+    const seen = new Set();
+    items = items.filter(i=>{
+      const key = i.clienteId+i.fechaVencimiento+i.monto;
+      if(seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    items.sort((a,b)=>b.dias-a.dias);
+    if(!items.length){
+      div.innerHTML='<div style="text-align:center;padding:18px;color:#999;">Sin vencimientos pendientes</div>';
+      return;
+    }
+    const totalMonto = items.reduce((s,i)=>s+i.monto,0);
+    let html = `<div style="background:#fde8e8;border-radius:8px;padding:8px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:12px;color:#c62828;font-weight:700;">Total vencido</span>
+      <span style="font-size:18px;font-weight:700;color:#c62828;">$${totalMonto.toLocaleString('es-AR')}</span>
+    </div>`;
+    html += items.slice(0,10).map(i=>`<div class="task-today-row" data-cid="${i.clienteId}" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px"></div>
+      <div class="task-today-info">
+        <div class="task-today-desc"><strong>${i.clienteNombre}</strong> — $${i.monto.toLocaleString('es-AR')}</div>
+        <div class="task-today-meta" style="color:var(--accent)">${i.dias} día${i.dias>1?'s':''} vencido · ${fmtD(i.fechaVencimiento)}</div>
+      </div>
+      <span style="font-size:11px;color:#bbb;flex-shrink:0;">→</span>
+    </div>`).join('');
+    if(items.length>10) html += '<div style="font-size:11px;color:#999;text-align:center;margin-top:6px;">+'+(items.length-10)+' más</div>';
+    div.innerHTML = html;
+    div.querySelectorAll('.task-today-row[data-cid]').forEach(function(row){
+      row.addEventListener('click', function(){ abrirDetalle(this.dataset.cid); });
+    });
+  }
+}
+
+// ── Widget: Pipeline sin avance 14+ días ──
+function renderPipelineSinAvance(){
+  const div = document.getElementById('dashPipelineSinAvance');
+  if(!div) return;
+  const hoyMs = new Date().getTime();
+  const diasLimite = 14;
+  const conResponsable = clientes.filter(c=>{
+    if(!c.etapa || c.etapa==='inactivo') return false;
+    if(typeof tieneResponsable==='function' && !tieneResponsable(c)) return false;
+    return true;
+  });
+  const sinAvance = conResponsable.filter(c=>{
+    // Check historialEtapas for last update
+    const historial = Array.isArray(c.historialEtapas) ? c.historialEtapas : [];
+    let ultimaFecha = null;
+    if(historial.length>0){
+      const ultima = historial[historial.length-1];
+      ultimaFecha = ultima.fechaIngreso || null;
+    }
+    // Also check general update fields
+    if(!ultimaFecha) ultimaFecha = c.updatedAt || c.fechaModificacion || c.fechaCreacion || null;
+    if(!ultimaFecha) return true; // No date at all = stale
+    try {
+      let fechaMs;
+      if(typeof ultimaFecha === 'string') fechaMs = new Date(ultimaFecha).getTime();
+      else if(ultimaFecha.seconds) fechaMs = ultimaFecha.seconds * 1000;
+      else if(ultimaFecha._seconds) fechaMs = ultimaFecha._seconds * 1000;
+      else fechaMs = new Date(ultimaFecha).getTime();
+      const dias = Math.floor((hoyMs - fechaMs)/(86400000));
+      if(dias >= diasLimite){
+        c._diasSinAvance = dias;
+        return true;
+      }
+    } catch(e){}
+    return false;
+  }).sort((a,b)=>(b._diasSinAvance||0)-(a._diasSinAvance||0));
+  if(!sinAvance.length){
+    div.innerHTML='<div style="text-align:center;padding:18px;color:var(--green);font-weight:600;">✅ Pipeline al día</div>';
+    return;
+  }
+  div.innerHTML = sinAvance.map(c=>{
+    const responsables = (c.responsables||[]).map(rid=>{
+      const col = colaboradores.find(x=>x.id===rid);
+      return col ? col.nombre.split(' ')[0] : rid;
+    }).join(', ');
+    return `<div class="task-today-row" data-cid="${c.id}" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px"></div>
+      <div class="task-today-info">
+        <div class="task-today-desc"><strong>${c.nombre||'Sin nombre'}</strong></div>
+        <div class="task-today-meta">${ETAPA_LABELS[c.etapa]||c.etapa} · ${c._diasSinAvance||'?'} días sin avance${responsables?' · '+responsables:''}</div>
+      </div>
+      <span style="font-size:11px;color:#bbb;flex-shrink:0;">→</span>
+    </div>`;
+  }).join('');
+  div.querySelectorAll('.task-today-row[data-cid]').forEach(function(row){
+    row.addEventListener('click', function(){
+      cambiarVista('vPipeline', document.querySelector('.nav-tab[onclick*=vPipeline]'));
+    });
+  });
 }
 
 // ══ CLIENTES ══
@@ -4075,7 +4354,7 @@ function renderOrdenes(lista){
     var c = o.clienteId ? clientes.find(function(x){return x.id===o.clienteId;}) : null;
     var asig = o.asignadoA ? colaboradores.find(function(x){return x.id===o.asignadoA;}) : null;
     var fecha = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
-    var desc = o.titulo || o.descripcion || o.desc || 'Sin descripcion';
+    var desc = o.titulo || o.descripcion || o.desc || '<span style="color:#aaa;font-style:italic">(Sin título)</span>';
     var estado = o.estado || 'pendiente';
     var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : 'Pendiente';
     html += '<div class="order-item" data-oid="' + o.id + '" style="cursor:pointer;">';
@@ -4691,7 +4970,7 @@ function verTareasColaborador(id){
     : `<div class="avatar-iniciales lg" style="width:52px;height:52px;">${iniciales}</div>`;
   const renderOrdenes = (lista) => lista.length
     ? lista.map(o=>'<div style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;" onclick="cerrarModal(\'mcolaborador\');editarOrden(\''+o.id+'\')">'+
-        '<div style="font-weight:600;font-size:13px">'+(o.titulo||o.descripcion||'Sin título')+' <span style="color:#aaa;">›</span></div>'+
+        '<div style="font-weight:600;font-size:13px">'+(o.titulo||o.descripcion||'<span style="color:#aaa;font-style:italic">(Sin título)</span>')+' <span style="color:#aaa;">›</span></div>'+
         '<div style="font-size:11px;color:#999;margin-top:3px">'+((o.descripcion||'').substring(0,80))+'</div>'+
         '<div style="font-size:11px;color:#aaa;margin-top:2px">📅 '+(o.fechaVencimiento||o.fechaCreacion||'')+' · <span style="text-transform:capitalize">'+(o.estado||'pendiente')+'</span></div>'+
       '</div>').join('')
@@ -4986,7 +5265,7 @@ async function renderProductividadEmp(){
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin-bottom:8px">⚠️ Tareas atrasadas</div>
       ${atrasadas.map(o=>`
         <div style="background:var(--red-bg);border-left:3px solid var(--accent);border-radius:6px;padding:10px 12px;margin-bottom:6px;">
-          <div style="font-size:13px;font-weight:600;color:var(--ink)">${o.titulo||o.desc||'Sin título'}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">${o.titulo||o.desc||'<span style="color:#aaa;font-style:italic">(Sin título)</span>'}</div>
           <div style="font-size:11px;color:var(--accent);margin-top:2px">Vencía: ${fmtD(getFecha(o))}</div>
         </div>`).join('')}
     </div>` : ''}
@@ -5023,7 +5302,7 @@ function mostrarOrdenesEmp(filtro){
       const atrasada = f && f<hoyStr && o.estado!=='completada';
       const color = o.estado==='completada'?'var(--green)':atrasada?'var(--accent)':'var(--ink2)';
       return `<div style="padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="cerrarCheckColaborador();abrirDetalleOrdenEmp('${o.id}')">
-        <div style="font-weight:600;font-size:14px;">${o.titulo||o.descripcion||o.desc||'Sin título'}</div>
+        <div style="font-weight:600;font-size:14px;">${o.titulo||o.descripcion||o.desc||'<span style="color:#aaa;font-style:italic">(Sin título)</span>'}</div>
         <div style="font-size:12px;color:${color};margin-top:2px;">${o.estado||''} ${f?'· '+fmtD(f):''}</div>
       </div>`;
     }).join('');
@@ -5093,7 +5372,7 @@ function renderKanban(){
     return `<div class="kanban-card ${o.estado==='completada'?'completada':''} ${esUrgente?'prioridad-urgente':'prioridad-normal'}" onclick="abrirDetalleOrdenEmp('${o.id}')" style="cursor:pointer;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
-        <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${(o.origen==="email"||o.origen==="gmail")?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'Sin título'}</div>
+        <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${(o.origen==="email"||o.origen==="gmail")?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'<span style="color:#aaa;font-style:italic">(Sin título)</span>'}</div>
       </div>
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado}</span></div>
