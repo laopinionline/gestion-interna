@@ -1376,7 +1376,7 @@ header{
         </div>
         <!-- Widget: Reuniones de Hoy -->
         <div class="dash-panel">
-          <div class="dash-panel-title">📅 Reuniones de hoy</div>
+          <div class="dash-panel-title">📅 Reuniones de la semana</div>
           <div id="dashReunionesHoy" style="margin-top:8px"><div class="no-data">Cargando...</div></div>
         </div>
         <!-- Widget: Resumen Cacho -->
@@ -3598,22 +3598,25 @@ function renderTareasVencidas(){
   });
 }
 
-// ── Widget: Reuniones de Hoy ──
+// ── Widget: Reuniones de la Semana ──
 function renderReunionesHoy(){
   const div = document.getElementById('dashReunionesHoy');
   if(!div) return;
   const hoyStr = hoy();
+  const fin = new Date(); fin.setDate(fin.getDate()+7);
+  const finStr = fin.toISOString().split('T')[0];
   const misReuniones = reuniones.filter(r=>{
-    if(r.fecha!==hoyStr) return false;
+    if(!r.fecha || r.fecha<hoyStr || r.fecha>finStr) return false;
     if(empActualId==='emp01') return true;
     const parts = Array.isArray(r.participantes) ? r.participantes : [];
     return parts.includes(empActualId);
-  }).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
+  }).sort((a,b)=>sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)) || (a.hora||'').localeCompare(b.hora||''));
   if(!misReuniones.length){
-    div.innerHTML='<div style="text-align:center;padding:18px;color:#999;">Sin reuniones hoy</div>';
+    div.innerHTML='<div style="text-align:center;padding:18px;color:#999;">Sin reuniones esta semana</div>';
     return;
   }
   div.innerHTML = misReuniones.map(r=>{
+    const fechaLabel = r.fecha===hoyStr ? 'Hoy' : fmtD(r.fecha);
     const partsNombres = (Array.isArray(r.participantes)?r.participantes:[]).map(pid=>{
       const c = colaboradores.find(x=>x.id===pid);
       return c ? c.nombre.split(' ')[0] : pid;
@@ -3622,7 +3625,7 @@ function renderReunionesHoy(){
     return `<div class="task-today-row" data-tipo="reunion" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
       <div style="width:8px;height:8px;border-radius:50%;background:#6c757d;flex-shrink:0;margin-top:5px"></div>
       <div class="task-today-info">
-        <div class="task-today-desc"><strong>${r.hora||''}</strong> ${r.titulo||'Reunión'}</div>
+        <div class="task-today-desc"><strong>${r.hora||''}</strong> ${r.titulo||'Reunión'} <span style="font-size:11px;color:#999;">· ${fechaLabel}</span></div>
         ${partsNombres?'<div class="task-today-meta">👥 '+partsNombres+'</div>':''}
         ${externos?'<div class="task-today-meta">🏢 '+externos+'</div>':''}
       </div>
@@ -3801,7 +3804,7 @@ function renderPipelineSinAvance(){
   }).join('');
   div.querySelectorAll('.task-today-row[data-cid]').forEach(function(row){
     row.addEventListener('click', function(){
-      cambiarVista('vPipeline', document.querySelector('.nav-tab[onclick*=vPipeline]'));
+      abrirDetalle(this.dataset.cid);
     });
   });
 }
