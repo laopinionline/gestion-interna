@@ -306,12 +306,12 @@ header{
 
 /* ── ESTADO DEL EQUIPO ── */
 .equipo-grilla{width:100%;border-collapse:collapse;}
-.equipo-grilla th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#999;padding:8px 12px;text-align:left;border-bottom:2px solid var(--paper2);}
+.equipo-grilla th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--ink2);padding:8px 12px;text-align:left;border-bottom:2px solid var(--paper2);}
 .equipo-grilla td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--paper2);vertical-align:middle;}
 .equipo-grilla tr:last-child td{border-bottom:none;}
-.equipo-grilla tr.eq-verde td{background:#f0faf4;}
-.equipo-grilla tr.eq-amarillo td{background:#fffbf0;}
-.equipo-grilla tr.eq-rojo td{background:#fff5f5;}
+.equipo-grilla tr.eq-verde td{background:var(--green-bg);}
+.equipo-grilla tr.eq-amarillo td{background:var(--gold-bg);}
+.equipo-grilla tr.eq-rojo td{background:var(--red-bg);}
 .eq-nombre{font-weight:600;color:var(--ink);}
 .eq-puesto{font-size:11px;color:#aaa;margin-top:1px;}
 .eq-estado-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;}
@@ -360,12 +360,12 @@ header{
 .tablero-metricas-grupo .tmg-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:10px;}
 .tablero-metricas-grupo .tmg-row{display:flex;flex-wrap:wrap;gap:10px;}
 .tablero-metricas-grupo .tmg-card{
-  background:#fff;border-radius:10px;border:1.5px solid var(--line);
+  background:var(--paper);border-radius:10px;border:1.5px solid var(--line);
   padding:12px 16px;min-width:100px;flex:1;max-width:200px;
 }
-.tablero-metricas-grupo .tmg-card-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.tablero-metricas-grupo .tmg-card-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink2);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .tablero-metricas-grupo .tmg-card-value{font-family:'Playfair Display',serif;font-size:20px;line-height:1;color:var(--blue2);}
-.tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:#aaa;margin-top:2px;}
+.tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:var(--ink2);margin-top:2px;}
 
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
 .dash-panel{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;}
@@ -3494,7 +3494,7 @@ function renderEstadoEquipo(){
 
     const pctColor = pct===null ? '' : pct>=80 ? 'verde' : pct>=50 ? 'amarillo' : 'rojo';
     const pctBar = pct===null
-      ? '<span style="color:#ccc;font-size:11px">sin datos</span>'
+      ? '<span style="color:var(--ink2);font-size:11px">sin datos</span>'
       : `<div class="eq-cumplimiento"><div class="eq-progress"><div class="eq-progress-bar ${pctColor}" style="width:${pct}%"></div></div><span class="eq-pct">${pct}%</span></div>`;
 
     return { c, pendientes, enCurso, vencidas, pct, colorFila, estadoLabel, estadoClass, pctBar };
