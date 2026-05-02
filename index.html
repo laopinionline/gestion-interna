@@ -640,7 +640,9 @@ header{
 .avatar-iniciales.sm{width:40px;height:40px;font-size:14px;background:#dce8f5;color:var(--blue);}
 .avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 
+@media(max-width:1024px){.dash-cols{grid-template-columns:1fr 1fr;}}
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
+@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}}
 /* ══ BOTTOM NAV — solo mobile ══ */
 .bottom-nav{
   display:none;
@@ -684,7 +686,7 @@ header{
   /* Grillas */
   .form-grid{grid-template-columns:1fr;}
   .info-grid{grid-template-columns:1fr;}
-  .dash-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
   .dash-cols{grid-template-columns:1fr;}
   
   /* Stat cards más respiradas */
@@ -1604,7 +1606,7 @@ header{
       <div class="toolbar">
         <select class="filter-sel" id="filtroReunionEstado" onchange="filtrarReuniones()">
           <option value="">Todas</option>
-          <option value="proxima">Próximas</option>
+          <option value="proxima" selected>Próximas</option>
           <option value="hoy">Hoy</option>
           <option value="pasada">Pasadas</option>
         </select>
@@ -3644,7 +3646,7 @@ function renderCachoResumen(){
   if(!div) return;
   if(typeof db === 'undefined'){ div.innerHTML='<div class="no-data">Base de datos no disponible</div>'; return; }
   db.collection('cacho_reports').orderBy('createdAt','desc').limit(1).get().then(function(snap){
-    if(snap.empty){ div.innerHTML='<div class="no-data" style="color:#999">Sin reportes de Cacho</div>'; return; }
+    if(snap.empty){ div.innerHTML='<div class="no-data" style="color:var(--ink2)">Sin reportes de Cacho</div>'; return; }
     const r = {id:snap.docs[0].id, ...snap.docs[0].data()};
     const m = r.metricas || {};
     const cuenta = r.cuenta || {};
@@ -3657,15 +3659,15 @@ function renderCachoResumen(){
     let html = `<div style="cursor:pointer" id="dashCachoClick">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="font-weight:700;font-size:13px;">${cuenta.plataforma||'?'} @${cuenta.handle||'?'}</span>
-        <span style="font-size:11px;color:#999;">${r.fechaReporte||'—'}</span>
+        <span style="font-size:11px;color:var(--ink2);">${r.fechaReporte||'—'}</span>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:8px;">
-        <div><div style="font-size:11px;color:#999;">Followers</div><div style="font-size:16px;font-weight:700;">${(m.followers||0).toLocaleString('es-AR')} ${varHtml}</div></div>
-        <div><div style="font-size:11px;color:#999;">Posts hoy</div><div style="font-size:16px;font-weight:700;">${m.postsHoy??'—'}</div></div>
-        ${hallazgos.length?'<div><div style="font-size:11px;color:#999;">Hallazgos</div><div style="font-size:16px;font-weight:700;">'+hallazgos.length+'</div></div>':''}
+        <div><div style="font-size:11px;color:var(--ink2);">Followers</div><div style="font-size:16px;font-weight:700;">${(m.followers||0).toLocaleString('es-AR')} ${varHtml}</div></div>
+        <div><div style="font-size:11px;color:var(--ink2);">Posts hoy</div><div style="font-size:16px;font-weight:700;">${m.postsHoy??'—'}</div></div>
+        ${hallazgos.length?'<div><div style="font-size:11px;color:var(--ink2);">Hallazgos</div><div style="font-size:16px;font-weight:700;">'+hallazgos.length+'</div></div>':''}
       </div>`;
     if(spikes.length){
-      html += spikes.map(h=>`<div style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:4px;background:${h.tipo==='spike'?'#e8f5ee':'#fde8e8'};color:${h.tipo==='spike'?'var(--green)':'var(--accent)'};">${h.tipo==='spike'?'📈':'📉'} ${(h.descripcion||'').slice(0,80)}</div>`).join('');
+      html += spikes.map(h=>`<div style="padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:4px;background:${h.tipo==='spike'?'var(--green-bg)':'var(--red-bg)'};color:${h.tipo==='spike'?'var(--green)':'var(--accent)'};">${h.tipo==='spike'?'📈':'📉'} ${(h.descripcion||'').slice(0,80)}</div>`).join('');
     }
     html += '</div>';
     div.innerHTML = html;
@@ -5676,17 +5678,19 @@ function renderEmpReuniones(){
       (() => { try { return JSON.parse(r.participantes || '[]'); } catch { return []; } })();
     return parts.includes(empActualId);
   });
-  if(!lista.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px">No tenés reuniones agendadas</div>'; return; }
-  const hoyStr = hoy();
-  // Próximas y de hoy primero (ASC), pasadas al final (DESC)
+  // Filtrar solo próximas y de hoy por default (excluir pasadas)
+  lista = lista.filter(r => {
+    const st = statusReunion(r);
+    return st === 'hoy' || st === 'proxima';
+  });
+  if(!lista.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px">No tenés reuniones próximas</div>'; return; }
   lista.sort((a,b)=>{
     const stA = statusReunion(a), stB = statusReunion(b);
-    const ord = {hoy:0, proxima:1, pasada:2};
-    if(ord[stA] !== ord[stB]) return ord[stA] - ord[stB];
-    if(stA === 'pasada') return sortFecha(b.fecha).localeCompare(sortFecha(a.fecha)); // pasadas: más reciente primero
-    return sortFecha(a.fecha).localeCompare(sortFecha(b.fecha)); // próximas: más cercana primero
+    const ord = {hoy:0, proxima:1};
+    if(ord[stA] !== ord[stB]) return (ord[stA]||0) - (ord[stB]||0);
+    return sortFecha(a.fecha).localeCompare(sortFecha(b.fecha));
   });
-  cont.innerHTML = '<div style="margin-bottom:12px;font-family:Playfair Display,serif;font-size:20px;color:var(--ink)">Reuniones</div>' + lista.map(r=>renderReunionCard(r,false)).join('');
+  cont.innerHTML = '<div style="margin-bottom:12px;font-family:Playfair Display,serif;font-size:20px;color:var(--ink)">Reuniones próximas</div>' + lista.map(r=>renderReunionCard(r,false)).join('');
 }
 
 // ══ PRODUCTIVIDAD ══
@@ -6319,9 +6323,12 @@ function aplicarVisibilidad(){
     });
   }
 
-  // Sidebar Pipeline: visible para PIPELINE_SUPERVISOR
+  // Sidebar + Drawer Pipeline: visible para PIPELINE_SUPERVISOR
+  var pipeVisible = typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId);
   var sbPipe = document.getElementById('sidebarPipeline');
-  if(sbPipe) sbPipe.style.display = (typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId)) ? 'flex' : 'none';
+  if(sbPipe) sbPipe.style.display = pipeVisible ? 'flex' : 'none';
+  var drPipe = document.getElementById('drawerPipeline');
+  if(drPipe) drPipe.style.display = pipeVisible ? '' : 'none';
 
   if(j === 'director_general'){
     // Ve todo — sin restricciones
@@ -7027,6 +7034,7 @@ function navSidebar(vistaId, el){
   <div id="navDrawerSup">
     <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)"><span>📊</span> Dashboard</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)"><span>👥</span> Clientes</button>
+    <button class="nav-drawer-item" id="drawerPipeline" style="display:none" onclick="cambiarVistaDrawer('vPipeline',this)"><span>🎯</span> Pipeline</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vOrdenes',this)"><span>📋</span> Órdenes</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vcolaboradores',this)"><span>👤</span> Colaboradores</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vReuniones',this)"><span>📅</span> Reuniones</button>
