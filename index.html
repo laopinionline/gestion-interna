@@ -3274,15 +3274,7 @@ function renderTareasConReuniones(){
       <span style="font-size:11px;color:#bbb;flex-shrink:0;">${i.tipo==='orden'?'→':''}</span>
     </div>`;
   }).join('');
-  // Bind click handlers post-insert (robust — no inline onclick escaping issues)
-  div.querySelectorAll('.task-today-row[data-id]').forEach(function(row){
-    row.addEventListener('click', function(){
-      var tipo = this.dataset.tipo;
-      var id = this.dataset.id;
-      if(tipo==='orden') abrirOrden(id);
-      else cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
-    });
-  });
+  // Click handled by event delegation on #vDash
 }
 
 
@@ -3615,9 +3607,7 @@ function renderTareasVencidas(){
       </div>`;
     }).join('') +
     (vencidas.length>15?'<div style="font-size:11px;color:#999;text-align:center;margin-top:6px;">+'+(vencidas.length-15)+' más</div>':'');
-  div.querySelectorAll('.task-today-row[data-oid]').forEach(function(row){
-    row.addEventListener('click', function(){ abrirOrden(this.dataset.oid); });
-  });
+  // Click handled by event delegation on #vDash
 }
 
 // ── Widget: Reuniones de la Semana ──
@@ -3653,11 +3643,7 @@ function renderReunionesHoy(){
       </div>
     </div>`;
   }).join('');
-  div.querySelectorAll('.task-today-row[data-tipo="reunion"]').forEach(function(row){
-    row.addEventListener('click', function(){
-      cambiarVista('vReuniones', document.querySelector('.nav-tab[onclick*=vReuniones]'));
-    });
-  });
+  // Click handled by event delegation on #vDash
 }
 
 // ── Widget: Resumen Cacho último reporte ──
@@ -3824,11 +3810,7 @@ function renderPipelineSinAvance(){
       <span style="font-size:11px;color:#bbb;flex-shrink:0;">→</span>
     </div>`;
   }).join('');
-  div.querySelectorAll('.task-today-row[data-cid]').forEach(function(row){
-    row.addEventListener('click', function(){
-      abrirDetalle(this.dataset.cid);
-    });
-  });
+  // Click handled by event delegation on #vDash
 }
 
 // ══ CLIENTES ══
