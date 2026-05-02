@@ -642,7 +642,8 @@ header{
 
 @media(max-width:1024px){.dash-cols{grid-template-columns:1fr 1fr;}}
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
-@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}}
+@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}
+#dashTareasVencidas,#dashTareas,#dashReunionesHoy,#dashCachoResumen,#dashCobranzaVencida,#dashPipelineSinAvance{max-height:400px;overflow-y:auto;}}
 /* ══ BOTTOM NAV — solo mobile ══ */
 .bottom-nav{
   display:none;
@@ -3101,6 +3102,7 @@ function cambiarVistaDrawer(id, btn){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
   if(id==='vCacho'){ renderCachoReports(); }
+  if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 function puedeCheckOrden(orden){
   if(!empActualId) return false;
