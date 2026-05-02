@@ -368,7 +368,9 @@ header{
 .tablero-metricas-grupo .tmg-card-sub{font-size:11px;color:var(--ink2);margin-top:2px;}
 
 .dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
-.dash-panel{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;}
+.dash-cols-3{grid-template-columns:1fr 1fr 1fr;}
+.dash-grid-2{grid-template-columns:repeat(2,1fr);}
+.dash-panel{background:var(--paper);border-radius:12px;border:1.5px solid var(--line);padding:20px;}
 .dash-panel-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;color:var(--ink);}
 .dash-panel-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 
@@ -641,7 +643,7 @@ header{
 .avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 
 @media(max-width:1024px){.dash-cols{grid-template-columns:1fr 1fr;}}
-@media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols{grid-template-columns:1fr;}}
+@media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols,.dash-cols-3{grid-template-columns:1fr;}}
 @media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}
 #dashTareasVencidas,#dashTareas,#dashReunionesHoy,#dashCachoResumen,#dashCobranzaVencida,#dashPipelineSinAvance{max-height:400px;overflow-y:auto;}}
 /* ══ BOTTOM NAV — solo mobile ══ */
@@ -1357,7 +1359,7 @@ header{
         <a href="https://placas-lo-frontend.vercel.app" target="_blank" rel="noopener" class="herramienta-btn instagram" style="font-size:12px;padding:8px 14px;">✦ Placas IG</a>
         <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" rel="noopener" class="herramienta-btn" style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;text-decoration:none;font-size:12px;padding:8px 14px;">✂ Recortes Streaming</a>
       </div>
-   <div class="dash-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:18px">
+   <div class="dash-grid dash-grid-2" style="margin-bottom:18px">
         <div class="stat-card blue"><div class="stat-label">Lecturas esta semana</div><div class="stat-value" id="sLecturasSemanales">—</div><div class="stat-sub">pageviews GA4</div></div>
         <div class="stat-card gold"><div class="stat-label">vs semana anterior</div><div class="stat-value" id="sLecturasAnterior">—</div><div class="stat-sub">variación</div></div>
       </div>
@@ -1369,7 +1371,7 @@ header{
       </div>
 
       <!-- ROW 1: Tareas vencidas + Reuniones de hoy + Cacho resumen -->
-      <div class="dash-cols" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="dash-cols dash-cols-3">
         <!-- Widget: Tareas Vencidas Hoy -->
         <div class="dash-panel">
           <div class="dash-panel-actions">
