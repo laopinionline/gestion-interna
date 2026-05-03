@@ -4474,58 +4474,118 @@ function renderOrdenes(lista){
   var div = document.getElementById('ordenesList');
   if(!div) return;
   if(!lista.length){ div.innerHTML = '<div class="empty-state"><div class="ei">📋</div><p>No hay ordenes que coincidan.</p></div>'; return; }
-  var html = '';
+
+  var h = hoy();
+  function getFechaO(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
+
+  // Clasificar en grupos
+  var vencidas=[], pendientes=[], enCurso=[], completadas=[], canceladas=[];
   lista.forEach(function(o){
-    var c = o.clienteId ? clientes.find(function(x){return x.id===o.clienteId;}) : null;
-    var asig = o.asignadoA ? colaboradores.find(function(x){return x.id===o.asignadoA;}) : null;
-    var fecha = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
-    var desc = o.titulo || o.descripcion || o.desc || '<span style="color:#aaa;font-style:italic">(Sin título)</span>';
-    var estado = o.estado || 'pendiente';
-    var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : 'Pendiente';
-    html += '<div class="order-item" data-oid="' + o.id + '" style="cursor:pointer;">';
-    html += '<div class="order-hdr">';
-    html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-    if(fecha) html += '<div class="order-date">' + fmtD(fecha) + '</div>';
-    if(o.prioridad==='urgente') html += '<span style="background:#fde8e8;color:#c62828;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;">URGENTE</span>';
-    if(c) html += '<span class="order-client-tag">' + c.nombre + '</span>';
-    if(asig) html += '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">' + (asig.nombre||'').split(' ')[0] + '</span>';
+    var est = (o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
+    var f = getFechaO(o);
+    if(est==='completada') completadas.push(o);
+    else if(est==='cancelada') canceladas.push(o);
+    else if(f && f < h) vencidas.push(o);
+    else if(est==='en_curso') enCurso.push(o);
+    else pendientes.push(o);
+  });
+
+  // Estado colapsado persistente
+  var colKey = 'gestion_ordenes_collapsed_'+(empActualId||'');
+  var collapsed = {};
+  try { collapsed = JSON.parse(localStorage.getItem(colKey)||'{}'); } catch(e){}
+  if(!Object.keys(collapsed).length) collapsed = {vencidas:false, pendientes:false, enCurso:true, completadas:true, canceladas:true};
+
+  var grupos = [
+    {key:'vencidas', icon:'🔴', label:'Vencidas', items:vencidas, border:'var(--accent)', show:true},
+    {key:'pendientes', icon:'⏳', label:'Pendientes', items:pendientes, border:'var(--line)', show:true},
+    {key:'enCurso', icon:'▶', label:'En curso', items:enCurso, border:'var(--blue2)', show:true},
+    {key:'completadas', icon:'✓', label:'Completadas', items:completadas, border:'var(--green)', show:true},
+    {key:'canceladas', icon:'✕', label:'Canceladas', items:canceladas, border:'var(--ink2)', show:false}
+  ];
+
+  var html = '';
+  grupos.forEach(function(g){
+    if(!g.items.length && g.key!=='canceladas') return;
+    if(!g.show && !g.items.length) return;
+    var isCol = !!collapsed[g.key];
+    html += '<div class="ord-group" style="margin-bottom:16px;border-left:4px solid '+g.border+';border-radius:8px;background:var(--paper);padding:0;">';
+    html += '<div class="ord-group-hdr" data-grp="'+g.key+'" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none;" onclick="toggleOrdenGrupo(\''+g.key+'\')">';
+    html += '<span style="font-weight:700;font-size:13px;">'+g.icon+' '+g.label+' <span style="font-weight:400;color:var(--ink2);">('+g.items.length+')</span></span>';
+    html += '<span style="font-size:11px;color:var(--ink2);">'+(isCol?'▶':'▼')+'</span>';
     html += '</div>';
-    html += '<span class="osel osel-' + estado + '">' + estadoLabel + '</span>';
-    html += '</div>';
-    var esHugo = o.tipo==='nota_para_publicar' || o.origen==='borrador-hugo' || o.categoria==='borrador-hugo';
-    if(esHugo) html += '<span style="font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;">HUGO</span>';
-    if(o.origen==='email'||o.origen==='gmail') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
-    html += '<div class="order-desc">' + desc + '</div>';
-    if(esHugo) html += '<button onclick="event.stopPropagation();abrirNotaHugo(\'' + o.id + '\')" style="margin-top:6px;padding:6px 12px;background:#7c4dff;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>';
-    if((o.origen==='email'||o.origen==='gmail') && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
-    if(puedeCheckOrden(o)){
-      var comentCount = (o.comentarios||[]).length;
-      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">';
-      if(estado !== 'completada' && estado !== 'cancelada'){
-        html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green,#2e7d32);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓ Completar</button>';
-        html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'cancelada\')" style="padding:5px 12px;background:#fde8e8;color:#c62828;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>';
-      } else if(estado === 'completada'){
-        html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:#e8f5ee;color:#2e7d32;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
-      } else if(estado === 'cancelada'){
-        html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'pendiente\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
-      }
-      html += '<button onclick="event.stopPropagation();abrirComentariosOrden(\'' + o.id + '\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;cursor:pointer;">💬 Comentar' + (comentCount > 0 ? ' (' + comentCount + ')' : '') + '</button>';
+    html += '<div class="ord-group-body" id="ordGrp_'+g.key+'" style="'+(isCol?'display:none;':'')+'padding:0 8px 8px;">';
+    g.items.forEach(function(o){
+      var c = o.clienteId ? clientes.find(function(x){return x.id===o.clienteId;}) : null;
+      var asig = o.asignadoA ? colaboradores.find(function(x){return x.id===o.asignadoA;}) : null;
+      var fecha = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
+      var desc = o.titulo || o.descripcion || o.desc || '<span style="color:var(--ink2);font-style:italic">(Sin título)</span>';
+      var estado = o.estado || 'pendiente';
+      var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : estado==='en_curso'||estado==='en-curso' ? 'En curso' : 'Pendiente';
+      var opacity = estado==='completada' ? 'opacity:0.7;' : '';
+      html += '<div class="order-item" data-oid="' + o.id + '" style="cursor:pointer;'+opacity+'">';
+      html += '<div class="order-hdr">';
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+      if(fecha) html += '<div class="order-date">' + fmtD(fecha) + '</div>';
+      if(o.prioridad==='urgente') html += '<span style="background:var(--red-bg);color:var(--accent);font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;">URGENTE</span>';
+      if(c) html += '<span class="order-client-tag">' + c.nombre + '</span>';
+      if(asig) html += '<span class="order-client-tag" style="background:rgba(26,122,74,0.08);color:var(--green)">' + (asig.nombre||'').split(' ')[0] + '</span>';
       html += '</div>';
-    }
-    html += '</div>';
+      html += '<span class="osel osel-' + estado + '">' + estadoLabel + '</span>';
+      html += '</div>';
+      var esHugo = o.tipo==='nota_para_publicar' || o.origen==='borrador-hugo' || o.categoria==='borrador-hugo';
+      if(esHugo) html += '<span style="font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;">HUGO</span>';
+      if(o.origen==='email'||o.origen==='gmail') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
+      html += '<div class="order-desc">' + desc + '</div>';
+      if(esHugo) html += '<button onclick="event.stopPropagation();abrirNotaHugo(\'' + o.id + '\')" style="margin-top:6px;padding:6px 12px;background:#7c4dff;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>';
+      if((o.origen==='email'||o.origen==='gmail') && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
+      if(puedeCheckOrden(o)){
+        var comentCount = (o.comentarios||[]).length;
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">';
+        if(estado !== 'completada' && estado !== 'cancelada'){
+          html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green,#2e7d32);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓ Completar</button>';
+          html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'cancelada\')" style="padding:5px 12px;background:var(--red-bg);color:var(--accent);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>';
+        } else if(estado === 'completada'){
+          html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green-bg);color:var(--green);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
+        } else if(estado === 'cancelada'){
+          html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'pendiente\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
+        }
+        html += '<button onclick="event.stopPropagation();abrirComentariosOrden(\'' + o.id + '\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;cursor:pointer;">💬 Comentar' + (comentCount > 0 ? ' (' + comentCount + ')' : '') + '</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div></div>';
   });
   div.innerHTML = html;
-  Array.from(div.querySelectorAll('[data-oid]')).forEach(function(el){
-    el.addEventListener('click', function(){
-      var oid = this.getAttribute('data-oid');
-      var ord = ordenes.find(function(x){return x.id===oid;});
-      if(ord && (ord.tipo==='nota_para_publicar' || ord.origen==='borrador-hugo' || ord.categoria==='borrador-hugo')){
-        abrirNotaHugo(oid);
-      } else {
-        editarOrden(oid);
-      }
-    });
+  // Click delegation for order items
+  div.addEventListener('click', function(e){
+    var item = e.target.closest('.order-item[data-oid]');
+    if(!item || e.target.closest('button')) return;
+    var oid = item.getAttribute('data-oid');
+    var ord = ordenes.find(function(x){return x.id===oid;});
+    if(ord && (ord.tipo==='nota_para_publicar' || ord.origen==='borrador-hugo' || ord.categoria==='borrador-hugo')){
+      abrirNotaHugo(oid);
+    } else {
+      editarOrden(oid);
+    }
   });
+}
+
+function toggleOrdenGrupo(key){
+  var body = document.getElementById('ordGrp_'+key);
+  if(!body) return;
+  var isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? '' : 'none';
+  // Update arrow
+  var hdr = body.previousElementSibling;
+  if(hdr){ var arrow = hdr.querySelector('span:last-child'); if(arrow) arrow.textContent = isHidden?'▼':'▶'; }
+  // Persist
+  var colKey = 'gestion_ordenes_collapsed_'+(empActualId||'');
+  var collapsed = {};
+  try { collapsed = JSON.parse(localStorage.getItem(colKey)||'{}'); } catch(e){}
+  collapsed[key] = !isHidden;
+  try { localStorage.setItem(colKey, JSON.stringify(collapsed)); } catch(e){}
 }
 function abrirNuevaOrden(){
   editandoOrdenId=null;
