@@ -6448,6 +6448,35 @@ function aplicarVisibilidad(){
     } catch(e){}
   });
 
+  // ══════════ BFCACHE — botón atrás del browser ══════════
+  window.addEventListener('pageshow', function(e){
+    if(!e.persisted) return; // carga normal, ya manejada arriba
+    // Verificar si hay sesión activa
+    var sup = document.getElementById('appSupervisor');
+    var col = document.getElementById('appcolaborador');
+    var supActive = sup && sup.classList.contains('active');
+    var colActive = col && col.classList.contains('active');
+    if(supActive || colActive) return; // ya logueado, nada que hacer
+    // Intentar rehidratar desde gestion_session
+    try {
+      var sess = localStorage.getItem('gestion_session');
+      if(sess && colaboradores.length > 0){
+        var s = JSON.parse(sess);
+        var sessTel = (s.tel||'').replace(/[^0-9]/g,'');
+        var u = colaboradores.find(function(c){
+          var tl = (c.telLogin||'').replace(/[^0-9]/g,'');
+          var ta = (c.telefono||'').replace(/[^0-9]/g,'');
+          return c.id===s.id && (tl===sessTel || ta===sessTel) && c.password===s.pass;
+        });
+        if(u){
+          document.getElementById('loginTel').value = s.tel;
+          document.getElementById('loginPass').value = s.pass;
+          loginWithRetry().then(function(){ aplicarVisibilidad(); });
+        }
+      }
+    } catch(ex){}
+  });
+
   // Mover todos los modales al body para evitar problemas de anidamiento
   ['mPerfil','mcolaborador','mCliente','mOrden','mReunion','modalCheckColaborador','mOrdenDetalle','mMoverEtapa','navDrawerOverlay','navDrawerPanel'].forEach(function(id){
     var m = document.getElementById(id);
