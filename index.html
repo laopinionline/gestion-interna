@@ -2479,8 +2479,11 @@ async function actualizarAvatarHeader(usuario){
 }
 
 async function loginWithRetry(){
+  window._loginTrace = window._loginTrace || [];
+  window._loginTrace.push({ts:Date.now(), event:'retry_start'});
   for(var i=0;i<3;i++){
-    try { await login(); } catch(e){ console.warn('[loginWithRetry] intento '+(i+1)+' falló:', e.message); }
+    window._loginTrace.push({ts:Date.now(), event:'retry_attempt', attempt:i+1});
+    try { await login(); } catch(e){ console.warn('[loginWithRetry] intento '+(i+1)+' falló:', e.message); window._loginTrace.push({ts:Date.now(), event:'retry_catch', attempt:i+1, error:e.message}); }
     await new Promise(function(r){ setTimeout(r, 300); });
     var sup=document.getElementById('appSupervisor');
     var col=document.getElementById('appcolaborador');
@@ -2492,23 +2495,38 @@ async function loginWithRetry(){
 }
 
 async function login(){
+  window._loginTrace = window._loginTrace || [];
+  var _t = function(ev, extra){ window._loginTrace.push({ts:Date.now(), event:ev, empActualId:empActualId, ...extra}); };
+  _t('login_start', {
+    telValue: document.getElementById('loginTel')?.value,
+    passLen: document.getElementById('loginPass')?.value?.length || 0,
+    colaboradoresLen: colaboradores.length,
+    rolActual: rolActual,
+    stack: new Error().stack.split('\n').slice(1,4).join(' | ')
+  });
   const telInput = document.getElementById('loginTel').value.trim().replace(/[^0-9]/g,'');
   const pass = document.getElementById('loginPass').value.trim();
   const err = document.getElementById('loginError');
-  if(!telInput||!pass){ err.textContent='Ingresá teléfono y contraseña'; return; }
-  if(colaboradores.length===0){ err.textContent='Conectando...'; await cargarDatosFirestore(); err.textContent=''; }
+  if(!telInput||!pass){ _t('login_abort_empty'); err.textContent='Ingresá teléfono y contraseña'; return; }
+  if(colaboradores.length===0){
+    _t('login_loading_firestore');
+    err.textContent='Conectando...'; await cargarDatosFirestore(); err.textContent='';
+    _t('login_firestore_loaded', { colaboradoresLen: colaboradores.length });
+  }
   // Buscar colaborador por teléfono
   const usuario = colaboradores.find(c => {
     const telGuardado = (c.telLogin||'').replace(/[^0-9]/g,'');
     const telAlt = (c.telefono||'').replace(/[^0-9]/g,'');
     return (telGuardado===telInput || telAlt===telInput) && c.password===pass;
   });
-  
+
   if(!usuario){
+    _t('login_no_match', { colaboradoresLen: colaboradores.length, telInput: telInput });
     if(colaboradores.length===0){ err.textContent='Cargando datos, esperá unos segundos...'; return; }
     err.textContent='Teléfono o contraseña incorrectos'; return;
   }
 
+  _t('login_matched', { userId: usuario.id, userName: usuario.nombre });
   usuarioLogueado = usuario;
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
@@ -2571,7 +2589,13 @@ async function login(){
     setTimeout(aplicarVisibilidad, 0);
   } catch(e){
     console.error('[login] Error post-login (no interrumpe sesión):', e.message);
+    _t('login_post_error', { error: e.message });
   }
+  _t('login_end', {
+    supActive: document.getElementById('appSupervisor')?.classList.contains('active'),
+    colActive: document.getElementById('appcolaborador')?.classList.contains('active'),
+    loginScreenDisplay: document.getElementById('loginScreen')?.style.display
+  });
 }
 
 
