@@ -1273,9 +1273,9 @@ header{
     </div>
     <div class="form-group" style="margin-bottom:20px;text-align:left">
       <label class="form-label" style="color:#888">Contraseña</label>
-      <input type="password" class="pin-field" id="loginPass" placeholder="••••••" style="letter-spacing:4px;font-size:18px" onkeydown="if(event.key==='Enter')loginWithRetry()">
+      <input type="password" class="pin-field" id="loginPass" placeholder="••••••" style="letter-spacing:4px;font-size:18px">
     </div>
-    <button class="btn-login" onclick="loginWithRetry()">Ingresar</button>
+    <button class="btn-login" id="btnIngresar" type="button">Ingresar</button>
     <div class="login-error" id="loginError"></div>
     <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line);">
       <div style="font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Acceso rápido</div>
@@ -2478,9 +2478,13 @@ async function actualizarAvatarHeader(usuario){
   }
 }
 
+var _loginInProgress = false;
 async function loginWithRetry(){
+  if(_loginInProgress) return;
+  _loginInProgress = true;
   window._loginTrace = window._loginTrace || [];
   window._loginTrace.push({ts:Date.now(), event:'retry_start'});
+  try {
   for(var i=0;i<3;i++){
     window._loginTrace.push({ts:Date.now(), event:'retry_attempt', attempt:i+1});
     try { await login(); } catch(e){ console.warn('[loginWithRetry] intento '+(i+1)+' falló:', e.message); window._loginTrace.push({ts:Date.now(), event:'retry_catch', attempt:i+1, error:e.message}); }
@@ -2492,6 +2496,7 @@ async function loginWithRetry(){
     if(supVisible||colVisible){ console.log('[loginWithRetry] login OK en intento '+(i+1)); return; }
   }
   console.warn('[loginWithRetry] login falló tras 3 intentos');
+  } finally { _loginInProgress = false; }
 }
 
 async function login(){
@@ -6404,6 +6409,19 @@ function aplicarVisibilidad(){
     rendercolaborador();
   }
 }
+
+  // ══════════ LOGIN LISTENERS (robusto — cubre click, touch, Enter) ══════════
+  (function(){
+    var btn = document.getElementById('btnIngresar');
+    var passFld = document.getElementById('loginPass');
+    var telFld = document.getElementById('loginTel');
+    if(btn){
+      btn.addEventListener('click', loginWithRetry);
+      btn.addEventListener('touchend', function(e){ e.preventDefault(); loginWithRetry(); }, {passive:false});
+    }
+    if(passFld) passFld.addEventListener('keydown', function(e){ if(e.key==='Enter') loginWithRetry(); });
+    if(telFld) telFld.addEventListener('keydown', function(e){ if(e.key==='Enter'){ document.getElementById('loginPass').focus(); } });
+  })();
 
   // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
   cargarDatosFirestore().then(() => {
