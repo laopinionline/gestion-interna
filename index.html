@@ -6326,12 +6326,16 @@ function aplicarVisibilidad(){
     });
   }
 
-  // Sidebar + Drawer Pipeline: visible para PIPELINE_SUPERVISOR
-  var pipeVisible = typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId);
+  // Sidebar Pipeline: visible para PIPELINE_SUPERVISOR
+  var pipeSupVisible = typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId);
   var sbPipe = document.getElementById('sidebarPipeline');
-  if(sbPipe) sbPipe.style.display = pipeVisible ? 'flex' : 'none';
+  if(sbPipe) sbPipe.style.display = pipeSupVisible ? 'flex' : 'none';
   var drPipe = document.getElementById('drawerPipeline');
-  if(drPipe) drPipe.style.display = pipeVisible ? '' : 'none';
+  if(drPipe) drPipe.style.display = pipeSupVisible ? '' : 'none';
+  // Drawer Pipeline empleado: visible para EQUIPO_COMERCIAL (incluye supervisores + comerciales)
+  var pipeEmpVisible = typeof EQUIPO_COMERCIAL !== 'undefined' && EQUIPO_COMERCIAL.includes(empActualId);
+  var drPipeEmp = document.getElementById('drawerEmpPipeline');
+  if(drPipeEmp) drPipeEmp.style.display = pipeEmpVisible ? '' : 'none';
 
   if(j === 'director_general'){
     // Ve todo — sin restricciones
@@ -7034,7 +7038,7 @@ function navSidebar(vistaId, el){
     <span class="nav-drawer-logo">La Opinión</span>
     <button class="nav-drawer-close" onclick="cerrarDrawer()">✕</button>
   </div>
-  <div id="navDrawerSup">
+  <div id="navDrawerSup" style="display:none">
     <button class="nav-drawer-item active" onclick="cambiarVistaDrawer('vDash',this)"><span>📊</span> Dashboard</button>
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vClientes',this)"><span>👥</span> Clientes</button>
     <button class="nav-drawer-item" id="drawerPipeline" style="display:none" onclick="cambiarVistaDrawer('vPipeline',this)"><span>🎯</span> Pipeline</button>
@@ -7052,15 +7056,19 @@ function navSidebar(vistaId, el){
     <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
   <div id="navDrawerEmp" style="display:none">
+    <button class="nav-drawer-item active" onclick="cambiarVistaEmpDrawer('vEmpKanban',this)"><span>📋</span> Mis Tareas</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpReuniones',this)"><span>📅</span> Reuniones</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpMisClientes',this)"><span>⭐</span> Mis Clientes</button>
+    <button class="nav-drawer-item" id="drawerEmpClientes" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpClientes',this)"><span>👥</span> Clientes</button>
+    <button class="nav-drawer-item" id="drawerEmpPipeline" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpPipeline',this)"><span>🎯</span> Pipeline</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📊</span> Mi Productividad</button>
+    <button class="nav-drawer-item" id="drawerCachoEmp" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpCacho',this)"><span>🦟</span> Cacho</button>
+    <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
     <div style="padding:12px 18px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--ink2);">Herramientas</div>
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
     <a href="https://placas-lo-frontend.vercel.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✦</span> Placas IG</a>
     <a href="https://leafy-pegasus-f69b59.netlify.app" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✂</span> Recortes Streaming</a>
-    <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
-    <button class="nav-drawer-item" onclick="cambiarVistaEmpDrawer('vEmpProductividad',this)"><span>📊</span> Mi Productividad</button>
-    <button class="nav-drawer-item" id="drawerEmpClientes" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpClientes',this)"><span>👥</span> Clientes</button>
-    <button class="nav-drawer-item" id="drawerCachoEmp" style="display:none" onclick="cambiarVistaEmpDrawer('vEmpCacho',this)"><span>🦟</span> Cacho</button>
     <div style="border-top:1px solid var(--line);margin:12px 0;"></div>
     <button class="nav-drawer-item" onclick="logout()" style="color:#ffaaaa;"><span>→</span> Salir</button>
   </div>
