@@ -2366,6 +2366,93 @@ let colaboradores = [];
 let reuniones = [];
 let rolActual = null;
 
+// ══ REAL-TIME LISTENERS ══
+var _realtimeUnsubs = [];
+
+function setupRealtimeListeners(){
+  teardownRealtimeListeners();
+  if(typeof db === 'undefined') return;
+
+  // Ordenes — tiempo real
+  _realtimeUnsubs.push(db.collection('ordenes').onSnapshot(function(snap){
+    ordenes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
+    try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
+    _realtimeRerender('ordenes');
+  }, function(err){ console.warn('[realtime] ordenes error:', err.message); }));
+
+  // Clientes — tiempo real
+  _realtimeUnsubs.push(db.collection('clientes').onSnapshot(function(snap){
+    clientes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
+    try { localStorage.setItem('d_clientes', JSON.stringify(clientes)); } catch(e){}
+    _realtimeRerender('clientes');
+  }, function(err){ console.warn('[realtime] clientes error:', err.message); }));
+
+  // Reuniones — tiempo real
+  _realtimeUnsubs.push(db.collection('reuniones').onSnapshot(function(snap){
+    reuniones = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
+    try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
+    _realtimeRerender('reuniones');
+  }, function(err){ console.warn('[realtime] reuniones error:', err.message); }));
+
+  console.log('[realtime] Listeners activos: ordenes, clientes, reuniones');
+}
+
+function teardownRealtimeListeners(){
+  _realtimeUnsubs.forEach(function(u){ try{u();}catch(e){} });
+  _realtimeUnsubs = [];
+}
+
+function _realtimeRerender(coleccion){
+  // Solo re-renderizar si hay un usuario logueado
+  if(!empActualId) return;
+  var sup = document.getElementById('appSupervisor');
+  var col = document.getElementById('appcolaborador');
+  var esSup = sup && sup.classList.contains('active');
+  var esCol = col && col.classList.contains('active');
+  if(!esSup && !esCol) return;
+
+  try {
+    if(coleccion === 'ordenes'){
+      if(esSup){
+        var vDash = document.getElementById('vDash');
+        if(vDash && vDash.classList.contains('active')) renderDashboard();
+        var vOrd = document.getElementById('vOrdenes');
+        if(vOrd && vOrd.classList.contains('active')){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+      }
+      if(esCol){
+        var vKanban = document.getElementById('vEmpKanban');
+        if(vKanban && vKanban.classList.contains('active')) renderKanban();
+      }
+    }
+    if(coleccion === 'clientes'){
+      if(esSup){
+        var vCli = document.getElementById('vClientes');
+        if(vCli && vCli.classList.contains('active')){ actualizarFiltroRubros(); filtrarClientes(); }
+        var vPipe = document.getElementById('vPipeline');
+        if(vPipe && vPipe.classList.contains('active')) renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips');
+        var vDashC = document.getElementById('vDash');
+        if(vDashC && vDashC.classList.contains('active')) renderPipelineSinAvance();
+      }
+      if(esCol){
+        var vEmpPipe = document.getElementById('vEmpPipeline');
+        if(vEmpPipe && vEmpPipe.classList.contains('active')) renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
+      }
+    }
+    if(coleccion === 'reuniones'){
+      if(esSup){
+        var vReu = document.getElementById('vReuniones');
+        if(vReu && vReu.classList.contains('active')) filtrarReuniones();
+        var vDashR = document.getElementById('vDash');
+        if(vDashR && vDashR.classList.contains('active')) renderReunionesHoy();
+      }
+      if(esCol){
+        var vEmpReu = document.getElementById('vEmpReuniones');
+        if(vEmpReu && vEmpReu.classList.contains('active')) renderEmpReuniones();
+      }
+    }
+  } catch(e){ console.warn('[realtime] rerender error:', e.message); }
+}
+
 // Polling de visibilidad post-login (cubre todos los entry points)
 (function(){
   var intentos = 0;
@@ -2606,6 +2693,8 @@ async function login(){
     colActive: document.getElementById('appcolaborador')?.classList.contains('active'),
     loginScreenDisplay: document.getElementById('loginScreen')?.style.display
   });
+  // Activar listeners en tiempo real
+  setupRealtimeListeners();
 }
 
 
@@ -2895,6 +2984,7 @@ function etiquetaJerarquia(j){
 function irAlHome(){ if(rolActual==="supervisor") cambiarVistaBN("vDash","bn-dash"); else cambiarVistaEmpBN("vEmpKanban","bne-tareas"); window.scrollTo(0,0); }
 
 function logout(){
+  teardownRealtimeListeners();
   try { localStorage.removeItem('gestion_session'); } catch(e){}
   rolActual=null; usuarioLogueado=null; empActualId=null; empActualNombre='';
   document.querySelectorAll('.app').forEach(a=>a.classList.remove('active'));
