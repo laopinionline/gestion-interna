@@ -7682,7 +7682,7 @@ async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
 <script>
 // ══ CACHE BUSTING — version check ══
 (function(){
-  if(PANEL_VERSION === '__PANEL_VERSION__') return; // dev/sin deploy, no chequear
+  if(PANEL_VERSION.indexOf('PANEL_VER') > -1) return; // dev/sin deploy, no chequear
   var stored = localStorage.getItem('panel_version');
   if(!stored){ localStorage.setItem('panel_version', PANEL_VERSION); return; }
   if(stored === PANEL_VERSION) return;
