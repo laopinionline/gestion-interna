@@ -3786,28 +3786,24 @@ function renderCobranzaVencidaDash(){
   }
 }
 
-// ── Widget: Pipeline sin avance 14+ días ──
+// ── Widget: Pipeline sin avance 14+ días (solo contacto/negociacion) ──
 function renderPipelineSinAvance(){
   const div = document.getElementById('dashPipelineSinAvance');
   if(!div) return;
   const hoyMs = new Date().getTime();
   const diasLimite = 14;
-  const conResponsable = clientes.filter(c=>{
-    if(!c.etapa || c.etapa==='inactivo') return false;
+  const etapasEnFlujo = ['contacto','negociacion','negociación'];
+  const enFlujo = clientes.filter(c=>{
+    if(!etapasEnFlujo.includes((c.etapa||'').toLowerCase())) return false;
     if(typeof tieneResponsable==='function' && !tieneResponsable(c)) return false;
     return true;
   });
-  const sinAvance = conResponsable.filter(c=>{
-    // Check historialEtapas for last update
+  const sinAvance = enFlujo.filter(c=>{
     const historial = Array.isArray(c.historialEtapas) ? c.historialEtapas : [];
     let ultimaFecha = null;
-    if(historial.length>0){
-      const ultima = historial[historial.length-1];
-      ultimaFecha = ultima.fechaIngreso || null;
-    }
-    // Also check general update fields
+    if(historial.length>0) ultimaFecha = historial[historial.length-1].fechaIngreso || null;
     if(!ultimaFecha) ultimaFecha = c.updatedAt || c.fechaModificacion || c.fechaCreacion || null;
-    if(!ultimaFecha) return true; // No date at all = stale
+    if(!ultimaFecha) return true;
     try {
       let fechaMs;
       if(typeof ultimaFecha === 'string') fechaMs = new Date(ultimaFecha).getTime();
@@ -3815,10 +3811,7 @@ function renderPipelineSinAvance(){
       else if(ultimaFecha._seconds) fechaMs = ultimaFecha._seconds * 1000;
       else fechaMs = new Date(ultimaFecha).getTime();
       const dias = Math.floor((hoyMs - fechaMs)/(86400000));
-      if(dias >= diasLimite){
-        c._diasSinAvance = dias;
-        return true;
-      }
+      if(dias >= diasLimite){ c._diasSinAvance = dias; return true; }
     } catch(e){}
     return false;
   }).sort((a,b)=>(b._diasSinAvance||0)-(a._diasSinAvance||0));
@@ -3832,10 +3825,10 @@ function renderPipelineSinAvance(){
       return col ? col.nombre.split(' ')[0] : rid;
     }).join(', ');
     return `<div class="task-today-row" data-cid="${c.id}" style="cursor:pointer;border-radius:8px;padding:4px 6px;margin:0 -6px;">
-      <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px"></div>
       <div class="task-today-info">
         <div class="task-today-desc"><strong>${c.nombre||'Sin nombre'}</strong></div>
-        <div class="task-today-meta">${ETAPA_LABELS[c.etapa]||c.etapa} · ${c._diasSinAvance||'?'} días sin avance${responsables?' · '+responsables:''}</div>
+        <div class="task-today-meta" style="color:var(--accent);font-weight:600;">${ETAPA_LABELS[c.etapa]||c.etapa} · ${c._diasSinAvance||'?'} días sin avance${responsables?' · '+responsables:''}</div>
       </div>
       <span style="font-size:11px;color:#bbb;flex-shrink:0;">→</span>
     </div>`;
