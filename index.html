@@ -5722,6 +5722,12 @@ function guardarReunion(){
   // Auto-incluir al creador si no se incluyó
   if(empActualId && !participantes.includes(empActualId)) participantes.push(empActualId);
   const tipo = document.getElementById('rTipo').value;
+  // Inicializar o preservar RSVP
+  var rsvpExistente = editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.rsvp||{}) : {};
+  var rsvp = {};
+  participantes.forEach(function(pid){
+    rsvp[pid] = rsvpExistente[pid] || { estado: 'sin_responder', actualizadoEn: null, actualizadoPor: null };
+  });
   const datos = {
     titulo, fecha: tipo==='semanal' ? '' : fecha,
     tipo,
@@ -5730,6 +5736,8 @@ function guardarReunion(){
     desc: document.getElementById('rDesc').value.trim(),
     temario: document.getElementById('rTemario').value.trim(),
     participantes,
+    rsvp,
+    creadoPor: editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.creadoPor||empActualId) : empActualId,
     cumplimiento: editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.cumplimiento||{}) : {}
   };
   if(editandoReunionId){
@@ -5783,37 +5791,49 @@ function filtrarReuniones(){
 
 function renderReunionCard(r, esSupervisor){
   const status = statusReunion(r);
-  // Normalizar participantes — puede venir como array, string JSON, o undefined
   let participantes = r.participantes;
   if (!Array.isArray(participantes)) {
     try { participantes = JSON.parse(participantes || '[]'); } catch { participantes = []; }
   }
   r.participantes = participantes;
   const total = participantes.length;
-  const cumplidos = Object.values(r.cumplimiento||{}).filter(Boolean).length;
-  const pct = total ? Math.round(cumplidos/total*100) : 0;
+  const rsvp = r.rsvp || {};
+  const confirmados = participantes.filter(pid => rsvp[pid]?.estado === 'va').length;
+  const esCreador = r.creadoPor === empActualId;
   const statusLabel = {hoy:'HOY',proxima:'Próxima',pasada:'Realizada'}[status];
   const statusClass = {hoy:'ms-hoy',proxima:'ms-proxima',pasada:'ms-pasada'}[status];
 
+  const RSVP_ICONS = {va:'✅', no_va:'❌', tal_vez:'🤔', sin_responder:'⏳'};
+  const RSVP_COLORS = {va:'var(--green)', no_va:'var(--accent)', tal_vez:'var(--gold)', sin_responder:'var(--ink2)'};
+
   const chips = participantes.map(pid=>{
     const emp = colaboradores.find(e=>e.id===pid);
-    if(!emp)return'';
-    const done = r.cumplimiento?.[pid];
+    if(!emp) return '';
     const nombre = emp.nombre.split(' ').slice(0,2).join(' ');
-    if(esSupervisor){
-      return `<div class="participant-chip ${done?'done':''}">
-        <span class="${done?'✓':''}" style="font-size:11px">${done?'✓':'·'}</span>
-        ${nombre}
-      </div>`;
-    } else {
-      return `<div class="participant-chip ${done?'done':''}" onclick="toggleCumplimiento('${r.id}','${pid}')" style="cursor:pointer" title="Click para marcar como realizada">
-        <span style="font-size:13px">${done?'✅':'⬜'}</span>
-        ${nombre}
-      </div>`;
+    const estado = rsvp[pid]?.estado || 'sin_responder';
+    const icon = RSVP_ICONS[estado];
+    const color = RSVP_COLORS[estado];
+    const esSoyYo = pid === empActualId;
+
+    let btns = '';
+    if(esSoyYo || esCreador){
+      const acts = ['va','no_va','tal_vez'];
+      const labels = {va:'Voy', no_va:'No voy', tal_vez:'Tal vez'};
+      const icons = {va:'✅', no_va:'❌', tal_vez:'🤔'};
+      btns = acts.map(a => {
+        const activo = estado === a;
+        return `<button onclick="event.stopPropagation();cambiarRsvp('${r.id}','${pid}','${a}')" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid ${activo?color:'var(--line)'};background:${activo?color:'transparent'};color:${activo?'#fff':'var(--ink2)'};cursor:pointer;font-weight:${activo?'700':'400'};">${icons[a]}</button>`;
+      }).join('');
     }
+
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;">
+      <span style="color:${color};font-size:13px;">${icon}</span>
+      <span style="font-size:12px;font-weight:${esSoyYo?'700':'400'};color:var(--ink);">${nombre}</span>
+      ${btns ? '<span style="display:flex;gap:3px;margin-left:auto;">'+btns+'</span>' : ''}
+    </div>`;
   }).join('');
 
-  const editBtn = esSupervisor ? `<button class="hero-btn" onclick="abrirModalReunion('${r.id}')" style="font-size:11px">Editar</button>` : '';
+  const editBtn = (esSupervisor || esCreador) ? `<button class="hero-btn" onclick="abrirModalReunion('${r.id}')" style="font-size:11px">Editar</button>` : '';
 
   return `<div class="meeting-card">
     <div class="meeting-header">
@@ -5829,12 +5849,11 @@ function renderReunionCard(r, esSupervisor){
     ${r.desc?`<div class="meeting-desc">${r.desc}</div>`:''}
     ${r.temario?`<div class="meeting-temario"><div class="meeting-temario-title">📋 Agenda</div><div class="meeting-temario-body">${r.temario}</div></div>`:''}
     ${total?`<div style="margin-top:10px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#aaa;margin-bottom:8px">Participantes</div>
-      <div class="meeting-participants">${chips}</div>
-      <div class="meeting-progress">
-        <div class="meeting-prog-bar"><div class="meeting-prog-fill" style="width:${pct}%"></div></div>
-        <span class="meeting-prog-text">${cumplidos}/${total} confirmaron</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--ink2);">Participantes</span>
+        <span style="font-size:11px;color:var(--green);font-weight:600;">✅ ${confirmados} de ${total} confirmados</span>
       </div>
+      <div style="display:flex;flex-direction:column;gap:2px;">${chips}</div>
     </div>`:''}
   </div>`;
 }
@@ -5848,6 +5867,25 @@ function toggleCumplimiento(reunionId, empId){
   if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(e=>console.error('Firestore reuniones:',e));}
   renderEmpReuniones();
   toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
+}
+
+function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
+  const r = reuniones.find(x=>x.id===reunionId);
+  if(!r) return;
+  // Permisos: solo el participante puede cambiar SU estado, o el creador puede cambiar cualquiera
+  const esCreador = r.creadoPor === empActualId;
+  const esSoyYo = targetEmpId === empActualId;
+  if(!esCreador && !esSoyYo){ toast('No podés cambiar la asistencia de otro','err'); return; }
+  if(!r.rsvp) r.rsvp = {};
+  r.rsvp[targetEmpId] = { estado: nuevoEstado, actualizadoEn: new Date().toISOString(), actualizadoPor: empActualId };
+  gLS();
+  if(typeof db!=='undefined'&&db){
+    var updateObj = {}; updateObj['rsvp.'+targetEmpId] = r.rsvp[targetEmpId];
+    db.collection('reuniones').doc(reunionId).update(updateObj).catch(e=>console.error('Firestore rsvp:',e));
+  }
+  filtrarReuniones(); renderEmpReuniones();
+  var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔'};
+  toast(labels[nuevoEstado]||nuevoEstado, 'ok');
 }
 
 function renderEmpReuniones(){
