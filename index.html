@@ -2368,27 +2368,31 @@ let rolActual = null;
 
 // ══ REAL-TIME LISTENERS ══
 var _realtimeUnsubs = [];
+var _lastLocalChange = 0; // timestamp del último cambio local (RSVP, etc.)
 
 function setupRealtimeListeners(){
   teardownRealtimeListeners();
   if(typeof db === 'undefined') return;
 
-  // Ordenes — tiempo real
+  // Ordenes — tiempo real (con cooldown para no pisar cambios locales)
   _realtimeUnsubs.push(db.collection('ordenes').onSnapshot(function(snap){
+    if(Date.now() - _lastLocalChange < 2000) return;
     ordenes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
     _realtimeRerender('ordenes');
   }, function(err){ console.warn('[realtime] ordenes error:', err.message); }));
 
-  // Clientes — tiempo real
+  // Clientes — tiempo real (con cooldown)
   _realtimeUnsubs.push(db.collection('clientes').onSnapshot(function(snap){
+    if(Date.now() - _lastLocalChange < 2000) return;
     clientes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_clientes', JSON.stringify(clientes)); } catch(e){}
     _realtimeRerender('clientes');
   }, function(err){ console.warn('[realtime] clientes error:', err.message); }));
 
-  // Reuniones — tiempo real
+  // Reuniones — tiempo real (con cooldown para no pisar cambios locales)
   _realtimeUnsubs.push(db.collection('reuniones').onSnapshot(function(snap){
+    if(Date.now() - _lastLocalChange < 2000) return; // skip si hubo cambio local reciente
     reuniones = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
     _realtimeRerender('reuniones');
@@ -3252,6 +3256,7 @@ function puedeCheckOrden(orden){
 }
 
 async function marcarOrdenCompletada(ordenId){
+  _lastLocalChange = Date.now();
   const orden = ordenes.find(o=>o.id===ordenId);
   if(!orden) return;
   if(!puedeCheckOrden(orden)){ toast('Sin permiso para marcar esta tarea','err'); return; }
@@ -5872,22 +5877,29 @@ function toggleCumplimiento(reunionId, empId){
 function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
   const r = reuniones.find(x=>x.id===reunionId);
   if(!r) return;
-  // Permisos: solo el participante puede cambiar SU estado, o el creador puede cambiar cualquiera
   const esCreador = r.creadoPor === empActualId;
   const esSoyYo = targetEmpId === empActualId;
   if(!esCreador && !esSoyYo){ toast('No podés cambiar la asistencia de otro','err'); return; }
+  // Optimistic UI: mutar local + re-render ANTES de Firestore
   if(!r.rsvp) r.rsvp = {};
+  var prevEstado = r.rsvp[targetEmpId] ? {...r.rsvp[targetEmpId]} : null;
   r.rsvp[targetEmpId] = { estado: nuevoEstado, actualizadoEn: new Date().toISOString(), actualizadoPor: empActualId };
-  // Actualizar también en localStorage para que el re-render use datos frescos
+  _lastLocalChange = Date.now();
   try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
-  if(typeof db!=='undefined'&&db){
-    var updateObj = {}; updateObj['rsvp.'+targetEmpId] = r.rsvp[targetEmpId];
-    db.collection('reuniones').doc(reunionId).update(updateObj).catch(e=>console.error('Firestore rsvp:',e));
-  }
-  // Re-render inmediato + delayed (cubre onSnapshot que puede llegar después)
   filtrarReuniones(); renderEmpReuniones();
   var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔'};
   toast(labels[nuevoEstado]||nuevoEstado, 'ok');
+  // Write a Firestore en background
+  if(typeof db!=='undefined'&&db){
+    var updateObj = {}; updateObj['rsvp.'+targetEmpId] = r.rsvp[targetEmpId];
+    db.collection('reuniones').doc(reunionId).update(updateObj).catch(function(e){
+      console.error('Firestore rsvp:', e);
+      // Rollback en caso de error
+      if(prevEstado) r.rsvp[targetEmpId] = prevEstado; else delete r.rsvp[targetEmpId];
+      filtrarReuniones(); renderEmpReuniones();
+      toast('Error al guardar RSVP','err');
+    });
+  }
 }
 
 function renderEmpReuniones(){
