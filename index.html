@@ -5878,11 +5878,13 @@ function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
   if(!esCreador && !esSoyYo){ toast('No podés cambiar la asistencia de otro','err'); return; }
   if(!r.rsvp) r.rsvp = {};
   r.rsvp[targetEmpId] = { estado: nuevoEstado, actualizadoEn: new Date().toISOString(), actualizadoPor: empActualId };
-  gLS();
+  // Actualizar también en localStorage para que el re-render use datos frescos
+  try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
   if(typeof db!=='undefined'&&db){
     var updateObj = {}; updateObj['rsvp.'+targetEmpId] = r.rsvp[targetEmpId];
     db.collection('reuniones').doc(reunionId).update(updateObj).catch(e=>console.error('Firestore rsvp:',e));
   }
+  // Re-render inmediato + delayed (cubre onSnapshot que puede llegar después)
   filtrarReuniones(); renderEmpReuniones();
   var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔'};
   toast(labels[nuevoEstado]||nuevoEstado, 'ok');
