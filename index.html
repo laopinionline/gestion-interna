@@ -5827,7 +5827,8 @@ function renderReunionCard(r, esSupervisor){
       const icons = {va:'✅', no_va:'❌', tal_vez:'🤔'};
       btns = acts.map(a => {
         const activo = estado === a;
-        return `<button onclick="event.stopPropagation();cambiarRsvp('${r.id}','${pid}','${a}')" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid ${activo?color:'var(--line)'};background:${activo?color:'transparent'};color:${activo?'#fff':'var(--ink2)'};cursor:pointer;font-weight:${activo?'700':'400'};">${icons[a]}</button>`;
+        const target = activo ? 'sin_responder' : a;
+        return `<button onclick="event.stopPropagation();cambiarRsvp('${r.id}','${pid}','${target}')" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid ${activo?color:'var(--line)'};background:${activo?color:'transparent'};color:${activo?'#fff':'var(--ink2)'};cursor:pointer;font-weight:${activo?'700':'400'};">${icons[a]}</button>`;
       }).join('');
     }
 
@@ -5887,7 +5888,7 @@ function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
   _lastLocalChange = Date.now();
   try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
   filtrarReuniones(); renderEmpReuniones();
-  var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔'};
+  var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔', sin_responder:'Sin responder ⏳'};
   toast(labels[nuevoEstado]||nuevoEstado, 'ok');
   // Write a Firestore en background
   if(typeof db!=='undefined'&&db){
