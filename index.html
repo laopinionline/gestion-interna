@@ -332,6 +332,8 @@ header{
 .eq-pct{font-size:12px;font-family:'DM Mono',monospace;color:#666;min-width:34px;}
 .eq-equipo-sep{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue2);padding:10px 12px 4px;background:var(--paper2);}
 .hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:10px;font-size:26px;color:#fff;line-height:1;flex-shrink:0;}
+.btn-refresh-mobile{display:none;}
+#pullIndicator{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);z-index:1100;width:40px;height:40px;border-radius:50%;background:var(--paper);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;transition:transform 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
 .nav-drawer-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.45);}
 .nav-drawer-overlay.open{display:block;}
 .nav-drawer-panel{position:fixed;top:0;left:-280px;width:270px;height:100%;background:var(--card-bg);z-index:350;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(0,0,0,0.18);transition:left 0.25s ease;}
@@ -680,6 +682,7 @@ header{
   header .logo img{height:36px;}
   .nav-tabs{display:none !important;}
   #globalHamburger{display:flex !important;align-items:center;justify-content:center;}
+  .btn-refresh-mobile{display:flex !important;align-items:center;justify-content:center;}
   .user-badge{display:none;}
   .btn-logout{font-size:12px;padding:5px 10px;}
   
@@ -1294,6 +1297,7 @@ header{
 <!-- ══════════ APP SUPERVISOR ══════════ -->
 <div class="app" id="appSupervisor" style="padding-top:64px;">
   <header style="z-index:100;position:fixed;top:0;left:0;right:0;">   <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
+    <button class="hamburger-btn btn-refresh-mobile" onclick="refreshVistaActiva()" aria-label="Refrescar" style="font-size:18px;">↻</button>
     <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="cambiarVista('vDash',this)">Dashboard</button>
@@ -1735,6 +1739,7 @@ header{
 <div class="app" id="appcolaborador" style="padding-top:64px;">
   <header style="z-index:100;position:fixed;top:0;left:0;right:0;">
     <button class="hamburger-btn" id="globalHamburger" onclick="abrirDrawer()" aria-label="Menú">☰</button>
+    <button class="hamburger-btn btn-refresh-mobile" onclick="refreshVistaActiva()" aria-label="Refrescar" style="font-size:18px;">↻</button>
     <div class="logo" onclick="irAlHome()" style="cursor:pointer;" title="Inicio"><img src="logo.png" alt="La Opinión" style="height:48px;object-fit:contain;vertical-align:middle;"></div>
     <!-- RESUMEN TAREAS HEADER -->
     <div id="headerResumenTareas" style="display:flex;align-items:center;gap:8px;flex:1;justify-content:center;">
@@ -3279,6 +3284,10 @@ async function marcarOrdenCompletada(ordenId){
   try {
     db.collection('ordenes').doc(ordenId).update(update);
     renderKanban();
+    var vOrd = document.getElementById('vOrdenes');
+    if(vOrd && vOrd.classList.contains('active')) filtrarOrdenes();
+    var vDashO = document.getElementById('vDash');
+    if(vDashO && vDashO.classList.contains('active')) renderDashboard();
     toast(nuevoEstado === 'completada' ? '✅ Completada por ' + empActualNombre.split(' ')[0] : '↩ Reabierta', 'ok');
   } catch(e){ toast('Error al guardar','err'); }
 }
@@ -4563,10 +4572,12 @@ function renderOrdenes(lista){
     html += '</div></div>';
   });
   div.innerHTML = html;
-  // Click delegation for order items
-  div.addEventListener('click', function(e){
-    var item = e.target.closest('.order-item[data-oid]');
-    if(!item || e.target.closest('button')) return;
+  // Click delegation for order items (guard against duplicates)
+  if(!div._delegated){
+    div._delegated = true;
+    div.addEventListener('click', function(e){
+      var item = e.target.closest('.order-item[data-oid]');
+      if(!item || e.target.closest('button')) return;
     var oid = item.getAttribute('data-oid');
     var ord = ordenes.find(function(x){return x.id===oid;});
     if(ord && (ord.tipo==='nota_para_publicar' || ord.origen==='borrador-hugo' || ord.categoria==='borrador-hugo')){
@@ -4575,6 +4586,7 @@ function renderOrdenes(lista){
       editarOrden(oid);
     }
   });
+  }
 }
 
 function toggleOrdenGrupo(key){
@@ -5633,7 +5645,9 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(typeof db !== 'undefined'){
     db.collection('ordenes').doc(id).update({estado: nuevoEstado, updatedAt: new Date().toISOString()}).catch(e=>console.warn('Firestore update error:', e));
   }
+  _lastLocalChange = Date.now();
   rendercolaborador();
+  renderKanban();
   toast('Estado: ' + nuevoEstado, 'ok');
 }
 
@@ -7908,6 +7922,84 @@ async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
     toast('Error al mover etapa: ' + e.message, 'err');
   }
 }
+
+// ══ PULL-TO-REFRESH + REFRESH MANUAL ══
+function refreshVistaActiva(){
+  // Ignora cooldown de _lastLocalChange (disparo manual del usuario)
+  var sup = document.getElementById('appSupervisor');
+  var col = document.getElementById('appcolaborador');
+  var esSup = sup && sup.classList.contains('active');
+  var esCol = col && col.classList.contains('active');
+  if(esSup){
+    var vD=document.getElementById('vDash'), vO=document.getElementById('vOrdenes'),
+        vC=document.getElementById('vClientes'), vP=document.getElementById('vPipeline'),
+        vR=document.getElementById('vReuniones');
+    if(vD&&vD.classList.contains('active')) renderDashboard();
+    if(vO&&vO.classList.contains('active')){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
+    if(vC&&vC.classList.contains('active')){ actualizarFiltroRubros(); filtrarClientes(); }
+    if(vP&&vP.classList.contains('active')) renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips');
+    if(vR&&vR.classList.contains('active')) filtrarReuniones();
+  }
+  if(esCol){
+    var vK=document.getElementById('vEmpKanban'), vER=document.getElementById('vEmpReuniones'),
+        vEP=document.getElementById('vEmpPipeline');
+    if(vK&&vK.classList.contains('active')) renderKanban();
+    if(vER&&vER.classList.contains('active')) renderEmpReuniones();
+    if(vEP&&vEP.classList.contains('active')) renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
+  }
+  toast('Actualizado ↻','ok');
+}
+
+(function(){
+  if(window.innerWidth >= 768) return; // solo mobile
+  // Pull indicator
+  var indicator = document.createElement('div');
+  indicator.id = 'pullIndicator';
+  indicator.textContent = '↻';
+  document.body.appendChild(indicator);
+
+  var startY = 0, pulling = false;
+
+  document.addEventListener('touchstart', function(e){
+    if(window.scrollY === 0 && e.touches.length === 1){
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, {passive: true});
+
+  document.addEventListener('touchmove', function(e){
+    if(!pulling) return;
+    var deltaY = e.touches[0].clientY - startY;
+    if(deltaY < 0 || window.scrollY > 0){ pulling = false; indicator.style.transform = 'translateX(-50%) translateY(-60px)'; return; }
+    if(deltaY > 0){
+      e.preventDefault();
+      var progress = Math.min(deltaY / 120, 1);
+      var translateY = -60 + (progress * 80);
+      var rotate = progress * 360;
+      indicator.style.transform = 'translateX(-50%) translateY('+translateY+'px) rotate('+rotate+'deg)';
+    }
+  }, {passive: false});
+
+  document.addEventListener('touchend', function(){
+    if(!pulling) return;
+    pulling = false;
+    var currentY = parseFloat(indicator.style.transform.match(/translateY\(([^)]+)px\)/)?.[1] || '-60');
+    if(currentY > 10){
+      // Trigger refresh
+      indicator.style.transition = 'transform 0.3s';
+      indicator.style.transform = 'translateX(-50%) translateY(20px) rotate(720deg)';
+      setTimeout(function(){
+        refreshVistaActiva();
+        indicator.style.transform = 'translateX(-50%) translateY(-60px)';
+        setTimeout(function(){ indicator.style.transition = ''; }, 300);
+      }, 600);
+    } else {
+      indicator.style.transition = 'transform 0.2s';
+      indicator.style.transform = 'translateX(-50%) translateY(-60px)';
+      setTimeout(function(){ indicator.style.transition = ''; }, 200);
+    }
+  }, {passive: true});
+})();
 
 </script>
 
