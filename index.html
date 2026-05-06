@@ -1664,6 +1664,7 @@ header{
       <div class="toolbar">
         <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
         <span class="count-badge" id="pipelineCountBadge">0</span>
+        <button class="btn-primary" onclick="crearClienteComercial()" style="margin-left:auto;">+ Nuevo cliente</button>
       </div>
       <div id="pipelineChips" style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px;"></div>
       <div class="pipeline-board" id="pipelineBoard"></div>
@@ -1849,7 +1850,13 @@ header{
     </nav>
 
     <!-- MIS CLIENTES (responsable asignado) -->
-    <div class="view" id="vEmpMisClientes"><div id="empMisClientesList" style="margin-top:4px;padding:0 4px;"></div></div>
+    <div class="view" id="vEmpMisClientes">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:8px;">
+        <span style="font-size:16px;font-weight:700;color:var(--ink);">Mis Clientes</span>
+        <button id="btnNuevoClienteEmpMis" class="btn-primary" onclick="crearClienteComercial()" style="display:none;">+ Nuevo cliente</button>
+      </div>
+      <div id="empMisClientesList" style="padding:0 4px;"></div>
+    </div>
     <!-- CLIENTES DIRECTOR -->
     <div class="view" id="vEmpClientes"><div id="empClientesList" style="margin-top:4px"></div></div>
     <!-- PIPELINE COLABORADOR -->
@@ -1857,6 +1864,7 @@ header{
       <div class="toolbar">
         <span style="font-size:16px;font-weight:700;color:var(--ink)">Pipeline Comercial</span>
         <span class="count-badge" id="pipelineEmpCountBadge">0</span>
+        <button id="btnNuevoClienteEmpPipeline" class="btn-primary" onclick="crearClienteComercial()" style="display:none;margin-left:auto;">+ Nuevo cliente</button>
       </div>
       <div id="pipelineChipsEmp" style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0 8px;"></div>
       <div class="pipeline-board" id="pipelineBoardEmp"></div>
@@ -4172,7 +4180,24 @@ function abrirModalCliente(id){
   if(document.getElementById('fTieneComision')){ document.getElementById('fTieneComision').value=c?.tieneComision||'no'; toggleComision(); }
   if(document.getElementById('fComisionPct')) document.getElementById('fComisionPct').value=c?.comisionPct||'';
   if(document.getElementById('fComisionEmp')) document.getElementById('fComisionEmp').value=c?.comisionEmp||'';
-  document.getElementById('btnEliminarCliente').style.display=c?'block':'none';
+  // Permisos: eliminar solo directores, editar solo responsables/directores
+  var yoModal = colaboradores.find(function(x){return x.id===empActualId;});
+  var esDirModal = yoModal && (yoModal.jerarquia==='director' || yoModal.jerarquia==='director_general');
+  var esResponsable = c && (c.responsables||[]).includes(empActualId);
+  document.getElementById('btnEliminarCliente').style.display = (c && esDirModal) ? 'block' : 'none';
+  // Bloquear guardar si no es responsable ni director (editando cliente ajeno)
+  var btnGuardar = document.querySelector('#mCliente .btn-blue');
+  if(btnGuardar){
+    if(c && !esDirModal && !esResponsable){
+      btnGuardar.disabled = true;
+      btnGuardar.title = 'Solo el responsable o un director puede editar';
+      btnGuardar.style.opacity = '0.5';
+    } else {
+      btnGuardar.disabled = false;
+      btnGuardar.title = '';
+      btnGuardar.style.opacity = '';
+    }
+  }
   mostrarCamposConfidenciales();
   poblarGrupos(c?.grupoEmpresarial||'');
   // Poblar responsables
@@ -4226,6 +4251,15 @@ function guardarCliente(){
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).set(clientes[i],{merge:true}).catch(e=>console.error('Firestore clientes:',e));}
   } else {
+    // Auto-asignar responsable y etapa para comerciales
+    if(!datos.responsables || !datos.responsables.length){
+      if(empActualId) datos.responsables = [empActualId];
+    }
+    if(!datos.etapa) datos.etapa = 'contacto';
+    datos.creadoPor = empActualId;
+    // Inicializar historialEtapas para Pipeline
+    datos.historialEtapas = [{etapa:'contacto', fechaIngreso:new Date().toISOString(), deadlineComprometido:null, fechaSalida:null, dadoDeAltaPor:empActualId, motivo:'Alta de cliente'}];
+    datos.deadlineEtapa = null;
     const nuevoId=uid();
     const nuevoCliente={id:nuevoId,fechaAlta:new Date().toLocaleDateString('es-AR'),...datos};
     clientes.unshift(nuevoCliente);
@@ -4240,6 +4274,15 @@ function eliminarCliente(){
   if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().catch(e=>console.error('Firestore clientes:',e));}
   clientes=clientes.filter(x=>x.id!==editandoClienteId);
   gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente'); toast('Cliente eliminado');
+}
+
+function crearClienteComercial(){
+  // Verifica permisos antes de abrir modal
+  var esComercial = typeof EQUIPO_COMERCIAL !== 'undefined' && EQUIPO_COMERCIAL.includes(empActualId);
+  var yoC = colaboradores.find(function(c){return c.id===empActualId;});
+  var esDir = yoC && (yoC.jerarquia==='director' || yoC.jerarquia==='director_general');
+  if(!esComercial && !esDir){ toast('No tenés permiso para crear clientes','err'); return; }
+  abrirModalCliente();
 }
 
 // ══ DETALLE CLIENTE ══
@@ -6715,6 +6758,11 @@ function aplicarVisibilidad(){
   var pipeEmpVisible = typeof EQUIPO_COMERCIAL !== 'undefined' && EQUIPO_COMERCIAL.includes(empActualId);
   var drPipeEmp = document.getElementById('drawerEmpPipeline');
   if(drPipeEmp) drPipeEmp.style.display = pipeEmpVisible ? '' : 'none';
+  // Botones "+ Nuevo cliente" para comerciales en vistas del colaborador
+  var btnNuevoEmpPipe = document.getElementById('btnNuevoClienteEmpPipeline');
+  if(btnNuevoEmpPipe) btnNuevoEmpPipe.style.display = pipeEmpVisible ? '' : 'none';
+  var btnNuevoEmpMis = document.getElementById('btnNuevoClienteEmpMis');
+  if(btnNuevoEmpMis) btnNuevoEmpMis.style.display = pipeEmpVisible ? '' : 'none';
 
   if(j === 'director_general'){
     // Ve todo — sin restricciones
