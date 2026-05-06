@@ -4266,7 +4266,9 @@ function guardarCliente(){
     toast('Cliente agregado ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('clientes').doc(nuevoId).set(nuevoCliente).catch(e=>console.error('Firestore clientes:',e));}
   }
-  gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente');
+  cerrarModal('mCliente');
+  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+  actualizarFiltroRubros(); filtrarClientes();
 }
 
 function eliminarCliente(){
@@ -4891,7 +4893,9 @@ function guardarOrdenStandalone(){
     ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   }
-  guardarYSincronizar('d_ordenes', ordenes); filtrarOrdenes(); cerrarModal('mOrden');
+  cerrarModal('mOrden');
+  try { guardarYSincronizar('d_ordenes', ordenes); } catch(e){ console.warn('Sync error:', e); }
+  filtrarOrdenes(); renderKanban();
 }
 
 function eliminarOrden(){
@@ -5460,7 +5464,9 @@ function guardarcolaborador(){
     toast('colaborador agregado ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
   }
-  gLS(); filtrarcolaboradores(); cerrarModal('mcolaborador');
+  cerrarModal('mcolaborador');
+  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+  filtrarcolaboradores();
   // also update orden form colaborador selector
   actualizarFiltroOrdenes();
 }
@@ -5948,7 +5954,9 @@ function guardarReunion(){
     toast('Reunión creada ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
   }
-  gLS(); cerrarModal('mReunion'); filtrarReuniones(); renderEmpReuniones();
+  cerrarModal('mReunion');
+  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+  filtrarReuniones(); renderEmpReuniones();
 }
 
 function eliminarReunion(){
