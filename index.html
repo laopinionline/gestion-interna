@@ -577,6 +577,7 @@ header{
 .osel-en-curso{background:rgba(26,58,92,0.1);color:var(--blue);}
 .osel-completada{background:var(--green-bg);color:var(--green);}
 .osel-cancelada{background:var(--red-bg);color:var(--accent);}
+.osel-en_revision{background:#ede7f6;color:#7c4dff;}
 .no-orders{text-align:center;padding:32px;color:#ccc;background:var(--paper);border-radius:9px;border:2px dashed var(--line);}
 .order-form{background:var(--paper);border:1.5px solid var(--line);border-radius:9px;padding:18px;margin-bottom:16px;display:none;}
 .order-form.open{display:block;animation:sdown 0.2s ease;}
@@ -3292,6 +3293,78 @@ async function marcarOrdenCompletada(ordenId){
   } catch(e){ toast('Error al guardar','err'); }
 }
 
+function pasarARevision(ordenId){
+  _lastLocalChange = Date.now();
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  var yo = colaboradores.find(function(c){return c.id===empActualId;});
+  if(!yo || (!DIRECTORES[empActualId] && yo.jerarquia!=='director_general')){ toast('Solo directores pueden enviar a revisión','err'); return; }
+  if(empActualId==='emp01'){ toast('No podés enviarte a vos mismo','err'); return; }
+  o.revisionPedidaPor = empActualId;
+  o.revisionPedidaPorNombre = empActualNombre;
+  o.revisionPedidaEn = new Date().toISOString();
+  o.asignadoOriginal = o.asignadoA;
+  o.estadoPrevio = o.estado;
+  o.estado = 'en_revision';
+  if(!o.comentarios) o.comentarios = [];
+  o.comentarios.push({id:uid(), texto:'📤 Enviado a revisión por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision'});
+  gLS();
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'en_revision', revisionPedidaPor:empActualId, revisionPedidaPorNombre:empActualNombre, revisionPedidaEn:o.revisionPedidaEn, asignadoOriginal:o.asignadoOriginal, estadoPrevio:o.estadoPrevio, comentarios:o.comentarios}).catch(function(e){console.error('Firestore revision:',e);});
+  filtrarOrdenes(); renderKanban();
+  toast('📤 Enviado a revisión de Lucas','ok');
+}
+
+function aprobarRevision(ordenId){
+  _lastLocalChange = Date.now();
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  if(empActualId!=='emp01'){ toast('Solo Lucas puede aprobar','err'); return; }
+  o.estado = 'completada';
+  o.completadoPor = 'emp01';
+  o.completadoPorNombre = 'Lucas';
+  o.completadoAt = new Date().toISOString();
+  if(!o.comentarios) o.comentarios = [];
+  o.comentarios.push({id:uid(), texto:'✅ Aprobado por Lucas', autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'aprobacion'});
+  gLS();
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);});
+  filtrarOrdenes(); renderDashboard();
+  toast('✅ Aprobada','ok');
+}
+
+function devolverRevision(ordenId){
+  var comentario = prompt('Comentario de devolución (opcional):');
+  _lastLocalChange = Date.now();
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  if(empActualId!=='emp01'){ toast('Solo Lucas puede devolver','err'); return; }
+  var estadoAnterior = o.estadoPrevio || 'pendiente';
+  var asigOriginal = o.asignadoOriginal || o.asignadoA;
+  o.estado = estadoAnterior;
+  o.asignadoA = asigOriginal;
+  if(!o.comentarios) o.comentarios = [];
+  var textoDevolucion = '⤴ Devuelto por Lucas';
+  if(comentario && comentario.trim()) textoDevolucion += ': ' + comentario.trim();
+  o.comentarios.push({id:uid(), texto:textoDevolucion, autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'devolucion'});
+  gLS();
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:estadoAnterior, asignadoA:asigOriginal, comentarios:o.comentarios}).catch(function(e){console.error('Firestore devolver:',e);});
+  filtrarOrdenes(); renderDashboard();
+  toast('⤴ Devuelta' + (comentario?' con comentario':''),'ok');
+}
+
+function cancelarRevision(ordenId){
+  _lastLocalChange = Date.now();
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  if(o.revisionPedidaPor !== empActualId && empActualId!=='emp01'){ toast('Solo quien pidió la revisión puede cancelarla','err'); return; }
+  o.estado = o.estadoPrevio || 'pendiente';
+  if(!o.comentarios) o.comentarios = [];
+  o.comentarios.push({id:uid(), texto:'↩ Revisión cancelada por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision_cancelada'});
+  gLS();
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).catch(function(e){console.error('Firestore cancelar revision:',e);});
+  filtrarOrdenes(); renderKanban();
+  toast('↩ Revisión cancelada','ok');
+}
+
 function puedeHacerCheck(targetId){
   if(rolActual === 'supervisor') return true; // supervisor puede con todos
   if(empActualId === targetId) return true;
@@ -4493,30 +4566,39 @@ function renderOrdenes(lista){
   function getFechaO(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds) v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds) v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
 
   // Clasificar en grupos
-  var vencidas=[], pendientes=[], enCurso=[], completadas=[], canceladas=[];
+  var enRevision=[], vencidas=[], pendientes=[], enCurso=[], completadas=[], canceladas=[];
   lista.forEach(function(o){
     var est = (o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
     var f = getFechaO(o);
-    if(est==='completada') completadas.push(o);
+    if(est==='en_revision') enRevision.push(o);
+    else if(est==='completada') completadas.push(o);
     else if(est==='cancelada') canceladas.push(o);
     else if(f && f < h) vencidas.push(o);
     else if(est==='en_curso') enCurso.push(o);
     else pendientes.push(o);
   });
 
-  // Estado colapsado persistente
   var colKey = 'gestion_ordenes_collapsed_'+(empActualId||'');
   var collapsed = {};
   try { collapsed = JSON.parse(localStorage.getItem(colKey)||'{}'); } catch(e){}
-  if(!Object.keys(collapsed).length) collapsed = {vencidas:false, pendientes:false, enCurso:true, completadas:true, canceladas:true};
+  if(!Object.keys(collapsed).length) collapsed = {enRevision:false, vencidas:false, pendientes:false, enCurso:true, completadas:true, canceladas:true};
 
-  var grupos = [
+  var grupos = [];
+  // Solo Lucas ve la sección "En revisión" al tope
+  if(empActualId==='emp01' && enRevision.length){
+    grupos.push({key:'enRevision', icon:'🔍', label:'Esperan tu revisión', items:enRevision, border:'#7c4dff', show:true});
+  }
+  grupos.push(
     {key:'vencidas', icon:'🔴', label:'Vencidas', items:vencidas, border:'var(--accent)', show:true},
     {key:'pendientes', icon:'⏳', label:'Pendientes', items:pendientes, border:'var(--line)', show:true},
     {key:'enCurso', icon:'▶', label:'En curso', items:enCurso, border:'var(--blue2)', show:true},
     {key:'completadas', icon:'✓', label:'Completadas', items:completadas, border:'var(--green)', show:true},
     {key:'canceladas', icon:'✕', label:'Canceladas', items:canceladas, border:'var(--ink2)', show:false}
-  ];
+  );
+  // Directores ven sus tareas en_revision en pendientes con badge
+  if(empActualId!=='emp01' && DIRECTORES[empActualId] && enRevision.length){
+    enRevision.forEach(function(o){ if(o.revisionPedidaPor===empActualId) pendientes.unshift(o); });
+  }
 
   var html = '';
   grupos.forEach(function(g){
@@ -4535,7 +4617,7 @@ function renderOrdenes(lista){
       var fecha = o.fechaVencimiento || o.fechaCreacion || o.fecha || '';
       var desc = o.titulo || o.descripcion || o.desc || '<span style="color:var(--ink2);font-style:italic">(Sin título)</span>';
       var estado = o.estado || 'pendiente';
-      var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : estado==='en_curso'||estado==='en-curso' ? 'En curso' : 'Pendiente';
+      var estadoLabel = estado==='completada' ? 'Completada' : estado==='cancelada' ? 'Cancelada' : estado==='en_curso'||estado==='en-curso' ? 'En curso' : estado==='en_revision' ? 'En revisión' : 'Pendiente';
       var opacity = estado==='completada' ? 'opacity:0.7;' : '';
       html += '<div class="order-item" data-oid="' + o.id + '" style="cursor:pointer;'+opacity+'">';
       html += '<div class="order-hdr">';
@@ -4551,14 +4633,33 @@ function renderOrdenes(lista){
       if(esHugo) html += '<span style="font-size:9px;font-weight:700;background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;margin-left:6px;">HUGO</span>';
       if(o.origen==='email'||o.origen==='gmail') html += '<span class="email-badge" style="margin-left:6px;">📧 email</span>';
       html += '<div class="order-desc">' + desc + '</div>';
+      if(estado==='en_revision' && o.revisionPedidaPorNombre) html += '<div style="font-size:11px;color:#7c4dff;margin-top:4px;">📤 Enviado por ' + (o.revisionPedidaPorNombre||'').split(' ')[0] + (o.revisionPedidaEn?' · '+fmtD(o.revisionPedidaEn):'') + '</div>';
       if(esHugo) html += '<button onclick="event.stopPropagation();abrirNotaHugo(\'' + o.id + '\')" style="margin-top:6px;padding:6px 12px;background:#7c4dff;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>';
       if((o.origen==='email'||o.origen==='gmail') && o.emailLink) html += '<button onclick="event.stopPropagation();window.open(\'' + o.emailLink + '\',\'_blank\')" style="margin-top:6px;padding:6px 12px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>';
       if(puedeCheckOrden(o)){
         var comentCount = (o.comentarios||[]).length;
+        var esDirectorViewer = DIRECTORES[empActualId] || (colaboradores.find(function(c){return c.id===empActualId;})?.jerarquia==='director_general');
+        var esLucas = empActualId === 'emp01';
+        var esMiTarea = o.asignadoA === empActualId || o.asignadoOriginal === empActualId;
         html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">';
-        if(estado !== 'completada' && estado !== 'cancelada'){
+        if(estado === 'en_revision'){
+          // Badge
+          html += '<span style="padding:3px 8px;background:#ede7f6;color:#7c4dff;border-radius:4px;font-size:10px;font-weight:700;">🔍 EN REVISIÓN</span>';
+          if(esLucas){
+            // Lucas: aprobar o devolver
+            html += '<button onclick="event.stopPropagation();aprobarRevision(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓ Aprobar</button>';
+            html += '<button onclick="event.stopPropagation();devolverRevision(\'' + o.id + '\')" style="padding:5px 12px;background:#ede7f6;color:#7c4dff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">⤴ Devolver</button>';
+          } else if(o.revisionPedidaPor === empActualId){
+            // Director que la pasó: puede cancelar revisión
+            html += '<button onclick="event.stopPropagation();cancelarRevision(\'' + o.id + '\')" style="padding:5px 12px;background:var(--paper2);color:var(--ink);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Cancelar revisión</button>';
+          }
+        } else if(estado !== 'completada' && estado !== 'cancelada'){
           html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green,#2e7d32);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✓ Completar</button>';
           html += '<button onclick="event.stopPropagation();cambiarEstadoOrden(\'' + o.id + '\',\'cancelada\')" style="padding:5px 12px;background:var(--red-bg);color:var(--accent);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>';
+          // Director (no Lucas) viendo su propia tarea activa: botón enviar a revisión
+          if(esDirectorViewer && !esLucas && esMiTarea){
+            html += '<button onclick="event.stopPropagation();pasarARevision(\'' + o.id + '\')" style="padding:5px 12px;background:#ede7f6;color:#7c4dff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">📤 Enviar a revisión</button>';
+          }
         } else if(estado === 'completada'){
           html += '<button onclick="event.stopPropagation();marcarOrdenCompletada(\'' + o.id + '\')" style="padding:5px 12px;background:var(--green-bg);color:var(--green);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">↩ Reabrir</button>';
         } else if(estado === 'cancelada'){
