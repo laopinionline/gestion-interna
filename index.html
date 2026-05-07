@@ -2085,7 +2085,7 @@ header{
           </div>
           <div class="form-actions" style="margin-top:12px;padding-top:10px">
             <button class="btn-cancel" onclick="toggleOrderForm()">Cancelar</button>
-            <button class="btn-blue" onclick="guardarOrdenCliente()">Agregar</button>
+            <button class="btn-blue" id="btnGuardarOrdenCliente" onclick="guardarOrdenCliente()">Agregar</button>
           </div>
         </div>
         <div id="dOrdenesList"></div>
@@ -2215,7 +2215,7 @@ header{
       <div class="form-actions">
         <button class="btn-danger" id="btnEliminarOrden" style="display:none" onclick="eliminarOrden()">🗑 Eliminar</button>
         <button class="btn-cancel" onclick="cerrarModal('mOrden')">Cancelar</button>
-        <button class="btn-blue" onclick="guardarOrdenStandalone()">Guardar orden</button>
+        <button class="btn-blue" id="btnGuardarOrdenStandalone" onclick="guardarOrdenStandalone()">Guardar orden</button>
       </div>
     </div>
   </div>
@@ -2392,6 +2392,7 @@ let rolActual = null;
 // ══ REAL-TIME LISTENERS ══
 var _realtimeUnsubs = [];
 var _lastLocalChange = 0; // timestamp del último cambio local (RSVP, etc.)
+var _savingOrden = false; // guard contra doble-click en Guardar orden
 
 function setupRealtimeListeners(){
   teardownRealtimeListeners();
@@ -2856,7 +2857,9 @@ function agregarComentario(){
     requiereDevolucion: true,
     resuelto: false,
   });
-  guardarYSincronizar('d_ordenes', ordenes);
+  _lastLocalChange = Date.now();
+  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
   document.getElementById('nuevoComentario').value = '';
   renderComentarios(orden);
   toast('Comentario agregado ✓','ok');
@@ -2889,7 +2892,9 @@ function resolverComentario(ordenId, comentarioId){
   if(!orden || !orden.comentarios) return;
   const c = orden.comentarios.find(c => c.id === comentarioId);
   if(c) c.resuelto = true;
-  guardarYSincronizar('d_ordenes', ordenes);
+  _lastLocalChange = Date.now();
+  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
   renderComentarios(orden);
   toast('Comentario resuelto ✓','ok');
 }
@@ -4438,16 +4443,24 @@ function toggleOrderForm(){
 }
 
 function guardarOrdenCliente(){
+  if(_savingOrden) return;
+  _savingOrden = true;
+  var btn = document.getElementById('btnGuardarOrdenCliente');
+  var btnTextoOriginal = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+  try {
   const fecha=document.getElementById('oFecha').value;
   const desc=document.getElementById('oDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
+  _lastLocalChange = Date.now();
   const nuevaOrden={id:uid(),fecha,desc,notas:document.getElementById('oNotas').value.trim(),estado:document.getElementById('oEstado').value,clienteId:clienteActualId};
   ordenes.push(nuevaOrden);
-  gLS();
+  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   const c=clientes.find(x=>x.id===clienteActualId);
   renderOrdenesCliente(c); toggleOrderForm(); filtrarOrdenes();
   toast('Orden agregada ✓','ok');
+  } finally { _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
 }
 
 function cambiarEstadoOrden(ordenId,estado){
@@ -4913,6 +4926,12 @@ function editarOrden(id){
   abrirModal('mOrden');
 }
 function guardarOrdenStandalone(){
+  if(_savingOrden) return;
+  _savingOrden = true;
+  var btn = document.getElementById('btnGuardarOrdenStandalone');
+  var btnTextoOriginal = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+  try {
   const fecha=document.getElementById('soFecha').value;
   const desc=document.getElementById('soDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
@@ -4936,6 +4955,7 @@ function guardarOrdenStandalone(){
     creadoPor: empActualId || 'emp01',
     creadoPorNombre: empActualNombre || 'Supervisor',
   };
+  _lastLocalChange = Date.now();
   if(editandoOrdenId){
     const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
     // Preservar comentarios al editar
@@ -4949,8 +4969,9 @@ function guardarOrdenStandalone(){
     if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   }
   cerrarModal('mOrden');
-  try { guardarYSincronizar('d_ordenes', ordenes); } catch(e){ console.warn('Sync error:', e); }
+  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   filtrarOrdenes(); renderKanban();
+  } finally { _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
 }
 
 function eliminarOrden(){
