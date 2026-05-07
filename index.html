@@ -1907,6 +1907,8 @@ header{
         <select id="filtroMisTareas" onchange="renderKanban()" class="filter-sel" style="font-size:13px;padding:6px 12px;">
           <option value="mias">📋 Mis tareas</option>
           <option value="delegadas">📤 Tareas que delegué</option>
+          <option value="claw_derivar">📥 De Claw para derivar</option>
+          <option value="mis_derivaciones">🔄 Mis derivaciones</option>
           <option value="todas">🌐 Todas</option>
         </select>
       </div>
@@ -3380,6 +3382,59 @@ function cancelarRevision(ordenId){
   if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).catch(function(e){console.error('Firestore cancelar revision:',e);});
   filtrarOrdenes(); renderKanban();
   toast('↩ Revisión cancelada','ok');
+}
+
+function abrirDerivar(ordenId){
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  var activos = colaboradores.filter(function(c){return c.estado==='activo' && c.jerarquia!=='externo' && c.id!==empActualId && c.id!=='emp00';});
+  var sugerido = o.destinatarioInferido || '';
+  var html = '<div style="max-height:300px;overflow-y:auto;">';
+  if(sugerido){
+    var sugColab = colaboradores.find(function(c){return c.id===sugerido;});
+    if(sugColab){
+      html += '<div style="padding:8px 0;border-bottom:2px solid var(--gold);margin-bottom:8px;">'
+        + '<button onclick="derivarOrden(\''+ordenId+'\',\''+sugerido+'\')" style="width:100%;text-align:left;padding:10px;background:var(--gold-bg);border:2px solid var(--gold);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);">'
+        + '💡 Sugerido por Claw: '+sugColab.nombre.split(' ').slice(0,2).join(' ')+'</button></div>';
+    }
+  }
+  activos.forEach(function(c){
+    if(c.id === sugerido) return;
+    html += '<button onclick="derivarOrden(\''+ordenId+'\',\''+c.id+'\')" style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;color:var(--ink);">'
+      + c.nombre.split(' ').slice(0,2).join(' ')+' <span style="color:var(--ink2);font-size:11px;">'+c.equipo+'</span></button>';
+  });
+  html += '</div>';
+  document.getElementById('mchkNombre').textContent = '📤 Derivar tarea';
+  document.getElementById('mchkBody').innerHTML = html;
+  var btnGuardar = document.querySelector('[onclick="guardarCheckColaborador()"]');
+  if(btnGuardar) btnGuardar.style.display='none';
+  abrirModal('modalCheckColaborador');
+}
+
+function derivarOrden(ordenId, nuevoAsignado){
+  _lastLocalChange = Date.now();
+  var o = ordenes.find(function(x){return x.id===ordenId;});
+  if(!o) return;
+  var nuevoNombre = (colaboradores.find(function(c){return c.id===nuevoAsignado;})?.nombre||'').split(' ')[0];
+  o.derivadaPor = empActualId;
+  o.derivadaPorNombre = empActualNombre;
+  o.derivadaEn = new Date().toISOString();
+  o.asignadoA = nuevoAsignado;
+  if(!o.comentarios) o.comentarios = [];
+  o.comentarios.push({id:uid(), texto:'📤 Derivado a '+nuevoNombre+' por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'derivacion'});
+  gLS();
+  if(typeof db!=='undefined'&&db){
+    db.collection('ordenes').doc(ordenId).update({
+      asignadoA: nuevoAsignado,
+      derivadaPor: empActualId,
+      derivadaPorNombre: empActualNombre,
+      derivadaEn: o.derivadaEn,
+      comentarios: o.comentarios
+    }).catch(function(e){console.error('Firestore derivar:',e);});
+  }
+  cerrarModal('modalCheckColaborador');
+  renderKanban(); filtrarOrdenes();
+  toast('📤 Derivado a '+nuevoNombre,'ok');
 }
 
 function puedeHacerCheck(targetId){
@@ -5683,26 +5738,30 @@ function renderKanban(){
   const estados = ['pendiente','en-curso','listo'];
   const {inicio: kInicio, fin: kFin} = proximaSemanaRango();
 
-  // Dropdown delegadas: visible solo para directores
+  // Dropdown: visible para directores + emp03 (Vivi, triage Claw)
   const yo = colaboradores.find(c=>c.id===empActualId);
   const esDirector = yo && (yo.jerarquia==='director' || yo.jerarquia==='director_general');
+  const tieneDerivacionesClaw = empActualId==='emp03' || esDirector;
   const filtroWrap = document.getElementById('filtroMisTareasWrap');
-  if(filtroWrap) filtroWrap.style.display = esDirector ? '' : 'none';
+  if(filtroWrap) filtroWrap.style.display = tieneDerivacionesClaw ? '' : 'none';
 
   // Leer filtro (persistido en localStorage)
   const filtroSel = document.getElementById('filtroMisTareas');
   const lsKey = 'gestion_misTareas_filtro_'+(empActualId||'');
+  const validOpts = ['mias','delegadas','claw_derivar','mis_derivaciones','todas'];
   if(filtroSel){
     const saved = localStorage.getItem(lsKey);
-    if(saved && ['mias','delegadas','todas'].includes(saved) && filtroSel.value !== saved) filtroSel.value = saved;
+    if(saved && validOpts.includes(saved) && filtroSel.value !== saved) filtroSel.value = saved;
     try { localStorage.setItem(lsKey, filtroSel.value); } catch(e){}
   }
-  const filtroVal = (filtroSel && esDirector) ? filtroSel.value : 'mias';
+  const filtroVal = (filtroSel && tieneDerivacionesClaw) ? filtroSel.value : 'mias';
 
   const tareas = ordenes.filter(o => {
     if(!empActualId) return false;
     const esMia = o.asignadoA === empActualId || (o.copiaA||[]).includes(empActualId) || (o.colaboradoresIds||[]).includes(empActualId) || o.colaboradorId === empActualId;
     const esDelegada = o.creadoPor === empActualId && o.asignadoA !== empActualId;
+    const esClawParaDerivar = o.derivadoPorClaw && o.asignadoA === empActualId && !o.derivadaPor;
+    const esMiDerivacion = o.derivadaPor === empActualId;
 
     if(filtroVal === 'mias'){
       if(esDirector && yo.jerarquia==='director_general') return true;
@@ -5718,7 +5777,9 @@ function renderKanban(){
       return esMia;
     }
     if(filtroVal === 'delegadas') return esDelegada;
-    if(filtroVal === 'todas') return esMia || esDelegada;
+    if(filtroVal === 'claw_derivar') return esClawParaDerivar;
+    if(filtroVal === 'mis_derivaciones') return esMiDerivacion;
+    if(filtroVal === 'todas') return esMia || esDelegada || esClawParaDerivar || esMiDerivacion;
     return esMia;
   }).sort((a,b)=>sortFecha(a.fechaCreacion||a.fecha).localeCompare(sortFecha(b.fechaCreacion||b.fecha)));
 
@@ -5741,9 +5802,14 @@ function renderKanban(){
     const comentCount = (o.comentarios||[]).length;
     const esDelegada = o.creadoPor === empActualId && o.asignadoA !== empActualId;
     const puedeAccionar = puedeCheckOrden(o) || o.creadoPor === empActualId;
-    // Badge delegada: mostrar a quién se asignó
+    const esClawSinDerivar = o.derivadoPorClaw && o.asignadoA === empActualId && !o.derivadaPor;
+    const fueDerivadaPorMi = o.derivadaPor === empActualId;
+    // Badge delegada / derivada
     const asigNombre = esDelegada ? (colaboradores.find(x=>x.id===o.asignadoA)?.nombre||'').split(' ')[0] : '';
     const delegadaBadge = esDelegada && asigNombre ? `<span style="font-size:10px;font-weight:600;color:var(--blue2);background:rgba(26,58,92,0.08);padding:2px 6px;border-radius:4px;">→ 👤 ${asigNombre}</span>` : '';
+    const derivadaNombre = fueDerivadaPorMi ? (colaboradores.find(x=>x.id===o.asignadoA)?.nombre||'').split(' ')[0] : '';
+    const derivadaBadge = fueDerivadaPorMi && derivadaNombre ? `<span style="font-size:10px;font-weight:600;color:var(--green);background:var(--green-bg);padding:2px 6px;border-radius:4px;">📤 Derivado a ${derivadaNombre}</span>` : '';
+    const sugerenciaClaw = esClawSinDerivar && o.destinatarioInferido ? (colaboradores.find(x=>x.id===o.destinatarioInferido)?.nombre||'').split(' ')[0] : '';
     const botones = o.estado==='pendiente'
       ? `<button class="kc-btn next-c" onclick="moverTarea('${o.id}','en-curso')">▶ En curso</button>`
       : o.estado==='en-curso'||o.estado==='en_curso'
@@ -5758,8 +5824,10 @@ function renderKanban(){
         ${esUrgente?'<span style="font-size:10px;font-weight:700;color:#c62828;background:#fde8e8;padding:2px 6px;border-radius:4px;">⚡ URGENTE</span>':''}
         ${esEnRevision?'<span style="font-size:10px;font-weight:700;color:#7c4dff;background:#ede7f6;padding:2px 6px;border-radius:4px;">🔍 EN REVISIÓN</span>':''}
         ${delegadaBadge}
+        ${derivadaBadge}
         <div class="kc-title" style="flex:1;">${(o.origen==="borrador-hugo"||o.categoria==="borrador-hugo")?"<span class=\"nota-hugo-badge\">HUGO</span> ":""}${(o.origen==="email"||o.origen==="gmail")?"<span class=\"email-badge\">📧 email</span> ":""}${o.titulo||o.desc||'<span style="color:#aaa;font-style:italic">(Sin título)</span>'}</div>
       </div>
+      ${sugerenciaClaw?`<div style="font-size:10px;color:var(--gold);margin-bottom:4px;">💡 Sugerencia Claw: ${sugerenciaClaw}</div>`:''}
       ${c?`<div class="kc-client">📌 ${c.nombre}</div>`:''}
       <div class="kc-meta"><span>${o.fecha===kInicio||(!empActualId&&o.fecha===hoy())?'📅 Hoy':'📅 '+fmtD(o.fecha)}</span><span class="task-status-pill pill-${o.estado==='completada'?'completada':o.estado==='en-curso'?'pendiente':'pendiente'}">${o.estado==='en_revision'?'en revisión':o.estado}</span></div>
       ${asig.length?`<div class="kc-assigned">👤 ${asig.map(e=>e.nombre.split(' ')[0]).join(', ')}</div>`:''}
@@ -5767,6 +5835,7 @@ function renderKanban(){
       <div class="orden-acciones" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
         ${(o.tipo==="nota_para_publicar"||o.origen==="borrador-hugo"||o.categoria==="borrador-hugo") ? `<button onclick="event.stopPropagation();abrirNotaHugo('${o.id}')" style="flex:1;padding:7px 10px;background:#7c4dff;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📄 Ver nota completa</button>` : ""}
         ${((o.origen==="email"||o.origen==="gmail")&&o.emailLink) ? `<button onclick="event.stopPropagation();window.open('${o.emailLink}','_blank')" style="padding:7px 10px;background:#f3e5f5;color:#7b1fa2;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📧 Ver email original</button>` : ""}
+        ${esClawSinDerivar ? `<button onclick="event.stopPropagation();abrirDerivar('${o.id}')" style="flex:1;padding:7px 10px;background:var(--gold-bg);color:var(--gold);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📤 Derivar</button>` : ''}
         ${puedeAccionar ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
           ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
         ${comentBtn}
