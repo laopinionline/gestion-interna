@@ -1977,6 +1977,7 @@ header{
             <input type="text" class="form-input" id="fNombre" placeholder="Ej: Farmacia Central">
           </div>
         </div>
+        <div class="form-group"><label class="form-label">CUIT</label><input type="text" class="form-input" id="fCuit" placeholder="Ej: 30-12345678-9"><div id="fCuitWarn" style="display:none;color:#e65100;font-size:11px;margin-top:2px;">⚠ CUIT debe tener 11 dígitos</div></div>
         <div class="form-group"><label class="form-label">Rubro *</label><input type="text" class="form-input" id="fRubro" placeholder="Ej: Salud, Comercio..."></div>
         <div class="form-group"><label class="form-label">Estado</label>
           <select class="form-select" id="fEstado"><option value="activo">Activo</option><option value="potencial">Potencial</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select>
@@ -1991,6 +1992,7 @@ header{
         </div>
         <div class="form-group"><label class="form-label">Teléfono</label><input type="text" class="form-input" id="fTel"></div>
         <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="fEmail"></div>
+        <div class="form-group"><label class="form-label">Dirección</label><input type="text" class="form-input" id="fDireccion" placeholder="Ej: Av. Pellegrini 1234, Pergamino"></div>
         <div class="form-section">Pauta publicitaria</div>
         <div class="form-group form-full"><label class="form-label">Descripción de pauta</label><input type="text" class="form-input" id="fPauta" placeholder="Ej: Banner home, redes sociales"></div>
         <div class="form-group"><label class="form-label">Inicio de pauta</label><input type="date" class="form-input" id="fPautaI"></div>
@@ -4225,10 +4227,13 @@ function abrirModalCliente(id){
     else { prevLogo.innerHTML = '🏢'; }
   }
   document.getElementById('fNombre').value=c?.nombre||'';
+  document.getElementById('fCuit').value=c?.cuit||'';
+  if(document.getElementById('fCuitWarn')) document.getElementById('fCuitWarn').style.display='none';
   document.getElementById('fRubro').value=c?.rubro||'';
   document.getElementById('fEstado').value=c?.estado||'activo';
   document.getElementById('fTel').value=c?.telefono||'';
   document.getElementById('fEmail').value=c?.email||'';
+  document.getElementById('fDireccion').value=c?.direccion||'';
   document.getElementById('fPauta').value=c?.pauta||'';
   document.getElementById('fPautaI').value=c?.pautaInicio||'';
   document.getElementById('fPautaV').value=c?.pautaVence||'';
@@ -4305,7 +4310,14 @@ function guardarCliente(){
   var grupoSel = document.getElementById('fGrupoSelect')?.value;
   var grupoNuevo = document.getElementById('fGrupoNuevo')?.value.trim();
   var grupoEmpresarial = grupoSel === '__nuevo__' ? grupoNuevo : (grupoSel || '');
-  const datos={nombre,rubro,estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),responsables:responsables,logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
+  var cuit = document.getElementById('fCuit').value.trim();
+  var cuitWarn = document.getElementById('fCuitWarn');
+  if(cuit){
+    var cuitDigits = cuit.replace(/[^0-9]/g,'');
+    if(cuitDigits.length !== 11){ if(cuitWarn) cuitWarn.style.display='block'; }
+    else { if(cuitWarn) cuitWarn.style.display='none'; }
+  } else { if(cuitWarn) cuitWarn.style.display='none'; }
+  const datos={nombre,rubro,cuit:cuit,direccion:document.getElementById('fDireccion').value.trim(),estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),responsables:responsables,logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
@@ -4354,8 +4366,10 @@ function abrirDetalle(id){
   document.getElementById('dNombre').textContent=c.nombre;
   document.getElementById('dRubro').textContent=c.rubro;
   let info='';
+  if(c.cuit)info+=`<div class="d-info-item" style="font-size:12px;color:var(--ink2);">CUIT: ${c.cuit}</div>`;
   if(c.telefono)info+=`<div class="d-info-item">📞 ${c.telefono}</div>`;
   if(c.email)info+=`<div class="d-info-item">✉ ${c.email}</div>`;
+  if(c.direccion)info+=`<div class="d-info-item"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion)}" target="_blank" style="color:var(--blue2);text-decoration:none;">📍 ${c.direccion}</a></div>`;
   if(c.fechaAlta && rolActual==='supervisor')info+=`<div class="d-info-item">📅 Alta: ${c.fechaAlta}</div>`;
   info+=`<div class="d-info-item" style="margin-left:auto"><span class="status-badge badge-${c.estado}">${c.estado}</span></div>`;
   document.getElementById('dInfoRow').innerHTML=info;
@@ -4364,9 +4378,11 @@ function abrirDetalle(id){
   const pc=al?(al.tipo==='vencido'?'vencido':'proximo'):'';
   document.getElementById('dInfoGrid').innerHTML=`
     <div class="info-box"><div class="info-box-label">Nombre</div><div class="info-box-value">${c.nombre}</div></div>
+    ${c.cuit?`<div class="info-box"><div class="info-box-label">CUIT</div><div class="info-box-value">${c.cuit}</div></div>`:''}
     <div class="info-box"><div class="info-box-label">Rubro</div><div class="info-box-value">${c.rubro}</div></div>
     <div class="info-box"><div class="info-box-label">Teléfono</div><div class="info-box-value">${c.telefono||'—'}</div></div>
     <div class="info-box"><div class="info-box-label">Email</div><div class="info-box-value">${c.email||'—'}</div></div>
+    ${c.direccion?`<div class="info-box info-box-full"><div class="info-box-label">Dirección</div><div class="info-box-value"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion)}" target="_blank" style="color:var(--blue2);text-decoration:none;">📍 ${c.direccion}</a></div></div>`:''}
     <div class="info-box info-box-full"><div class="info-box-label">Pauta</div><div class="info-box-value">${c.pauta||'—'}</div></div>
     <div class="info-box"><div class="info-box-label">Inicio pauta</div><div class="info-box-value">${fmtD(c.pautaInicio)}</div></div>
     <div class="info-box ${pc}"><div class="info-box-label">Vencimiento pauta</div><div class="info-box-value">${fmtD(c.pautaVence)}</div></div>
@@ -5094,6 +5110,7 @@ function renderEmpMisClientes(){
     const contacto = c.contacto ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">👤 ${c.contacto}</div>` : '';
     const tel = c.telefono ? `<div style="font-size:12px;color:var(--blue2);margin-top:2px;">📞 ${c.telefono}</div>` : '';
     const email = c.email ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;">✉ ${c.email}</div>` : '';
+    const dir = c.direccion ? `<div style="font-size:12px;color:var(--ink2);margin-top:2px;"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion)}" target="_blank" style="color:var(--blue2);text-decoration:none;">📍 ${c.direccion}</a></div>` : '';
     const esSeguimiento = (c.seguimientoA||[]).includes(empActualId);
     const badge = esSeguimiento ? '<span style="font-size:10px;background:#e3f2fd;color:#1565c0;padding:2px 6px;border-radius:4px;font-weight:700;">SEGUIMIENTO</span>' : '';
     const historial = (c.seguimientoHistorial||[]).filter(h => !esSeguimiento || true).slice(-5).reverse();
@@ -5114,7 +5131,7 @@ function renderEmpMisClientes(){
         </div>
         ${estadoBadge}
       </div>
-      ${contacto}${tel}${email}
+      ${contacto}${tel}${email}${dir}
       <div style="margin-top:10px;display:flex;gap:6px;">
         <input type="text" id="segNota_${c.id}" placeholder="Registrar llamada o nota de seguimiento..." style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
         <button onclick="guardarNotaSeguimiento('${c.id}')" style="padding:8px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Guardar</button>
