@@ -7013,7 +7013,11 @@ function aplicarVisibilidad(){
     var col = document.getElementById('appcolaborador');
     var supActive = sup && sup.classList.contains('active');
     var colActive = col && col.classList.contains('active');
-    if(supActive || colActive) return; // ya logueado, nada que hacer
+    if(supActive || colActive){
+      // Ya logueado: re-atajar listeners que pueden haber muerto en bfcache
+      setupRealtimeListeners();
+      return;
+    }
     // Intentar rehidratar desde gestion_session
     try {
       var sess = localStorage.getItem('gestion_session');
