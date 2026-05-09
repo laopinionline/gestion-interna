@@ -4522,8 +4522,12 @@ function guardarOrdenCliente(){
 
 function cambiarEstadoOrden(ordenId,estado){
   const o=ordenes.find(x=>x.id===ordenId); if(!o)return;
-  o.estado=estado; gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({estado:estado,updatedAt:new Date().toISOString()}).catch(e=>console.error('Firestore ordenes:',e));}
+  o.estado=estado;
+  var updateData = {estado:estado,updatedAt:new Date().toISOString()};
+  if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; }
+  if(estado==='cancelada'){ o.canceladoAt=new Date().toISOString(); o.canceladoPor=empActualId; updateData.canceladoAt=o.canceladoAt; updateData.canceladoPor=empActualId; }
+  gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(e=>console.error('Firestore ordenes:',e));}
   const c=clientes.find(x=>x.id===clienteActualId);
   if(c) renderOrdenesCliente(c);
   filtrarOrdenes(); renderDashboard();
@@ -5974,9 +5978,12 @@ function cambiarEstadoOrden(id, nuevoEstado){
   const i = ordenes.findIndex(x=>x.id===id);
   if(i===-1) return;
   ordenes[i].estado = nuevoEstado;
+  var updateData = {estado: nuevoEstado, updatedAt: new Date().toISOString()};
+  if(nuevoEstado==='completada'){ ordenes[i].completadoAt=new Date().toISOString(); ordenes[i].completadoPor=empActualId; updateData.completadoAt=ordenes[i].completadoAt; updateData.completadoPor=empActualId; }
+  if(nuevoEstado==='cancelada'){ ordenes[i].canceladoAt=new Date().toISOString(); ordenes[i].canceladoPor=empActualId; updateData.canceladoAt=ordenes[i].canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({estado: nuevoEstado, updatedAt: new Date().toISOString()}).catch(e=>console.warn('Firestore update error:', e));
+    db.collection('ordenes').doc(id).update(updateData).catch(e=>console.warn('Firestore update error:', e));
   }
   _markLocalChange('ordenes', id);
   rendercolaborador();
