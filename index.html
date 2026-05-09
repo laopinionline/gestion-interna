@@ -2393,32 +2393,73 @@ let rolActual = null;
 
 // ══ REAL-TIME LISTENERS ══
 var _realtimeUnsubs = [];
-var _lastLocalChange = 0; // timestamp del último cambio local (RSVP, etc.)
+var _pendingLocalDocIds = {}; // {docId: timestamp} — docs que esperamos confirmar del server
 var _savingOrden = false; // guard contra doble-click en Guardar orden
+
+// Registra un doc como "pendiente de echo" — onSnapshot lo ignora por 3s
+function _markLocalChange(coleccion, docId){
+  var key = coleccion + ':' + docId;
+  _pendingLocalDocIds[key] = Date.now();
+}
+
+// Limpia pendientes expirados (>3s)
+function _cleanPendingDocs(){
+  var now = Date.now();
+  for(var key in _pendingLocalDocIds){
+    if(now - _pendingLocalDocIds[key] > 3000) delete _pendingLocalDocIds[key];
+  }
+}
 
 function setupRealtimeListeners(){
   teardownRealtimeListeners();
   if(typeof db === 'undefined') return;
 
-  // Ordenes — tiempo real (con cooldown para no pisar cambios locales)
+  // Ordenes — tiempo real con cooldown SELECTIVO por doc
   _realtimeUnsubs.push(db.collection('ordenes').onSnapshot(function(snap){
-    if(Date.now() - _lastLocalChange < 2000) return;
+    _cleanPendingDocs();
+    var now = Date.now();
+    var tieneNuevos = false;
+    snap.docChanges().forEach(function(change){
+      var key = 'ordenes:' + change.doc.id;
+      if(_pendingLocalDocIds[key] && now - _pendingLocalDocIds[key] < 3000){
+        // Echo de nuestro propio write — ignorar este doc pero no bloquear los demás
+        return;
+      }
+      tieneNuevos = true;
+    });
+    if(!tieneNuevos && snap.docChanges().length > 0) return;
     ordenes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
     _realtimeRerender('ordenes');
   }, function(err){ console.warn('[realtime] ordenes error:', err.message); }));
 
-  // Clientes — tiempo real (con cooldown)
+  // Clientes — tiempo real con cooldown SELECTIVO por doc
   _realtimeUnsubs.push(db.collection('clientes').onSnapshot(function(snap){
-    if(Date.now() - _lastLocalChange < 2000) return;
+    _cleanPendingDocs();
+    var now = Date.now();
+    var tieneNuevos = false;
+    snap.docChanges().forEach(function(change){
+      var key = 'clientes:' + change.doc.id;
+      if(_pendingLocalDocIds[key] && now - _pendingLocalDocIds[key] < 3000) return;
+      tieneNuevos = true;
+    });
+    if(!tieneNuevos && snap.docChanges().length > 0) return;
     clientes = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_clientes', JSON.stringify(clientes)); } catch(e){}
     _realtimeRerender('clientes');
   }, function(err){ console.warn('[realtime] clientes error:', err.message); }));
 
-  // Reuniones — tiempo real (con cooldown para no pisar cambios locales)
+  // Reuniones — tiempo real con cooldown SELECTIVO por doc
   _realtimeUnsubs.push(db.collection('reuniones').onSnapshot(function(snap){
-    if(Date.now() - _lastLocalChange < 2000) return; // skip si hubo cambio local reciente
+    _cleanPendingDocs();
+    var now = Date.now();
+    var tieneNuevos = false;
+    snap.docChanges().forEach(function(change){
+      var key = 'reuniones:' + change.doc.id;
+      if(_pendingLocalDocIds[key] && now - _pendingLocalDocIds[key] < 3000) return;
+      tieneNuevos = true;
+    });
+    if(!tieneNuevos && snap.docChanges().length > 0) return;
     reuniones = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
     try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
     _realtimeRerender('reuniones');
@@ -2859,7 +2900,7 @@ function agregarComentario(){
     requiereDevolucion: true,
     resuelto: false,
   });
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', editandoOrdenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
   document.getElementById('nuevoComentario').value = '';
@@ -2894,7 +2935,7 @@ function resolverComentario(ordenId, comentarioId){
   if(!orden || !orden.comentarios) return;
   const c = orden.comentarios.find(c => c.id === comentarioId);
   if(c) c.resuelto = true;
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
   renderComentarios(orden);
@@ -3288,7 +3329,7 @@ function puedeCheckOrden(orden){
 }
 
 async function marcarOrdenCompletada(ordenId){
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   const orden = ordenes.find(o=>o.id===ordenId);
   if(!orden) return;
   if(!puedeCheckOrden(orden)){ toast('Sin permiso para marcar esta tarea','err'); return; }
@@ -3320,7 +3361,7 @@ async function marcarOrdenCompletada(ordenId){
 }
 
 function pasarARevision(ordenId){
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   var o = ordenes.find(function(x){return x.id===ordenId;});
   if(!o) return;
   var yo = colaboradores.find(function(c){return c.id===empActualId;});
@@ -3341,7 +3382,7 @@ function pasarARevision(ordenId){
 }
 
 function aprobarRevision(ordenId){
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   var o = ordenes.find(function(x){return x.id===ordenId;});
   if(!o) return;
   if(empActualId!=='emp01'){ toast('Solo Lucas puede aprobar','err'); return; }
@@ -3359,7 +3400,7 @@ function aprobarRevision(ordenId){
 
 function devolverRevision(ordenId){
   var comentario = prompt('Comentario de devolución (opcional):');
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   var o = ordenes.find(function(x){return x.id===ordenId;});
   if(!o) return;
   if(empActualId!=='emp01'){ toast('Solo Lucas puede devolver','err'); return; }
@@ -3378,7 +3419,7 @@ function devolverRevision(ordenId){
 }
 
 function cancelarRevision(ordenId){
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   var o = ordenes.find(function(x){return x.id===ordenId;});
   if(!o) return;
   if(o.revisionPedidaPor !== empActualId && empActualId!=='emp01'){ toast('Solo quien pidió la revisión puede cancelarla','err'); return; }
@@ -3419,7 +3460,7 @@ function abrirDerivar(ordenId){
 }
 
 function derivarOrden(ordenId, nuevoAsignado){
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', ordenId);
   var o = ordenes.find(function(x){return x.id===ordenId;});
   if(!o) return;
   var nuevoNombre = (colaboradores.find(function(c){return c.id===nuevoAsignado;})?.nombre||'').split(' ')[0];
@@ -4468,8 +4509,8 @@ function guardarOrdenCliente(){
   const fecha=document.getElementById('oFecha').value;
   const desc=document.getElementById('oDesc').value.trim();
   if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
-  _lastLocalChange = Date.now();
   const nuevaOrden={id:uid(),fecha,desc,notas:document.getElementById('oNotas').value.trim(),estado:document.getElementById('oEstado').value,clienteId:clienteActualId};
+  _markLocalChange('ordenes', nuevaOrden.id);
   ordenes.push(nuevaOrden);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
@@ -4971,8 +5012,8 @@ function guardarOrdenStandalone(){
     creadoPor: empActualId || 'emp01',
     creadoPorNombre: empActualNombre || 'Supervisor',
   };
-  _lastLocalChange = Date.now();
   if(editandoOrdenId){
+    _markLocalChange('ordenes', editandoOrdenId);
     const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
     // Preservar comentarios al editar
     datos.comentarios = ordenes[i].comentarios || [];
@@ -4981,6 +5022,7 @@ function guardarOrdenStandalone(){
   } else {
     datos.comentarios = [];
     const nuevoId=uid();
+    _markLocalChange('ordenes', nuevoId);
     ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
     if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
   }
@@ -5936,7 +5978,7 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(typeof db !== 'undefined'){
     db.collection('ordenes').doc(id).update({estado: nuevoEstado, updatedAt: new Date().toISOString()}).catch(e=>console.warn('Firestore update error:', e));
   }
-  _lastLocalChange = Date.now();
+  _markLocalChange('ordenes', id);
   rendercolaborador();
   renderKanban();
   toast('Estado: ' + nuevoEstado, 'ok');
@@ -6192,7 +6234,7 @@ function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
   if(!r.rsvp) r.rsvp = {};
   var prevEstado = r.rsvp[targetEmpId] ? {...r.rsvp[targetEmpId]} : null;
   r.rsvp[targetEmpId] = { estado: nuevoEstado, actualizadoEn: new Date().toISOString(), actualizadoPor: empActualId };
-  _lastLocalChange = Date.now();
+  _markLocalChange('reuniones', reunionId);
   try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
   filtrarReuniones(); renderEmpReuniones();
   var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔', sin_responder:'Sin responder ⏳'};
