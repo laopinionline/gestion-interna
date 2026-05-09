@@ -8268,8 +8268,22 @@ async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
 }
 
 // ══ PULL-TO-REFRESH + REFRESH MANUAL ══
-function refreshVistaActiva(){
-  // Ignora cooldown de _lastLocalChange (disparo manual del usuario)
+async function refreshVistaActiva(){
+  // Fetch fresco de Firestore antes de re-renderizar
+  if(typeof db !== 'undefined'){
+    try {
+      var cols = ['ordenes','clientes','reuniones'];
+      for(var ci=0; ci<cols.length; ci++){
+        var col = cols[ci];
+        var snap = await db.collection(col).get();
+        var datos = snap.docs.map(function(d){ return {id:d.id, ...d.data()}; });
+        if(col==='ordenes') ordenes = datos;
+        if(col==='clientes') clientes = datos;
+        if(col==='reuniones') reuniones = datos;
+        try { localStorage.setItem('d_'+col, JSON.stringify(datos)); } catch(e){}
+      }
+    } catch(e){ console.warn('[refresh] Firestore fetch error:', e.message); }
+  }
   var sup = document.getElementById('appSupervisor');
   var col = document.getElementById('appcolaborador');
   var esSup = sup && sup.classList.contains('active');
