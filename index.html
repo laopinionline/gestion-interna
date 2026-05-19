@@ -2732,6 +2732,22 @@ async function login(){
     } catch(e){
       console.error('[iniciarSesion] Error post-login (no interrumpe login):', e.message);
     }
+    // History nav: registrar vista inicial con replaceState (no push, para que el primer "atrás" no salga del panel)
+    var vistaInicial = (rolActual === 'supervisor') ? 'vDash' : 'vEmpKanban';
+    // Si hay hash en la URL, restaurar esa vista en lugar de la default
+    if(location.hash && location.hash.length > 1){
+      var hashVista = location.hash.replace('#','');
+      var elHash = document.getElementById(hashVista);
+      if(elHash){
+        vistaInicial = hashVista;
+        if(rolActual === 'supervisor'){
+          _activarVistaSup(hashVista);
+        } else {
+          _activarVistaEmp(hashVista);
+        }
+      }
+    }
+    history.replaceState({vista: vistaInicial, rol: rolActual}, '', '#' + vistaInicial);
   }
 
   // Detectar rol localmente — supervisor es emp01, directores, o quien tenga rol supervisor
@@ -3067,15 +3083,23 @@ function logout(){
   document.getElementById('loginTel').value='';
   document.getElementById('loginPass').value='';
   document.getElementById('loginError').textContent='';
+  // Limpiar hash e historial de navegación interna
+  history.replaceState(null, '', location.pathname);
 }
 
 // ══ VISTAS SUPERVISOR ══
-function cambiarVista(id, btn){
-  // scroll se hace con offsetTop después de activar la vista
-  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById(id).classList.add('active');
+// ══ HISTORY NAV — botón atrás del navegador ══
+var _skipPushState = false;
+
+function _activarVistaSup(id){
+  document.querySelectorAll('#appSupervisor .nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#appSupervisor .view').forEach(function(v){v.classList.remove('active');});
+  var vista = document.getElementById(id);
+  if(vista) vista.classList.add('active');
+  // Highlight tab correcto
+  var tab = document.querySelector('.nav-tab[onclick*="\'' + id + '\'"]');
+  if(tab) tab.classList.add('active');
+  // Render vista
   if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
   if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
   if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
@@ -3085,6 +3109,36 @@ function cambiarVista(id, btn){
   if(id==='vProveedores'){ renderProveedores(); }
   if(id==='vCacho'){ renderCachoReports(); }
   if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
+}
+
+function _activarVistaEmp(id){
+  document.querySelectorAll('#appcolaborador .nav-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#appcolaborador .view').forEach(function(v){v.classList.remove('active');});
+  var vista = document.getElementById(id);
+  if(vista) vista.classList.add('active');
+  // Highlight tab correcto
+  var tab = document.querySelector('.nav-tab[onclick*="\'' + id + '\'"]');
+  if(tab) tab.classList.add('active');
+  // Render vista
+  if(id==='vEmpKanban') renderKanban();
+  if(id==='vEmpClientes') renderEmpClientes();
+  if(id==='vEmpMisClientes') renderEmpMisClientes();
+  if(id==='vEmpReuniones') renderEmpReuniones();
+  if(id==='vEmpProductividad') renderProductividadEmp();
+  if(id==='vEmpCacho') renderCachoReports('emp');
+  if(id==='vEmpPipeline') renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
+}
+
+function _pushVista(id){
+  if(!_skipPushState){
+    history.pushState({vista: id, rol: rolActual}, '', '#' + id);
+  }
+}
+
+function cambiarVista(id, btn){
+  _activarVistaSup(id);
+  if(btn) btn.classList.add('active');
+  _pushVista(id);
 }
 
 // ══ DASHBOARD ══
@@ -3167,17 +3221,8 @@ function cambiarVistaMobile(id){
  const btn = document.querySelector(`.nav-tab-m[onclick="cambiarVistaMobile('${id}')"]`);
  if(btn) btn.classList.add('active');
  toggleMenuMobile();
- document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
- const vista = document.getElementById(id);
- if(vista) vista.classList.add('active');
- if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); }
- if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
- if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
- if(id==='vcolaboradores'){ filtrarcolaboradores(); }
- if(id==='vReuniones'){ filtrarReuniones(); }
- if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
- if(id==='vProveedores'){ renderProveedores(); }
- if(id==='vCacho'){ renderCachoReports(); }
+ _activarVistaSup(id);
+ _pushVista(id);
 }
 
 
@@ -3229,42 +3274,22 @@ function cambiarVistaBN(id, bnId){
   document.querySelectorAll('#bottomNavSup .bn-item').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById(bnId);
   if(btn) btn.classList.add('active');
-  // Cambiar vista directamente sin depender del querySelector del nav-tab
-  document.querySelectorAll('#appSupervisor .nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#appSupervisor .view').forEach(v=>v.classList.remove('active'));
-  const vista = document.getElementById(id);
-  if(vista) vista.classList.add('active');
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
-  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
-  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
-  if(id==='vReuniones'){ filtrarReuniones(); }
-  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
-  if(id==='vProveedores'){ renderProveedores(); }
-  if(id==='vCacho'){ renderCachoReports(); }
+  _activarVistaSup(id);
+  _pushVista(id);
 }
 
 function cambiarVistaEmpBN(id, bnId){
   document.querySelectorAll('#bottomNavEmp .bn-item').forEach(b=>b.classList.remove('active'));
   const btn = document.getElementById(bnId);
   if(btn) btn.classList.add('active');
-  // Cambiar vista directamente
-  document.querySelectorAll('#appcolaborador .nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#appcolaborador .view').forEach(v=>v.classList.remove('active'));
-  const vista = document.getElementById(id);
-  if(vista) vista.classList.add('active');
-  if(id==='vEmpKanban') renderKanban();
-  if(id==='vEmpClientes') renderEmpClientes();
-  if(id==='vEmpMisClientes') renderEmpMisClientes();
+  _activarVistaEmp(id);
+  _pushVista(id);
   // Mantener dash oculto en mobile siempre
   if(window.innerWidth > 768){
-    // En mobile el dashboard nunca se muestra (solo desktop)
-    if(window.innerWidth > 768){
-      const dash = document.getElementById('empDashContainer');
-      const lect = document.getElementById('empLecturasContainer');
-      if(dash) dash.style.display = '';
-      if(lect) lect.style.display = '';
-    }
+    const dash = document.getElementById('empDashContainer');
+    const lect = document.getElementById('empLecturasContainer');
+    if(dash) dash.style.display = '';
+    if(lect) lect.style.display = '';
   }
 }
 
@@ -3289,22 +3314,13 @@ function cambiarVistaDrawer(id, btn){
   document.querySelectorAll('.nav-drawer-item').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   cerrarDrawer();
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
+  _activarVistaSup(id);
+  _pushVista(id);
   // Scroll a la vista activa
   setTimeout(function(){
     var el = document.getElementById(id);
     if(el) window.scrollTo({top: el.offsetTop - 62, behavior:'instant'});
   }, 20);
-  if(id==='vDash'){ renderDashboard(); renderAlertasYouTube(); renderTareasConReuniones(); renderEstadoEquipo(); }
-  if(id==='vClientes'){ actualizarFiltroRubros(); filtrarClientes(); }
-  if(id==='vOrdenes'){ actualizarFiltroOrdenes(); filtrarOrdenes(); }
-  if(id==='vcolaboradores'){ setTimeout(filtrarcolaboradores, 100); }
-  if(id==='vReuniones'){ filtrarReuniones(); }
-  if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
-  if(id==='vProveedores'){ renderProveedores(); }
-  if(id==='vCacho'){ renderCachoReports(); }
-  if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 function puedeCheckOrden(orden){
   if(!empActualId) return false;
@@ -5684,22 +5700,14 @@ function rendercolaboradores(lista){
 // ══ COLABORADOR VISTAS ══
 let empActualNombre = '';
 function cambiarVistaEmp(id, btn){
-  document.querySelectorAll('#appcolaborador .nav-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#appcolaborador .view').forEach(v=>v.classList.remove('active'));
+  _activarVistaEmp(id);
   if(btn) btn.classList.add('active');
-  document.getElementById(id).classList.add('active');
+  _pushVista(id);
   // Scroll a la vista activa
   setTimeout(function(){
     var el = document.getElementById(id);
     if(el){ window.scrollTo({top: el.offsetTop - 97, behavior:'instant'}); }
   }, 20);
-  if(id==='vEmpKanban') renderKanban();
-  if(id==='vEmpClientes') renderEmpClientes();
-  if(id==='vEmpMisClientes') renderEmpMisClientes();
-  if(id==='vEmpReuniones') renderEmpReuniones();
-  if(id==='vEmpProductividad') renderProductividadEmp();
-  if(id==='vEmpCacho') renderCachoReports('emp');
-  if(id==='vEmpPipeline') renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
 }
 
 // ══ PRODUCTIVIDAD COLABORADOR ══
@@ -5922,6 +5930,7 @@ function renderKanban(){
         ${esClawSinDerivar ? `<button onclick="event.stopPropagation();abrirDerivar('${o.id}')" style="flex:1;padding:7px 10px;background:var(--gold-bg);color:var(--gold);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📤 Derivar</button>` : ''}
         ${puedeAccionar ? `<button onclick="marcarOrdenCompletada('${o.id}')" style="flex:1;padding:7px 10px;background:${o.estado==='completada'?'#e8f5ee':'var(--blue)'};color:${o.estado==='completada'?'#2e7d32':'#fff'};border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
           ${o.estado==='completada'?'↩ Reabrir':'✓ Completar'}</button>` : ''}
+        ${puedeAccionar && o.estado!=='completada' && o.estado!=='cancelada' ? `<button onclick="event.stopPropagation();if(confirm('¿Cancelar esta tarea?'))cambiarEstadoOrden('${o.id}','cancelada')" style="padding:7px 10px;background:#fde8e8;color:#c62828;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">✕ Cancelar</button>` : ''}
         ${comentBtn}
       </div>
     </div>`;
@@ -7051,6 +7060,26 @@ function aplicarVisibilidad(){
     if(m && m.parentElement !== document.body){
       document.body.appendChild(m);
     }
+  });
+
+  // ══════════ POPSTATE — botón atrás/adelante del navegador ══════════
+  window.addEventListener('popstate', function(e){
+    if(!e.state || !e.state.vista) return;
+    var id = e.state.vista;
+    var rol = e.state.rol;
+    _skipPushState = true;
+    if(rol === 'supervisor'){
+      _activarVistaSup(id);
+      // Sync bottom nav
+      document.querySelectorAll('#bottomNavSup .bn-item').forEach(function(b){b.classList.remove('active');});
+      var bnMap = {vDash:'bn-dash',vOrdenes:'bn-ordenes',vClientes:'bn-clientes',vReuniones:'bn-reuniones'};
+      if(bnMap[id]){ var bnBtn = document.getElementById(bnMap[id]); if(bnBtn) bnBtn.classList.add('active'); }
+    } else {
+      _activarVistaEmp(id);
+      // Sync bottom nav emp
+      document.querySelectorAll('#bottomNavEmp .bn-item').forEach(function(b){b.classList.remove('active');});
+    }
+    _skipPushState = false;
   });
 
 
