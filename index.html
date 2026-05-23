@@ -2736,7 +2736,7 @@ async function login(){
   empActualId = usuario.id;
   empActualNombre = usuario.nombre;
   // Persistir sesión — pisa cualquier sesión anterior de otro usuario
-  try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass})); } catch(e){}
+  try { localStorage.setItem('gestion_session', JSON.stringify({id:usuario.id, tel:telInput, pass:pass, rol:rol})); } catch(e){}
 
   function iniciarSesion(rol){
     rolActual = rol;
@@ -7045,6 +7045,43 @@ function aplicarVisibilidad(){
     if(telFld) telFld.addEventListener('keydown', function(e){ if(e.key==='Enter'){ document.getElementById('loginPass').focus(); } });
   })();
 
+  // ══════════ REHIDRATACIÓN RÁPIDA DE SESIÓN ══════════
+  // Setea rolActual/empActualId INMEDIATAMENTE desde localStorage,
+  // sin esperar a Firestore. Evita que popstate encuentre rolActual=null.
+  (function(){
+    try {
+      var sess = localStorage.getItem('gestion_session');
+      if(!sess) return;
+      var s = JSON.parse(sess);
+      if(!s.id) return;
+      empActualId = s.id;
+      // Determinar rol: usar el guardado si existe, si no calcular igual que el login real
+      if(s.rol){
+        rolActual = s.rol;
+      } else {
+        var esDirRehidr = (typeof DIRECTORES !== 'undefined') && DIRECTORES[s.id];
+        rolActual = (s.id === 'emp01' || esDirRehidr) ? 'supervisor' : 'colaborador';
+      }
+      // Activar panel visualmente (el login completo con render vendrá después de Firestore)
+      document.getElementById('loginScreen').style.display = 'none';
+      if(rolActual === 'supervisor'){
+        document.getElementById('appSupervisor').classList.add('active');
+      } else {
+        document.getElementById('appcolaborador').classList.add('active');
+      }
+      // Restaurar vista desde hash si hay
+      if(location.hash && location.hash.length > 1){
+        var hashVista = location.hash.replace('#','');
+        if(document.getElementById(hashVista)){
+          if(rolActual === 'supervisor') _activarVistaSup(hashVista);
+          else _activarVistaEmp(hashVista);
+        }
+      }
+      var vistaHash = location.hash ? location.hash.replace('#','') : (rolActual==='supervisor'?'vDash':'vEmpKanban');
+      history.replaceState({vista: vistaHash, rol: rolActual}, '', '#' + vistaHash);
+    } catch(e){ console.warn('[rehidratación rápida]', e); }
+  })();
+
   // ══════════ INICIAR FIRESTORE AL CARGAR ══════════
   cargarDatosFirestore().then(() => {
     console.log('Datos cargados desde Firestore');
@@ -7115,7 +7152,15 @@ function aplicarVisibilidad(){
 
   // ══════════ POPSTATE — botón atrás/adelante del navegador ══════════
   window.addEventListener('popstate', function(e){
-    if(!e.state || !e.state.vista) return;
+    // Si no hay state válido pero hay sesión activa → atrapar, no dejar salir del panel
+    if(!e.state || !e.state.vista){
+      if(rolActual){
+        var vistaActiva = document.querySelector('#appSupervisor .view.active, #appcolaborador .view.active');
+        var vistaId = vistaActiva ? vistaActiva.id : (rolActual === 'supervisor' ? 'vDash' : 'vEmpKanban');
+        history.pushState({vista: vistaId, rol: rolActual}, '', '#' + vistaId);
+      }
+      return;
+    }
     var id = e.state.vista;
     var rol = e.state.rol;
     _skipPushState = true;
