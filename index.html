@@ -1997,6 +1997,43 @@ header{
         <div class="form-group form-full"><label class="form-label">Descripción de pauta</label><input type="text" class="form-input" id="fPauta" placeholder="Ej: Banner home, redes sociales"></div>
         <div class="form-group"><label class="form-label">Inicio de pauta</label><input type="date" class="form-input" id="fPautaI"></div>
         <div class="form-group"><label class="form-label">Vencimiento de pauta</label><input type="date" class="form-input" id="fPautaV"></div>
+        <div class="form-group form-full"><label class="form-label">Tipo de pauta (selección múltiple)</label>
+          <div id="fTipoPautaWrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--paper2);border-radius:8px;border:1.5px solid var(--line);">
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="banner_web" onchange="togglePosicionWeb()">🌐 Banner web</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="papel">📰 Papel</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="notas_patrocinadas">📝 Notas patrocinadas</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="redes">📱 Redes</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="edictos">⚖️ Edictos</label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;"><input type="checkbox" class="tipoPauta-check" value="streaming">🎬 Streaming</label>
+          </div>
+        </div>
+        <div class="form-group form-full" id="fPosicionWebWrap" style="display:none;">
+          <label class="form-label">Posiciones en Capote (dónde va el banner)</label>
+          <div id="fPosicionWebChecks" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--paper2);border-radius:8px;border:1.5px solid var(--line);">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="HEADER_TOP">Header top</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="HERO_BOTTOM">Debajo hero</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="ARTICLE_SIDEBAR">Sidebar artículo</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SECTION_TOP">Arriba sección</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="FOOTER_TOP">Encima footer</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="BETWEEN_BLOCKS">Entre bloques</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="BETWEEN_ITEMS">Entre items</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="IN_ARTICLE">Entre párrafos</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_1">Lateral 1</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_2">Lateral 2</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_3">Lateral 3</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_4">Lateral 4</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_5">Lateral 5</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_6">Lateral 6</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_7">Lateral 7</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_8">Lateral 8</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_FILL_1">Relleno 1</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_FILL_2">Relleno 2</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_FILL_3">Relleno 3</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="SIDE_FILL_4">Relleno 4</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="POPUP">Popup</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="checkbox" class="posicionWeb-check" value="FULLSCREEN">Fullscreen</label>
+          </div>
+        </div>
         <div class="form-section">Notas</div>
         <div class="form-group form-full"><label class="form-label">Notas</label><textarea class="form-textarea" id="fNotas"></textarea></div>
         <div class="form-group form-full">
@@ -4295,6 +4332,11 @@ function abrirModalCliente(id){
   document.getElementById('fPautaI').value=c?.pautaInicio||'';
   document.getElementById('fPautaV').value=c?.pautaVence||'';
   document.getElementById('fNotas').value=c?.notas||'';
+  // Cargar tipoPauta (checkboxes)
+  document.querySelectorAll('.tipoPauta-check').forEach(function(cb){ cb.checked = (c?.tipoPauta||[]).includes(cb.value); });
+  togglePosicionWeb();
+  // Cargar posicionWeb (checkboxes)
+  document.querySelectorAll('.posicionWeb-check').forEach(function(cb){ cb.checked = (c?.posicionWeb||[]).includes(cb.value); });
   // Campos confidenciales
   if(document.getElementById('fMontoPauta')) document.getElementById('fMontoPauta').value=c?.montoPauta||'';
   if(document.getElementById('fEsCanje')) document.getElementById('fEsCanje').checked=c?.esCanje||false;
@@ -4349,6 +4391,12 @@ function abrirModalCliente(id){
   abrirModal('mCliente');
 }
 
+function togglePosicionWeb(){
+  var bannerChecked = document.querySelector('.tipoPauta-check[value="banner_web"]');
+  var wrap = document.getElementById('fPosicionWebWrap');
+  if(wrap) wrap.style.display = (bannerChecked && bannerChecked.checked) ? '' : 'none';
+}
+
 function guardarCliente(){
   const nombre=document.getElementById('fNombre').value.trim();
   const rubro=document.getElementById('fRubro').value.trim();
@@ -4374,7 +4422,10 @@ function guardarCliente(){
     if(cuitDigits.length !== 11){ if(cuitWarn) cuitWarn.style.display='block'; }
     else { if(cuitWarn) cuitWarn.style.display='none'; }
   } else { if(cuitWarn) cuitWarn.style.display='none'; }
-  const datos={nombre,rubro,cuit:cuit,direccion:document.getElementById('fDireccion').value.trim(),estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),responsables:responsables,logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
+  // Recoger tipoPauta y posicionWeb
+  const tipoPauta = Array.from(document.querySelectorAll('.tipoPauta-check:checked')).map(function(cb){return cb.value;});
+  const posicionWeb = Array.from(document.querySelectorAll('.posicionWeb-check:checked')).map(function(cb){return cb.value;});
+  const datos={nombre,rubro,cuit:cuit,direccion:document.getElementById('fDireccion').value.trim(),estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),responsables:responsables,tipoPauta:tipoPauta,posicionWeb:posicionWeb,logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
