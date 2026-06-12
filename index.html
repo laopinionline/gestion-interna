@@ -2391,30 +2391,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  async function guardarEnFirestore(coleccion, datos) {
-    if (!firestoreReady) return;
-    try {
-      const batch = db.batch();
-      // Primero borrar todos los docs de la colección
-      const snap = await db.collection(coleccion).get();
-      snap.docs.forEach(d => batch.delete(d.ref));
-      // Luego escribir los nuevos
-      datos.forEach(item => {
-        const ref = db.collection(coleccion).doc(item.id);
-        batch.set(ref, item);
-      });
-      await batch.commit();
-    } catch(e) {
-      console.warn('Error guardando en Firestore:', e);
-    }
-  }
-
-  // Sobrescribir guardarDatos para que también sincronice con Firestore
-  function guardarYSincronizar(clave, datos) {
-    localStorage.setItem(clave, JSON.stringify(datos));
-    const mapa = {'d_colaboradores':'colaboradores','d_clientes':'clientes','d_ordenes':'ordenes','d_reuniones':'reuniones'};
-    if (mapa[clave]) guardarEnFirestore(mapa[clave], datos);
-  }
+  // guardarEnFirestore y guardarYSincronizar ELIMINADAS (2026-06-12)
+  // Eran funciones nucleares que borraban y reescribían colecciones enteras.
+  // Todas las escrituras ahora son individuales por documento (.set/.update).
 
 // ══ PINS ══
 // Login por teléfono + contraseña — se gestiona desde el perfil de cada colaborador
@@ -2955,7 +2934,7 @@ function agregarComentario(){
   });
   _markLocalChange('ordenes', editandoOrdenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).catch(function(e){console.error('Firestore comentario:',e);toast('Error al guardar comentario','err');});}
   document.getElementById('nuevoComentario').value = '';
   renderComentarios(orden);
   toast('Comentario agregado ✓','ok');
@@ -2990,7 +2969,7 @@ function resolverComentario(ordenId, comentarioId){
   if(c) c.resuelto = true;
   _markLocalChange('ordenes', ordenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).catch(e=>console.error('Firestore comentario:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).catch(function(e){console.error('Firestore comentario:',e);toast('Error al guardar','err');});}
   renderComentarios(orden);
   toast('Comentario resuelto ✓','ok');
 }
@@ -3080,7 +3059,7 @@ function renderAlertasYouTube(){
 function resolverAlertaYT(id){
   const a = alertasYouTube.find(x => x.id === id);
   if(a){ a.resuelta = true; a.resueltaPor = empActualNombre || 'Supervisor'; a.fechaResolucion = Date.now(); }
-  guardarYSincronizar('d_alertas_youtube', alertasYouTube);
+  try { localStorage.setItem('d_alertas_youtube', JSON.stringify(alertasYouTube)); } catch(e){}
   renderAlertasYouTube();
   toast('Alerta resuelta ✓', 'ok');
 }
@@ -3094,7 +3073,7 @@ function agregarAlertaYT(titulo, motivo){
     resuelta: false,
     asignadoA: 'emp16', // Pascali
   });
-  guardarYSincronizar('d_alertas_youtube', alertasYouTube);
+  try { localStorage.setItem('d_alertas_youtube', JSON.stringify(alertasYouTube)); } catch(e){}
   renderAlertasYouTube();
 }
 
@@ -3429,7 +3408,7 @@ function pasarARevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'📤 Enviado a revisión por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'en_revision', revisionPedidaPor:empActualId, revisionPedidaPorNombre:empActualNombre, revisionPedidaEn:o.revisionPedidaEn, asignadoOriginal:o.asignadoOriginal, estadoPrevio:o.estadoPrevio, comentarios:o.comentarios}).catch(function(e){console.error('Firestore revision:',e);});
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'en_revision', revisionPedidaPor:empActualId, revisionPedidaPorNombre:empActualNombre, revisionPedidaEn:o.revisionPedidaEn, asignadoOriginal:o.asignadoOriginal, estadoPrevio:o.estadoPrevio, comentarios:o.comentarios}).catch(function(e){console.error('Firestore revision:',e);toast('Error al enviar a revisión','err');});
   filtrarOrdenes(); renderKanban();
   toast('📤 Enviado a revisión de Lucas','ok');
 }
@@ -3446,7 +3425,7 @@ function aprobarRevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'✅ Aprobado por Lucas', autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'aprobacion'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);});
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);toast('Error al aprobar','err');});
   filtrarOrdenes(); renderDashboard();
   toast('✅ Aprobada','ok');
 }
@@ -3466,7 +3445,7 @@ function devolverRevision(ordenId){
   if(comentario && comentario.trim()) textoDevolucion += ': ' + comentario.trim();
   o.comentarios.push({id:uid(), texto:textoDevolucion, autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'devolucion'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:estadoAnterior, asignadoA:asigOriginal, comentarios:o.comentarios}).catch(function(e){console.error('Firestore devolver:',e);});
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:estadoAnterior, asignadoA:asigOriginal, comentarios:o.comentarios}).catch(function(e){console.error('Firestore devolver:',e);toast('Error al devolver','err');});
   filtrarOrdenes(); renderDashboard();
   toast('⤴ Devuelta' + (comentario?' con comentario':''),'ok');
 }
@@ -3480,7 +3459,7 @@ function cancelarRevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'↩ Revisión cancelada por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision_cancelada'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).catch(function(e){console.error('Firestore cancelar revision:',e);});
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).catch(function(e){console.error('Firestore cancelar revision:',e);toast('Error al cancelar revisión','err');});
   filtrarOrdenes(); renderKanban();
   toast('↩ Revisión cancelada','ok');
 }
@@ -3531,7 +3510,7 @@ function derivarOrden(ordenId, nuevoAsignado){
       derivadaPorNombre: empActualNombre,
       derivadaEn: o.derivadaEn,
       comentarios: o.comentarios
-    }).catch(function(e){console.error('Firestore derivar:',e);});
+    }).catch(function(e){console.error('Firestore derivar:',e);toast('Error al derivar','err');});
   }
   cerrarModal('modalCheckColaborador');
   renderKanban(); filtrarOrdenes();
@@ -4291,7 +4270,7 @@ function guardarSeguimiento(clienteId){
   if(!c.seguimientoA.includes(empId)) c.seguimientoA.push(empId);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(e=>console.warn(e));
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(function(e){console.warn(e);toast('Error al guardar seguimiento','err');});
   }
   toast('Seguimiento asignado a '+( colaboradores.find(x=>x.id===empId)?.nombre?.split(' ')[0]||empId),'ok');
   if(typeof filtrarClientes==='function') filtrarClientes();
@@ -4303,7 +4282,7 @@ function quitarSeguimiento(clienteId, empId){
   c.seguimientoA = c.seguimientoA.filter(x=>x!==empId);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(e=>console.warn(e));
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(function(e){console.warn(e);toast('Error al guardar','err');});
   }
   toast('Seguimiento removido','ok');
   if(typeof filtrarClientes==='function') filtrarClientes();
@@ -4429,7 +4408,7 @@ function guardarCliente(){
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
     clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).set(clientes[i],{merge:true}).catch(e=>console.error('Firestore clientes:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).set(clientes[i],{merge:true}).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar cliente','err');});}
   } else {
     // Auto-asignar responsable y etapa para comerciales
     if(!datos.responsables || !datos.responsables.length){
@@ -4444,7 +4423,7 @@ function guardarCliente(){
     const nuevoCliente={id:nuevoId,fechaAlta:new Date().toLocaleDateString('es-AR'),...datos};
     clientes.unshift(nuevoCliente);
     toast('Cliente agregado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(nuevoId).set(nuevoCliente).catch(e=>console.error('Firestore clientes:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(nuevoId).set(nuevoCliente).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar cliente','err');});}
   }
   cerrarModal('mCliente');
   try { gLS(); } catch(e){ console.warn('Sync error:', e); }
@@ -4453,7 +4432,7 @@ function guardarCliente(){
 
 function eliminarCliente(){
   if(!confirm('¿Eliminar cliente? Las órdenes vinculadas quedarán sin cliente.'))return;
-  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().catch(e=>console.error('Firestore clientes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().catch(function(e){console.error('Firestore clientes:',e);toast('Error al eliminar cliente','err');});}
   clientes=clientes.filter(x=>x.id!==editandoClienteId);
   gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente'); toast('Cliente eliminado');
 }
@@ -4553,7 +4532,7 @@ function guardarNotasCliente(){
   const c=clientes.find(x=>x.id===clienteActualId); if(!c)return;
   c.notas=document.getElementById('dNotasArea').value;
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(clienteActualId).update({notas:c.notas}).catch(e=>console.error('Firestore clientes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(clienteActualId).update({notas:c.notas}).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar notas','err');});}
   toast('Notas guardadas ✓','ok');
 }
 
@@ -4580,7 +4559,7 @@ function guardarOrdenCliente(){
   _markLocalChange('ordenes', nuevaOrden.id);
   ordenes.push(nuevaOrden);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al guardar orden','err');});}
   const c=clientes.find(x=>x.id===clienteActualId);
   renderOrdenesCliente(c); toggleOrderForm(); filtrarOrdenes();
   toast('Orden agregada ✓','ok');
@@ -4594,7 +4573,7 @@ function cambiarEstadoOrden(ordenId,estado){
   if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; }
   if(estado==='cancelada'){ o.canceladoAt=new Date().toISOString(); o.canceladoPor=empActualId; updateData.canceladoAt=o.canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(e=>console.error('Firestore ordenes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al cambiar estado','err');});}
   const c=clientes.find(x=>x.id===clienteActualId);
   if(c) renderOrdenesCliente(c);
   filtrarOrdenes(); renderDashboard();
@@ -5089,13 +5068,13 @@ function guardarOrdenStandalone(){
     // Preservar comentarios al editar
     datos.comentarios = ordenes[i].comentarios || [];
     ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).set(ordenes[i],{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).set(ordenes[i],{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al guardar orden','err');});}
   } else {
     datos.comentarios = [];
     const nuevoId=uid();
     _markLocalChange('ordenes', nuevoId);
     ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore ordenes:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al crear orden','err');});}
   }
   cerrarModal('mOrden');
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
@@ -5107,7 +5086,7 @@ function eliminarOrden(){
   if(!confirm('¿Eliminar esta orden?'))return;
   ordenes=ordenes.filter(x=>x.id!==editandoOrdenId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().catch(e=>console.error('Firestore ordenes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().catch(function(e){console.error('Firestore ordenes:',e);toast('Error al eliminar orden','err');});}
   filtrarOrdenes(); cerrarModal('mOrden'); toast('Orden eliminada');
 }
 
@@ -5266,7 +5245,7 @@ function guardarNotaSeguimiento(clienteId){
   c.seguimientoHistorial.push(nota);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoHistorial: c.seguimientoHistorial}).catch(e=>console.warn(e));
+    db.collection('clientes').doc(clienteId).update({seguimientoHistorial: c.seguimientoHistorial}).catch(function(e){console.warn(e);toast('Error al guardar nota','err');});
   }
   input.value = '';
   toast('Nota de seguimiento guardada','ok');
@@ -5502,7 +5481,7 @@ function toggleClientePopup(id){
 function completarTarea(id){
   const o=ordenes.find(x=>x.id===id); if(!o)return;
   o.estado='completada'; gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(e=>console.error('Firestore ordenes:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al completar tarea','err');});}
   rendercolaborador(); toast('Tarea completada ✓','ok');
 }
 
@@ -5510,7 +5489,12 @@ function completarTarea(id){
 // ══ COLABORADORES ══
 let editandoEmpId = null;
 
-function saveEmps(){ guardarYSincronizar('d_colaboradores', colaboradores); }
+function saveEmps(){
+  try { localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); } catch(e){}
+  colaboradores.forEach(function(emp){
+    if(typeof db!=='undefined'&&db&&emp.id) db.collection('colaboradores').doc(emp.id).set(emp,{merge:true}).catch(function(e){console.warn('saveEmps error:',e);});
+  });
+}
 
 function verTareasColaborador(id){
   const e = colaboradores.find(c=>c.id===id);
@@ -5663,12 +5647,12 @@ function guardarcolaborador(){
   if(editandoEmpId){
     const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
     colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).update(datos).catch(e=>console.error('Firestore colaboradores:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).update(datos).catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al guardar colaborador','err');});}
   } else {
     const nuevoId=uid();
     colaboradores.push({id:nuevoId, ...datos});
     toast('colaborador agregado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore colaboradores:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al crear colaborador','err');});}
   }
   cerrarModal('mcolaborador');
   try { gLS(); } catch(e){ console.warn('Sync error:', e); }
@@ -5681,7 +5665,7 @@ function eliminarcolaborador(){
   if(!confirm('¿Eliminar este colaborador?')) return;
   colaboradores = colaboradores.filter(x=>x.id!==editandoEmpId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().catch(e=>console.error('Firestore colaboradores:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al eliminar colaborador','err');});}
   filtrarcolaboradores(); cerrarModal('mcolaborador'); toast('colaborador eliminado');
 }
 
@@ -6043,7 +6027,7 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(nuevoEstado==='cancelada'){ ordenes[i].canceladoAt=new Date().toISOString(); ordenes[i].canceladoPor=empActualId; updateData.canceladoAt=ordenes[i].canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update(updateData).catch(e=>console.warn('Firestore update error:', e));
+    db.collection('ordenes').doc(id).update(updateData).catch(function(e){console.warn('Firestore update error:', e);toast('Error al cambiar estado','err');});
   }
   _markLocalChange('ordenes', id);
   rendercolaborador();
@@ -6060,7 +6044,7 @@ function abrirComentarioOrden(id){
   o.comentarios = [...(o.comentarios||[]), {texto, autor: empActualId, fecha: new Date().toISOString()}];
   gLS();
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).catch(e=>console.warn('Firestore update error:', e));
+    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).catch(function(e){console.warn('Firestore update error:', e);toast('Error al guardar comentario','err');});
   }
   toast('Comentario guardado', 'ok');
 }
@@ -6068,10 +6052,26 @@ function abrirComentarioOrden(id){
 function moverTarea(id, nuevoEstado){
   const i = ordenes.findIndex(x=>x.id===id);
   if(i===-1)return;
+  var estadoPrevio = ordenes[i].estado;
   ordenes[i].estado = nuevoEstado;
-  gLS();
+  _markLocalChange('ordenes', id);
+  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   renderKanban();
-  toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+  var updateData = {estado: nuevoEstado, updatedAt: new Date().toISOString()};
+  if(nuevoEstado==='completada'){ updateData.completadoAt = new Date().toISOString(); updateData.completadoPor = empActualId; ordenes[i].completadoAt = updateData.completadoAt; ordenes[i].completadoPor = empActualId; }
+  if(typeof db!=='undefined'&&db){
+    db.collection('ordenes').doc(id).update(updateData).then(function(){
+      toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+    }).catch(function(e){
+      console.error('[moverTarea] Firestore error:', e);
+      ordenes[i].estado = estadoPrevio;
+      try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(ex){}
+      renderKanban();
+      toast('Error al guardar — reintentá','err');
+    });
+  } else {
+    toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+  }
 }
 
 // ══ REUNIONES ══
@@ -6163,12 +6163,12 @@ function guardarReunion(){
     const i = reuniones.findIndex(x=>x.id===editandoReunionId);
     reuniones[i] = {...reuniones[i], ...datos};
     toast('Reunión actualizada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).set(reuniones[i],{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).set(reuniones[i],{merge:true}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al guardar reunión','err');});}
   } else {
     const nuevoId=uid();
     reuniones.push({id:nuevoId, ...datos});
     toast('Reunión creada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(e=>console.error('Firestore reuniones:',e));}
+    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al crear reunión','err');});}
   }
   cerrarModal('mReunion');
   try { gLS(); } catch(e){ console.warn('Sync error:', e); }
@@ -6179,7 +6179,7 @@ function eliminarReunion(){
   if(!confirm('¿Eliminar esta reunión?'))return;
   reuniones = reuniones.filter(x=>x.id!==editandoReunionId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().catch(e=>console.error('Firestore reuniones:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().catch(function(e){console.error('Firestore reuniones:',e);toast('Error al eliminar reunión','err');});}
   cerrarModal('mReunion'); filtrarReuniones(); toast('Reunión eliminada');
 }
 
@@ -6286,7 +6286,7 @@ function toggleCumplimiento(reunionId, empId){
   if(!r.cumplimiento)r.cumplimiento={};
   r.cumplimiento[empId] = !r.cumplimiento[empId];
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(e=>console.error('Firestore reuniones:',e));}
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al guardar cumplimiento','err');});}
   renderEmpReuniones();
   toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
 }
@@ -6524,7 +6524,7 @@ function marcarNotaPublicada(id){
   if(typeof db !== 'undefined'){
     db.collection('ordenes').doc(id).update({
       estado: 'publicada', fechaPublicacion: new Date().toISOString(), publicadaPor: empActualId
-    }).catch(function(e){ console.warn(e); });
+    }).catch(function(e){ console.warn(e); toast('Error al marcar como publicada','err'); });
   }
   toast('Nota marcada como publicada', 'ok');
   cerrarHugoViewer();
@@ -6537,7 +6537,7 @@ function moverNotaHugo(id, nuevoEstado){
   if(i < 0) return;
   ordenes[i].estado = nuevoEstado;
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); });
+    db.collection('ordenes').doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); toast('Error al cambiar estado','err'); });
   }
   toast('Estado actualizado', 'ok');
   cerrarHugoViewer();
@@ -6725,7 +6725,7 @@ function guardarPerfil(){
     const updateData = { nombre, telefono, email, fechaNacimiento: fechaNac };
     if(passNueva) updateData.password = passNueva;
     db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
-      .catch(err => console.warn('Firestore update error:', err));
+      .catch(function(err){ console.warn('Firestore update error:', err); toast('Error al guardar perfil','err'); });
 
   }
 
@@ -6780,7 +6780,8 @@ function activarCuenta(){
   var idx = colaboradores.findIndex(function(c){ return c.id === onbUsuario.id; });
   if(idx === -1){ err.textContent = 'Error: usuario no encontrado'; return; }
   colaboradores[idx].password = p1;
-  guardarYSincronizar('d_colaboradores', colaboradores);
+  try { localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); } catch(e){}
+  if(typeof db!=='undefined'&&db) db.collection('colaboradores').doc(onbUsuario.id).update({password:p1}).catch(function(e){console.warn('Onboarding save error:',e);toast('Error al guardar contraseña','err');});
   err.textContent = '';
   var ok = document.getElementById('onbSuccess');
   ok.style.display = 'block';
