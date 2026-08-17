@@ -1506,6 +1506,9 @@ header{
      <div class="sidebar-item" onclick="navSidebar('vCacho',this)">
        <span class="sidebar-icon" style="background:#f5ede6;color:#8b5e3c;">🦟</span> Cacho
      </div>
+     <div class="sidebar-item" onclick="navSidebar('vBandejaHugo',this)">
+       <span class="sidebar-icon" style="background:#ede7f6;color:#7c4dff;">📰</span> Bandeja Hugo
+     </div>
      <div class="sidebar-section">Herramientas</div>
      <a href="https://www.laopinionline.ar" target="_blank" class="sidebar-item">
        <span class="sidebar-icon" style="background:#1a3a5c;color:#fff;font-size:9px;font-weight:700;">WEB</span> El Diario
@@ -1656,6 +1659,19 @@ header{
       <div id="cachoList" style="margin-top:12px"></div>
       <div id="cachoEmpty" style="display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px;">
         Cacho todavía no generó reportes.<br>El primer reporte llega a las 18:00hs.
+      </div>
+    </div>
+
+    <!-- BANDEJA HUGO (notas del agente IA — colección bandeja_hugo) -->
+    <div class="view" id="vBandejaHugo">
+      <div class="toolbar">
+        <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--ink)">📰 Bandeja Hugo</span>
+        <span class="count-badge" id="bandejaHugoCountBadge">0</span>
+        <button class="btn-cancel" onclick="renderBandejaHugo(true)" style="margin-left:auto;">↻ Actualizar</button>
+      </div>
+      <div id="bandejaHugoList" style="margin-top:12px"></div>
+      <div id="bandejaHugoEmpty" style="display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px;">
+        No hay notas de Hugo pendientes.
       </div>
     </div>
 
@@ -2405,6 +2421,7 @@ let clientes = [];
 let ordenes = [];
 let colaboradores = [];
 let reuniones = [];
+let bandejaHugo = []; // notas del agente Hugo — colección propia bandeja_hugo, carga lazy al abrir la vista
 let rolActual = null;
 
 // ══ REAL-TIME LISTENERS ══
@@ -3124,6 +3141,7 @@ function _activarVistaSup(id){
   if(id==='vProductividad'){ semanaOffset=0; renderProductividad(); }
   if(id==='vProveedores'){ renderProveedores(); }
   if(id==='vCacho'){ renderCachoReports(); }
+  if(id==='vBandejaHugo'){ renderBandejaHugo(); }
   if(id==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 
@@ -6428,7 +6446,7 @@ function cerrarHugoViewer(){
 }
 
 function abrirNotaHugo(input){
-  if(typeof input === 'string'){ input = ordenes.find(function(x){ return x.id === input; }); }
+  if(typeof input === 'string'){ var _id = input; input = ordenes.find(function(x){ return x.id === _id; }) || bandejaHugo.find(function(x){ return x.id === _id; }); }
   var o = input;
   if(!o) return;
   cerrarHugoViewer();
@@ -6524,34 +6542,97 @@ function copiarNotaHugo(){
   }
 }
 
-function marcarNotaPublicada(id){
+// Resuelve dónde vive una nota Hugo: en la colección ordenes (legado) o en bandeja_hugo.
+function _ubicarNotaHugo(id){
   var i = ordenes.findIndex(function(x){ return x.id === id; });
-  if(i < 0) return;
-  ordenes[i].estado = 'publicada';
-  ordenes[i].fechaPublicacion = new Date().toISOString();
-  ordenes[i].publicadaPor = empActualId;
+  if(i >= 0) return { arr: ordenes, i: i, col: 'ordenes', enBandeja: false };
+  i = bandejaHugo.findIndex(function(x){ return x.id === id; });
+  if(i >= 0) return { arr: bandejaHugo, i: i, col: 'bandeja_hugo', enBandeja: true };
+  return null;
+}
+
+function marcarNotaPublicada(id){
+  var loc = _ubicarNotaHugo(id);
+  if(!loc) return;
+  var ts = new Date().toISOString();
+  loc.arr[loc.i].estado = 'publicada';
+  loc.arr[loc.i].fechaPublicacion = ts;
+  loc.arr[loc.i].publicadaPor = empActualId;
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({
-      estado: 'publicada', fechaPublicacion: new Date().toISOString(), publicadaPor: empActualId
+    db.collection(loc.col).doc(id).update({
+      estado: 'publicada', fechaPublicacion: ts, publicadaPor: empActualId
     }).catch(function(e){ console.warn(e); toast('Error al marcar como publicada','err'); });
   }
   toast('Nota marcada como publicada', 'ok');
   cerrarHugoViewer();
+  if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
   if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
   if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
 }
 
 function moverNotaHugo(id, nuevoEstado){
-  var i = ordenes.findIndex(function(x){ return x.id === id; });
-  if(i < 0) return;
-  ordenes[i].estado = nuevoEstado;
+  var loc = _ubicarNotaHugo(id);
+  if(!loc) return;
+  loc.arr[loc.i].estado = nuevoEstado;
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); toast('Error al cambiar estado','err'); });
+    db.collection(loc.col).doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); toast('Error al cambiar estado','err'); });
   }
   toast('Estado actualizado', 'ok');
   cerrarHugoViewer();
+  if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
   if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
   if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
+}
+
+// Vista Bandeja Hugo — carga lazy (.get() al abrir, no listener siempre-activo, para no
+// gastar lecturas en cada apertura del panel). forzar=true refresca desde Firestore.
+function renderBandejaHugo(forzar){
+  var list = document.getElementById('bandejaHugoList');
+  var empty = document.getElementById('bandejaHugoEmpty');
+  var badge = document.getElementById('bandejaHugoCountBadge');
+  if(!list) return;
+
+  function pintar(){
+    var notas = bandejaHugo.slice().sort(function(a,b){
+      return String(b.fechaCreacion||b.created_at||'').localeCompare(String(a.fechaCreacion||a.created_at||''));
+    });
+    if(badge) badge.textContent = notas.length + ' nota' + (notas.length!==1?'s':'');
+    if(!notas.length){ list.innerHTML=''; if(empty) empty.style.display=''; return; }
+    if(empty) empty.style.display='none';
+    list.innerHTML = notas.map(function(o){
+      var titulo = (o.titulo||o.descripcion||'Sin título').replace('[Hugo] ','');
+      var cat = o.categoria || o.seccion || '';
+      var asig = o.asignadoA ? colaboradores.find(function(c){return c.id===o.asignadoA;}) : null;
+      var asigNom = asig ? (asig.nombre||'').split(' ')[0] : '';
+      var estado = o.estado || 'pendiente';
+      var estLabel = estado==='publicada' ? 'Publicada' : estado==='en-curso'||estado==='en_curso' ? 'En curso' : 'Pendiente';
+      var estBg = estado==='publicada' ? '#e8f5ee' : estado==='en-curso'||estado==='en_curso' ? '#fff3e0' : '#e3f2fd';
+      var estCol = estado==='publicada' ? '#2e7d32' : estado==='en-curso'||estado==='en_curso' ? '#e65100' : '#1565c0';
+      var fecha = String(o.fechaCreacion||o.created_at||'').slice(0,10);
+      return '<div class="dash-panel" style="cursor:pointer;margin-bottom:10px;" onclick="abrirNotaHugo(\''+o.id+'\')">'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">'+
+          '<span style="background:'+estBg+';color:'+estCol+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">'+estLabel+'</span>'+
+          (cat?'<span style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:11px;">'+cat+'</span>':'')+
+          (asigNom?'<span style="background:#f5f5f5;padding:2px 8px;border-radius:4px;font-size:11px;">'+asigNom+'</span>':'')+
+          (fecha?'<span style="color:#aaa;font-size:11px;margin-left:auto;">'+fecha+'</span>':'')+
+        '</div>'+
+        '<div style="font-weight:700;font-size:15px;color:var(--ink);">'+titulo+'</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  // Si ya tenemos las notas en memoria y no se fuerza refresh, pintar directo (0 lecturas).
+  if(bandejaHugo.length && !forzar){ pintar(); return; }
+  if(typeof db === 'undefined'){ pintar(); return; }
+  list.innerHTML = '<div class="no-data" style="opacity:.6">Cargando notas de Hugo…</div>';
+  db.collection('bandeja_hugo').get().then(function(snap){
+    bandejaHugo = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    try { localStorage.setItem('d_bandejaHugo', JSON.stringify(bandejaHugo)); } catch(e){}
+    pintar();
+  }).catch(function(e){
+    console.warn('[bandeja_hugo] load error:', e.message);
+    list.innerHTML = '<div class="no-data">Error cargando la bandeja de Hugo</div>';
+  });
 }
 
 function abrirOrdenesColaborador(empId, nombre){
@@ -7671,6 +7752,7 @@ function navSidebar(vistaId, el){
   if(vistaId==='vReuniones'){ filtrarReuniones(); }
   if(vistaId==='vProductividad'){ if(typeof semanaOffset!=='undefined') semanaOffset=0; renderProductividad(); }
   if(vistaId==='vCacho'){ renderCachoReports(); }
+  if(vistaId==='vBandejaHugo'){ renderBandejaHugo(); }
   if(vistaId==='vPipeline'){ renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips'); }
 }
 
@@ -7820,6 +7902,7 @@ function navSidebar(vistaId, el){
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
     <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
     <button class="nav-drawer-item" id="drawerCacho" style="display:none" onclick="cambiarVistaDrawer('vCacho',this)"><span>🦟</span> Cacho</button>
+    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vBandejaHugo',this)"><span>📰</span> Bandeja Hugo</button>
     <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
