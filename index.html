@@ -649,8 +649,11 @@ header{
 .avatar-sm{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 
 @media(max-width:1024px){.dash-cols{grid-template-columns:1fr 1fr;}}
+.orden-filtros{display:contents;}
+.orden-filtros-toggle{display:none;background:var(--paper2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;}
+@media(max-width:768px){.orden-filtros{display:none;flex-basis:100%;flex-wrap:wrap;gap:8px;}.orden-filtros.abierto{display:flex;}.orden-filtros-toggle{display:inline-flex;align-items:center;}.orden-filtros .filter-sel{flex:1 1 45%;}}
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr);}.dash-cols,.dash-cols-3{grid-template-columns:1fr;}}
-@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}
+@media(max-width:768px){.dash-grid{grid-template-columns:repeat(2,1fr);gap:10px;}.stat-card{padding:12px 14px;}.dash-cols{grid-template-columns:1fr;}.dash-panel{overflow-x:hidden;}.task-today-row{word-break:break-word;}
 #dashTareasVencidas,#dashTareas,#dashReunionesHoy,#dashCachoResumen,#dashCobranzaVencida,#dashPipelineSinAvance{max-height:400px;overflow-y:auto;}}
 /* ══ BOTTOM NAV — solo mobile ══ */
 .bottom-nav{
@@ -1196,6 +1199,7 @@ header{
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <style id="css-critico">
 .view{display:none !important;}
 .view.active{display:block !important;}
@@ -1555,6 +1559,9 @@ header{
     <!-- ÓRDENES -->
     <div class="view" id="vOrdenes">
       <div class="toolbar">
+        <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="searchOrden" placeholder="Buscar orden…" oninput="filtrarOrdenesDebounced()"></div>
+        <button class="orden-filtros-toggle" onclick="document.getElementById('ordenFiltros').classList.toggle('abierto')">⚙ Filtros</button>
+        <div class="orden-filtros" id="ordenFiltros">
         <select class="filter-sel" id="filtroOrdenFecha" onchange="filtrarOrdenes()">
           <option value="hoy">Hoy</option>
           <option value="semana">Esta semana</option>
@@ -1581,6 +1588,7 @@ header{
         <select class="filter-sel" id="filtroOrdenCliente" onchange="filtrarOrdenes()">
           <option value="">Todos los clientes</option>
         </select>
+        </div>
         <span class="count-badge" id="ordenCountBadge">0</span>
         <button class="btn-primary" onclick="abrirNuevaOrden()">+ Nueva orden</button>
       </div>
@@ -1888,6 +1896,7 @@ header{
     </div>
     <!-- KANBAN -->
     <div class="view active" id="vEmpKanban">
+      <div id="empMiDia"></div>
       <div class="emp-header">
         <div class="emp-date" id="empFecha"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2354,6 +2363,57 @@ document.addEventListener('DOMContentLoaded', function(){
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const storage = firebase.storage();
+
+  // ══════════ AUTH ANÓNIMA (lanzamiento 2026-08) ══════════
+  // El panel no usa Firebase Auth por usuario. signInAnonymously() da un request.auth != null
+  // para que las security rules (activación MAÑANA) no rompan a los 34 clientes. INOFENSIVO con
+  // las rules actuales (abiertas). Si el provider Anonymous NO está habilitado en la consola,
+  // falla en silencio y el panel sigue igual.
+  // PASO DE ACTIVACIÓN (mañana, post-reset de cuota):
+  //   1) Firebase console → Authentication → Sign-in method → habilitar "Anonymous".
+  //   2) Recargar el panel y confirmar en TODOS los shells que firebase.auth().currentUser != null.
+  //   3) Recién entonces desplegar las rules: `firebase deploy --only firestore:rules`
+  //      (archivo firestore.rules en el repo). NO deployar rules antes de confirmar el paso 2.
+  try {
+    if (firebase.auth) {
+      firebase.auth().signInAnonymously().catch(function(e){
+        console.warn('[auth] signInAnonymously falló (¿provider Anonymous deshabilitado?):', e && e.code);
+      });
+    }
+  } catch(e) { console.warn('[auth] no disponible:', e && e.message); }
+
+  // ══════════ OBSERVABILIDAD (lanzamiento) ══════════
+  // Errores no capturados del cliente → colección `errores_panel`. ESCRIBIR no consume cuota de
+  // LECTURA (se puede probar hoy forzando un error). Throttle: máx 1 write por firma de error
+  // cada 5 min, para no quemar cuota si algo entra en loop.
+  var _errThrottle = {};
+  function _logErrorPanel(mensaje, stack){
+    try {
+      if (typeof db === 'undefined' || !db) return;
+      var firma = String(mensaje||'').slice(0,120) + '|' + String(stack||'').split('\n')[0];
+      var ahora = Date.now();
+      if (_errThrottle[firma] && (ahora - _errThrottle[firma]) < 5*60*1000) return;
+      _errThrottle[firma] = ahora;
+      var vistaActiva = (document.querySelector('.view.active') && document.querySelector('.view.active').id) || '';
+      db.collection('errores_panel').add({
+        mensaje: String(mensaje||'').slice(0,300),
+        stack: String(stack||'').slice(0,800),
+        usuario: (typeof empActualId!=='undefined' ? empActualId : '') || '',
+        usuarioNombre: (typeof empActualNombre!=='undefined' ? empActualNombre : '') || '',
+        vista: vistaActiva,
+        userAgent: navigator.userAgent,
+        url: (location.hash || location.pathname || ''),
+        ts: new Date().toISOString()
+      }).catch(function(){ /* nunca romper por un log */ });
+    } catch(e) { /* el logger jamás debe romper el panel */ }
+  }
+  window.addEventListener('error', function(ev){
+    _logErrorPanel(ev && ev.message, (ev && ev.error && ev.error.stack) ? ev.error.stack : ((ev && ev.filename ? ev.filename : '') + ':' + (ev && ev.lineno) + ':' + (ev && ev.colno)));
+  });
+  window.addEventListener('unhandledrejection', function(ev){
+    var r = ev && ev.reason;
+    _logErrorPanel((r && r.message) ? r.message : String(r), (r && r.stack) ? r.stack : '');
+  });
 
   // ══════════ FIRESTORE SYNC ══════════
   let firestoreReady = false;
@@ -4781,10 +4841,13 @@ function actualizarFiltroOrdenes(){
   }
 }
 
+var _ordenSearchT;
+function filtrarOrdenesDebounced(){ clearTimeout(_ordenSearchT); _ordenSearchT = setTimeout(filtrarOrdenes, 200); }
 function filtrarOrdenes(){
   var fFecha = document.getElementById('filtroOrdenFecha').value;
   var fEst = document.getElementById('filtroOrdenEstado').value;
   var fCli = document.getElementById('filtroOrdenCliente').value;
+  var fBusq = (document.getElementById('searchOrden') ? document.getElementById('searchOrden').value : '').trim().toLowerCase();
   var fEquipo = document.getElementById('filtroOrdenEquipo') ? document.getElementById('filtroOrdenEquipo').value : '';
   var h = hoy();
   var inicioSemana = typeof lunesDeSemana === 'function' ? lunesDeSemana(h) : h;
@@ -4807,6 +4870,11 @@ function filtrarOrdenes(){
     if(fEquipo){ var asig=colaboradores.find(function(c){return c.id===o.asignadoA;}); if(!asig||asig.equipo!==fEquipo) return false; }
     var fColab = document.getElementById('filtroOrdenColaborador') ? document.getElementById('filtroOrdenColaborador').value : '';
     if(fColab && o.asignadoA !== fColab) return false;
+    if(fBusq){
+      var cliB = o.clienteId ? clientes.find(function(c){ return c.id===o.clienteId; }) : null;
+      var heno = ((o.titulo||'') + ' ' + (o.descripcion||o.desc||'') + ' ' + (cliB ? cliB.nombre : '')).toLowerCase();
+      if(heno.indexOf(fBusq) === -1) return false;
+    }
     return true;
   }).sort(function(a,b){ return (getFecha(b)||'').localeCompare(getFecha(a)||''); });
   renderOrdenes(lista);
@@ -5175,6 +5243,7 @@ function rendercolaborador(usuarioActual){
   document.getElementById('empTotal').textContent=tareasHoy.length;
 
   renderKanban();
+  renderMiDia();
   renderEmpReuniones();
   renderMisRedes();
   // Mostrar tab Clientes solo para directores
@@ -5510,6 +5579,55 @@ function completarTarea(id){
   o.estado='completada'; gLS();
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al completar tarea','err');});}
   rendercolaborador(); toast('Tarea completada ✓','ok');
+}
+
+// "Mi día" (lanzamiento): lo primero que ve el colaborador al abrir. Sus tareas ACCIONABLES
+// (pendiente/en curso) — atrasadas reales arriba, luego las de hoy. Regla de oro: "abro y en
+// 5 segundos sé qué hago hoy". Botón ✓ Listo reusa completarTarea() (que re-renderiza).
+function renderMiDia(){
+  var cont = document.getElementById('empMiDia');
+  if(!cont) return;
+  if(!empActualId){ cont.innerHTML=''; return; }
+  var h = hoy();
+  function gf(o){ var v=o.fechaVencimiento||o.fechaCreacion||o.fecha||''; if(v&&v.seconds)v=new Date(v.seconds*1000).toISOString(); if(v&&v._seconds)v=new Date(v._seconds*1000).toISOString(); return (typeof v==='string'&&v.length>10)?v.slice(0,10):(v||''); }
+  var mias = ordenes.filter(function(o){
+    var esMia = o.asignadoA===empActualId || (o.colaboradoresIds||[]).includes(empActualId) || o.colaboradorId===empActualId || (o.copiaA||[]).includes(empActualId);
+    if(!esMia) return false;
+    var est=(o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
+    return est==='pendiente'||est==='en_curso';
+  });
+  var atrasadas = mias.filter(function(o){ var f=gf(o); return f && f < h; }).sort(function(a,b){ return (gf(a)||'').localeCompare(gf(b)||''); });
+  var hoyTareas = mias.filter(function(o){ var f=gf(o); return f===h; });
+  function row(o, atrasada){
+    var t = (typeof dedupTitulo==='function' ? dedupTitulo(o.titulo||o.descripcion||o.desc) : (o.titulo||o.descripcion||o.desc)) || 'Sin título';
+    var est=(o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
+    var dias = atrasada ? Math.max(1,Math.floor((new Date(h)-new Date(gf(o)))/86400000)) : 0;
+    var punto = atrasada ? 'var(--accent)' : (est==='en_curso' ? 'var(--blue2)' : '#fbbf24');
+    var sub = atrasada ? ('<div style="font-size:11px;color:var(--accent);font-weight:600;">'+dias+' día'+(dias>1?'s':'')+' atrás</div>') : (est==='en_curso' ? '<div style="font-size:11px;color:var(--blue2);">En curso</div>' : '');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);">'+
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+punto+';flex-shrink:0;"></div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:600;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t+'</div>'+ sub +
+      '</div>'+
+      '<button onclick="completarTarea(\''+o.id+'\')" style="flex-shrink:0;background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">✓ Listo</button>'+
+    '</div>';
+  }
+  if(!atrasadas.length && !hoyTareas.length){
+    cont.innerHTML = '<div style="background:rgba(52,211,153,0.10);border:1px solid rgba(52,211,153,0.3);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px;"><div style="font-size:16px;font-weight:700;color:var(--green);">✓ Estás al día</div><div style="font-size:13px;color:var(--ink2);margin-top:4px;">No tenés tareas atrasadas ni para hoy.</div></div>';
+    return;
+  }
+  var html = '<div style="border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;background:var(--paper);">';
+  html += '<div style="padding:12px 14px;background:var(--paper2);font-weight:800;font-size:15px;color:var(--ink);">🎯 Mi día</div>';
+  if(atrasadas.length){
+    html += '<div style="padding:8px 12px 4px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;">🔴 Atrasadas ('+atrasadas.length+')</div>';
+    html += atrasadas.map(function(o){return row(o,true);}).join('');
+  }
+  if(hoyTareas.length){
+    html += '<div style="padding:10px 12px 4px;font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;">📅 Para hoy ('+hoyTareas.length+')</div>';
+    html += hoyTareas.map(function(o){return row(o,false);}).join('');
+  }
+  html += '</div>';
+  cont.innerHTML = html;
 }
 
 
@@ -6233,7 +6351,7 @@ function filtrarReuniones(){
   if(filtro) listaR = listaR.filter(r=>statusReunion(r)===filtro);
   document.getElementById('reunionCountBadge').textContent = listaR.length;
   const cont = document.getElementById('reunionesList');
-  if(!listaR.length){ cont.innerHTML='<div class="no-data" style="margin-top:40px;font-size:15px">No hay reuniones</div>'; return; }
+  if(!listaR.length){ cont.innerHTML='<div class="empty-state" style="margin-top:40px;"><div class="ei">📅</div><p>No hay reuniones para este filtro.</p><button class="btn-primary" onclick="abrirModalReunion()" style="margin-top:12px;">+ Nueva reunión</button></div>'; return; }
   cont.innerHTML = listaR.map(r=>renderReunionCard(r, true)).join('');
 }
 

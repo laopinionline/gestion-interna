@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// ══════════════════════════════════════════════════════════════════════════
+// Security Rules mínimas del Panel de Gestión — Grupo La Opinión
+//
+// ⚠️ NO DEPLOYADAS TODAVÍA. Activación planificada: 2026-08-18 (post reset de cuota),
+//    DESPUÉS de confirmar que la auth anónima funciona en todos los clientes.
+//
+// El panel NO usa Firebase Auth por usuario: usa signInAnonymously() al arrancar
+// (ver index.html, bloque "AUTH ANÓNIMA"). Eso da request.auth != null.
+//
+// PASOS DE ACTIVACIÓN (en orden, sin saltarse ninguno):
+//   1) Firebase console → Authentication → Sign-in method → habilitar "Anonymous".
+//   2) Recargar el panel en cada shell (supervisor y colaborador, desktop y móvil) y
+//      confirmar firebase.auth().currentUser != null.
+//   3) Verificar que las lecturas/escrituras siguen funcionando con estas rules en el
+//      simulador de la consola (o en un cliente de prueba).
+//   4) Recién entonces: `firebase deploy --only firestore:rules`
+//
+// Si se deployan ANTES de habilitar Anonymous, TODO el panel deja de leer/escribir.
+// ══════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Logs de errores del cliente. Se permite CREATE sin auth para poder capturar
+    // errores que ocurran antes de que la auth anónima resuelva. Lectura solo autenticado.
+    match /errores_panel/{doc} {
+      allow create: if true;
+      allow read: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // Archivo de órdenes. Lo escribe el backend con service account (bypassa rules).
+    // Desde el cliente: lectura y escritura autenticadas.
+    match /ordenes_archivo/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Resto de colecciones (ordenes, clientes, colaboradores, reuniones, bandeja_hugo,
+    // cacho_reports, claw_ga4, metricas_redes, etc.): requieren auth != null.
+    // La auth anónima del panel lo satisface.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
