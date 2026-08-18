@@ -1357,7 +1357,7 @@ header{
         <div class="stat-card green" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Clientes activos</div><div class="stat-value" id="sActivos">0</div><div class="stat-sub">en el sistema</div></div>
         <div class="stat-card gold" onclick="cambiarVistaBN('vClientes','bn-clientes')" style="cursor:pointer;"><div class="stat-label">Pausados</div><div class="stat-value" id="sPausados">0</div><div class="stat-sub">temporalmente</div></div>
         <div class="stat-card red" style="cursor:pointer" onclick="dashFiltrarOrdenes('pendiente')"><div class="stat-label">Tareas próx. 7 días</div><div class="stat-value" id="sPendientes">0</div><div class="stat-sub">pendientes o en curso</div></div>
-        <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">del día</div></div>
+        <div class="stat-card blue" style="cursor:pointer" onclick="dashFiltrarOrdenes('completada')"><div class="stat-label">Completadas (7 días)</div><div class="stat-value" id="sCompletadas">0</div><div class="stat-sub">últimos 7 días</div></div>
         <div class="stat-card red" style="cursor:pointer;border-color:var(--accent)" onclick="dashFiltrarOrdenes('vencidas')"><div class="stat-label">Vencidas</div><div class="stat-value" id="sVencidas">0</div><div class="stat-sub">plazo cumplido</div></div>
       </div>
 
@@ -3450,13 +3450,21 @@ async function marcarOrdenCompletada(ordenId){
     update.completadoPor = empActualId;
     update.completadoPorNombre = empActualNombre;
     update.completadoAt = ahora;
+    update.fechaCompletada = ahora;      // canónico — lo lee el bot de Telegram
+    update.completadaPor = empActualId;  // canónico — lo lee el bot de Telegram
     orden.completadoPor = empActualId;
     orden.completadoPorNombre = empActualNombre;
     orden.completadoAt = ahora;
+    orden.fechaCompletada = ahora;
+    orden.completadaPor = empActualId;
   } else {
     update.completadoPor = null;
     update.completadoPorNombre = null;
     update.completadoAt = null;
+    update.fechaCompletada = null;
+    update.completadaPor = null;
+    orden.fechaCompletada = null;
+    orden.completadaPor = null;
   }
   orden.estado = nuevoEstado;
   try {
@@ -3500,10 +3508,12 @@ function aprobarRevision(ordenId){
   o.completadoPor = 'emp01';
   o.completadoPorNombre = 'Lucas';
   o.completadoAt = new Date().toISOString();
+  o.fechaCompletada = o.completadoAt;
+  o.completadaPor = 'emp01';
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'✅ Aprobado por Lucas', autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'aprobacion'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);toast('Error al aprobar','err');});
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, fechaCompletada:o.completadoAt, completadaPor:'emp01', comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);toast('Error al aprobar','err');});
   filtrarOrdenes(); renderDashboard();
   toast('✅ Aprobada','ok');
 }
@@ -3652,7 +3662,14 @@ async function guardarCheckColaborador(){
     const ord = ordenes.find(o=>o.id===id);
     if(ord && ord.estado !== nuevoEstado){
       ord.estado = nuevoEstado;
-      batch.update(db.collection('ordenes').doc(id), {estado: nuevoEstado});
+      const upd = {estado: nuevoEstado};
+      if(nuevoEstado==='completada'){
+        upd.fechaCompletada = new Date().toISOString();
+        upd.completadaPor = empActualId;
+        ord.fechaCompletada = upd.fechaCompletada;
+        ord.completadaPor = empActualId;
+      }
+      batch.update(db.collection('ordenes').doc(id), upd);
     }
   });
   await batch.commit();
@@ -3749,7 +3766,19 @@ function renderDashboard(){
   });
 
   document.getElementById('sPendientes').textContent = tareasSemana.filter(o=>o.estado==='pendiente'||o.estado==='en-curso'||o.estado==='en_curso').length;
-  document.getElementById('sCompletadas').textContent = tareasSemana.filter(o=>o.estado==='completada').length;
+
+  // Completadas de los ÚLTIMOS 7 días — cuenta por sello real de completado
+  // (fechaCompletada canónico; completadoAt legado). tareasSemana excluye completadas,
+  // por eso el contador viejo daba siempre 0. Sin sello no se puede datar: no cuenta.
+  const hace7 = new Date(); hace7.setDate(hace7.getDate()-7);
+  const hace7Str = hace7.toISOString().split('T')[0];
+  document.getElementById('sCompletadas').textContent = ordenes.filter(o=>{
+    if(o.estado!=='completada') return false;
+    var fc = o.fechaCompletada || o.completadoAt || '';
+    if(fc&&fc.seconds) fc=new Date(fc.seconds*1000).toISOString();
+    fc = (typeof fc==='string'&&fc.length>10)?fc.slice(0,10):(fc||'');
+    return fc && fc >= hace7Str && fc <= hoyStr;
+  }).length;
 
   // Vencidas: fecha pasada y no completadas/canceladas
   const vencidas = ordenes.filter(o=>{
@@ -4657,7 +4686,7 @@ function cambiarEstadoOrden(ordenId,estado){
   const o=ordenes.find(x=>x.id===ordenId); if(!o)return;
   o.estado=estado;
   var updateData = {estado:estado,updatedAt:new Date().toISOString()};
-  if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; }
+  if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; o.fechaCompletada=o.completadoAt; o.completadaPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; updateData.fechaCompletada=o.completadoAt; updateData.completadaPor=empActualId; }
   if(estado==='cancelada'){ o.canceladoAt=new Date().toISOString(); o.canceladoPor=empActualId; updateData.canceladoAt=o.canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al cambiar estado','err');});}
@@ -5576,8 +5605,9 @@ function toggleClientePopup(id){
 
 function completarTarea(id){
   const o=ordenes.find(x=>x.id===id); if(!o)return;
-  o.estado='completada'; gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',updatedAt:new Date().toISOString()}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al completar tarea','err');});}
+  var ahora=new Date().toISOString();
+  o.estado='completada'; o.fechaCompletada=ahora; o.completadaPor=empActualId; gLS();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',fechaCompletada:ahora,completadaPor:empActualId,updatedAt:ahora}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al completar tarea','err');});}
   rendercolaborador(); toast('Tarea completada ✓','ok');
 }
 
@@ -6168,7 +6198,7 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(i===-1) return;
   ordenes[i].estado = nuevoEstado;
   var updateData = {estado: nuevoEstado, updatedAt: new Date().toISOString()};
-  if(nuevoEstado==='completada'){ ordenes[i].completadoAt=new Date().toISOString(); ordenes[i].completadoPor=empActualId; updateData.completadoAt=ordenes[i].completadoAt; updateData.completadoPor=empActualId; }
+  if(nuevoEstado==='completada'){ ordenes[i].completadoAt=new Date().toISOString(); ordenes[i].completadoPor=empActualId; ordenes[i].fechaCompletada=ordenes[i].completadoAt; ordenes[i].completadaPor=empActualId; updateData.completadoAt=ordenes[i].completadoAt; updateData.completadoPor=empActualId; updateData.fechaCompletada=ordenes[i].completadoAt; updateData.completadaPor=empActualId; }
   if(nuevoEstado==='cancelada'){ ordenes[i].canceladoAt=new Date().toISOString(); ordenes[i].canceladoPor=empActualId; updateData.canceladoAt=ordenes[i].canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
   if(typeof db !== 'undefined'){
@@ -6203,7 +6233,7 @@ function moverTarea(id, nuevoEstado){
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
   renderKanban();
   var updateData = {estado: nuevoEstado, updatedAt: new Date().toISOString()};
-  if(nuevoEstado==='completada'){ updateData.completadoAt = new Date().toISOString(); updateData.completadoPor = empActualId; ordenes[i].completadoAt = updateData.completadoAt; ordenes[i].completadoPor = empActualId; }
+  if(nuevoEstado==='completada'){ updateData.completadoAt = new Date().toISOString(); updateData.completadoPor = empActualId; updateData.fechaCompletada = updateData.completadoAt; updateData.completadaPor = empActualId; ordenes[i].completadoAt = updateData.completadoAt; ordenes[i].completadoPor = empActualId; ordenes[i].fechaCompletada = updateData.completadoAt; ordenes[i].completadaPor = empActualId; }
   if(typeof db!=='undefined'&&db){
     db.collection('ordenes').doc(id).update(updateData).then(function(){
       toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
