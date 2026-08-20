@@ -3518,6 +3518,7 @@ async function marcarOrdenCompletada(ordenId){
   if(vDashO && vDashO.classList.contains('active')) renderDashboard();
   db.collection('ordenes').doc(ordenId).update(update).then(function(){
     toast(nuevoEstado === 'completada' ? '✅ Completada por ' + empActualNombre.split(' ')[0] : '↩ Reabierta', 'ok');
+    sincronizarNotaHugo(orden, nuevoEstado);
   }).catch(_errWrite('toggleCompletada', '⚠️ NO se guardó el cambio de estado — reintentá'));
 }
 
@@ -3647,6 +3648,8 @@ function derivarOrden(ordenId, nuevoAsignado){
       comentarios: o.comentarios
     }).then(function(){
       toast('📤 Derivado a '+nuevoNombre,'ok');
+      // espejo Hugo: reflejar el nuevo responsable en la bandeja (chip de los directores)
+      if(o.bandejaHugoId) db.collection('bandeja_hugo').doc(o.bandejaHugoId).update({asignadoA: nuevoAsignado, colaboradoresIds: [nuevoAsignado]}).catch(_errWrite('syncNotaHugoAsig', null));
     }).catch(_errWrite('derivarOrden', '⚠️ NO se derivó — reintentá'));
   }
   cerrarModal('modalCheckColaborador');
@@ -3704,6 +3707,7 @@ async function guardarCheckColaborador(){
   const empId = document.getElementById('mchkEmpId').value;
   const checks = document.querySelectorAll('#mchkBody input[type=checkbox]');
   const batch = db.batch();
+  const cambiadas = [];
   checks.forEach(chk=>{
     const id = chk.dataset.id;
     const nuevoEstado = chk.checked ? 'completada' : 'en_curso';
@@ -3718,11 +3722,13 @@ async function guardarCheckColaborador(){
         ord.completadaPor = empActualId;
       }
       batch.update(db.collection('ordenes').doc(id), upd);
+      cambiadas.push({ord: ord, estado: nuevoEstado});
     }
   });
   try {
     await batch.commit();
   } catch(e){ _errWrite('checkColaborador', '⚠️ El check NO se guardó — reintentá')(e); return; }
+  cambiadas.forEach(function(c){ sincronizarNotaHugo(c.ord, c.estado); });
   cerrarCheckColaborador();
   renderEstadoEquipo();
   toast('Check guardado ✓', 'ok');
@@ -4761,7 +4767,9 @@ function cambiarEstadoOrden(ordenId,estado){
   if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; o.fechaCompletada=o.completadoAt; o.completadaPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; updateData.fechaCompletada=o.completadoAt; updateData.completadaPor=empActualId; }
   if(estado==='cancelada'){ o.canceladoAt=new Date().toISOString(); o.canceladoPor=empActualId; updateData.canceladoAt=o.canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(_errWrite('cambiarEstadoOrden', '⚠️ NO se guardó el cambio de estado — reintentá'));}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).then(function(){
+    sincronizarNotaHugo(o, estado);
+  }).catch(_errWrite('cambiarEstadoOrden', '⚠️ NO se guardó el cambio de estado — reintentá'));}
   const c=clientes.find(x=>x.id===clienteActualId);
   if(c) renderOrdenesCliente(c);
   filtrarOrdenes(); renderDashboard();
@@ -5280,7 +5288,7 @@ function guardarOrdenStandalone(){
   db.collection('ordenes').doc(docId).set({id:docId,...datos},{merge:true}).then(function(){
     if(esEdicion){
       const i=ordenes.findIndex(x=>x.id===docId);
-      if(i>=0) ordenes[i]={...ordenes[i],...datos};
+      if(i>=0){ ordenes[i]={...ordenes[i],...datos}; sincronizarNotaHugo(ordenes[i], datos.estado); }
     } else {
       if(!ordenes.some(x=>x.id===docId)) ordenes.push({id:docId,...datos});
       _ordenCreateId = null;
@@ -5704,6 +5712,7 @@ function completarTarea(id){
   rendercolaborador();
   if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',fechaCompletada:ahora,completadaPor:empActualId,updatedAt:ahora}).then(function(){
     toast('Tarea completada ✓','ok');
+    sincronizarNotaHugo(o, 'completada');
   }).catch(_errWrite('completarTarea', '⚠️ NO se guardó la tarea como completada — reintentá'));}
 }
 
@@ -5733,19 +5742,19 @@ function renderMiDia(){
     var dias = atrasada ? Math.max(1,Math.floor((new Date(h)-new Date(gf(o)))/86400000)) : 0;
     var punto = atrasada ? 'var(--accent)' : (est==='en_curso' ? 'var(--blue2)' : '#fbbf24');
     var sub = atrasada ? ('<div style="font-size:11px;color:var(--accent);font-weight:600;">'+dias+' día'+(dias>1?'s':'')+' atrás</div>') : (est==='en_curso' ? '<div style="font-size:11px;color:var(--blue2);">En curso</div>' : '');
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);">'+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;" onclick="abrirDetalleOrdenEmp(\''+o.id+'\')">'+
       '<div style="width:8px;height:8px;border-radius:50%;background:'+punto+';flex-shrink:0;"></div>'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="font-weight:600;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t+'</div>'+ sub +
       '</div>'+
-      '<button onclick="completarTarea(\''+o.id+'\')" style="flex-shrink:0;background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">✓ Listo</button>'+
+      '<button onclick="event.stopPropagation();completarTarea(\''+o.id+'\')" style="flex-shrink:0;background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">✓ Listo</button>'+
     '</div>';
   }
   function rowProxima(o){
     var t = (typeof dedupTitulo==='function' ? dedupTitulo(o.titulo||o.descripcion||o.desc) : (o.titulo||o.descripcion||o.desc)) || 'Sin título';
     var f = gf(o);
     var fLabel = f ? ('Vence el '+f.slice(8,10)+'/'+f.slice(5,7)) : '';
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);">'+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;" onclick="abrirDetalleOrdenEmp(\''+o.id+'\')">'+
       '<div style="width:8px;height:8px;border-radius:50%;background:var(--ink2);opacity:.5;flex-shrink:0;"></div>'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="font-weight:600;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t+'</div>'+
@@ -6337,6 +6346,7 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(typeof db !== 'undefined'){
     db.collection('ordenes').doc(id).update(updateData).then(function(){
       toast('Estado: ' + nuevoEstado, 'ok');
+      sincronizarNotaHugo(ordenes[i], nuevoEstado);
     }).catch(_errWrite('cambiarEstadoOrdenEmp', '⚠️ NO se guardó el cambio de estado — reintentá'));
   }
 }
@@ -6369,6 +6379,7 @@ function moverTarea(id, nuevoEstado){
   if(typeof db!=='undefined'&&db){
     db.collection('ordenes').doc(id).update(updateData).then(function(){
       toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+      sincronizarNotaHugo(ordenes[i], nuevoEstado);
     }).catch(function(e){
       ordenes[i].estado = estadoPrevio;
       try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(ex){}
@@ -6739,6 +6750,19 @@ function abrirNotaHugo(input){
   if(typeof input === 'string'){ var _id = input; input = ordenes.find(function(x){ return x.id === _id; }) || bandejaHugo.find(function(x){ return x.id === _id; }); }
   var o = input;
   if(!o) return;
+  // Tarea espejo (liviana): el contenido real vive en bandeja_hugo — fetch puntual (1 lectura) y re-render.
+  if(o.bandejaHugoId && !o.cuerpo){
+    var cacheNota = bandejaHugo.find(function(x){ return x.id === o.bandejaHugoId; });
+    if(cacheNota){ return abrirNotaHugo(Object.assign({}, cacheNota, {_espejoId: o.id})); }
+    if(typeof db !== 'undefined' && db){
+      toast('Cargando nota…');
+      db.collection('bandeja_hugo').doc(o.bandejaHugoId).get().then(function(doc){
+        if(doc.exists) abrirNotaHugo(Object.assign({id: doc.id}, doc.data(), {_espejoId: o.id}));
+        else toast('No se encontró la nota en la bandeja','err');
+      }).catch(function(e){ console.warn('[nota hugo] fetch error:', e.message); toast('Error al cargar la nota','err'); });
+    }
+    return;
+  }
   cerrarHugoViewer();
 
   var rawCuerpo = o.cuerpo || o.descripcion || '';
@@ -6841,39 +6865,93 @@ function _ubicarNotaHugo(id){
   return null;
 }
 
-function marcarNotaPublicada(id){
-  var loc = _ubicarNotaHugo(id);
-  if(!loc) return;
-  var ts = new Date().toISOString();
-  loc.arr[loc.i].estado = 'publicada';
-  loc.arr[loc.i].fechaPublicacion = ts;
-  loc.arr[loc.i].publicadaPor = empActualId;
-  if(typeof db !== 'undefined'){
-    db.collection(loc.col).doc(id).update({
-      estado: 'publicada', fechaPublicacion: ts, publicadaPor: empActualId
-    }).then(function(){
-      toast('Nota marcada como publicada', 'ok');
-    }).catch(_errWrite('marcarNotaPublicada', '⚠️ NO se guardó — reintentá'));
-  }
+// Resuelve nota Hugo + tarea espejo a partir de cualquiera de los dos ids.
+// espejo = tarea liviana en `ordenes` (bandejaHugoId apunta a la nota); legacy = nota
+// completa que todavía viva en `ordenes` (pre-migración 2026-08-17, hoy 0 docs).
+function _resolverNotaHugo(id){
+  var espejo = ordenes.find(function(x){ return x.bandejaHugoId && (x.id === id || x.bandejaHugoId === id); }) || null;
+  var notaId = (espejo && espejo.bandejaHugoId) || id;
+  var nota = bandejaHugo.find(function(x){ return x.id === notaId; }) || null;
+  var legacy = (!espejo && !nota) ? (ordenes.find(function(x){ return x.id === id; }) || null) : null;
+  return { espejo: espejo, notaId: (nota || espejo) ? notaId : null, nota: nota, legacy: legacy };
+}
+
+function _renderPostNotaHugo(){
   cerrarHugoViewer();
-  if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
+  if(document.getElementById('vBandejaHugo')?.classList.contains('active') && typeof renderBandejaHugo === 'function') renderBandejaHugo();
   if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
-  if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
+  if(typeof renderKanban === 'function') renderKanban();
+  if(rolActual !== 'supervisor' && typeof rendercolaborador === 'function') rendercolaborador();
+}
+
+function marcarNotaPublicada(id){
+  if(typeof db === 'undefined' || !db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); return; }
+  var r = _resolverNotaHugo(id);
+  if(!r.notaId && !r.legacy){ toast('No se encontró la nota','err'); return; }
+  var ts = new Date().toISOString();
+  var ps = [];
+  if(r.notaId) ps.push(db.collection('bandeja_hugo').doc(r.notaId).update({ estado:'publicada', fechaPublicacion:ts, publicadaPor:empActualId||null }));
+  if(r.espejo){
+    _markLocalChange('ordenes', r.espejo.id);
+    // sello canónico de completado (lo lee el bot de Telegram) — publicar la nota ES completar la tarea
+    ps.push(db.collection('ordenes').doc(r.espejo.id).update({ estado:'completada', fechaCompletada:ts, completadaPor:empActualId, completadoAt:ts, completadoPor:empActualId, updatedAt:ts }));
+  }
+  if(r.legacy){
+    _markLocalChange('ordenes', r.legacy.id);
+    ps.push(db.collection('ordenes').doc(r.legacy.id).update({ estado:'publicada', fechaPublicacion:ts, publicadaPor:empActualId||null }));
+  }
+  Promise.all(ps).then(function(){
+    if(r.nota){ r.nota.estado='publicada'; r.nota.fechaPublicacion=ts; r.nota.publicadaPor=empActualId||null; }
+    if(r.espejo){ r.espejo.estado='completada'; r.espejo.fechaCompletada=ts; r.espejo.completadaPor=empActualId; }
+    if(r.legacy){ r.legacy.estado='publicada'; }
+    gLS();
+    toast('Nota marcada como publicada', 'ok');
+    _renderPostNotaHugo();
+  }).catch(_errWrite('marcarNotaPublicada', '⚠️ NO se guardó — reintentá'));
 }
 
 function moverNotaHugo(id, nuevoEstado){
-  var loc = _ubicarNotaHugo(id);
-  if(!loc) return;
-  loc.arr[loc.i].estado = nuevoEstado;
-  if(typeof db !== 'undefined'){
-    db.collection(loc.col).doc(id).update({ estado: nuevoEstado }).then(function(){
-      toast('Estado actualizado', 'ok');
-    }).catch(_errWrite('moverNotaHugo', '⚠️ NO se guardó el cambio de estado — reintentá'));
+  if(typeof db === 'undefined' || !db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); return; }
+  var r = _resolverNotaHugo(id);
+  if(!r.notaId && !r.legacy){ toast('No se encontró la nota','err'); return; }
+  var estTarea = String(nuevoEstado||'').replace(/-/g,'_'); // ordenes usa en_curso; bandeja, en-curso
+  var ps = [];
+  if(r.notaId) ps.push(db.collection('bandeja_hugo').doc(r.notaId).update({ estado: nuevoEstado }));
+  if(r.espejo){
+    _markLocalChange('ordenes', r.espejo.id);
+    ps.push(db.collection('ordenes').doc(r.espejo.id).update({ estado: estTarea, updatedAt: new Date().toISOString() }));
   }
-  cerrarHugoViewer();
-  if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
-  if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
-  if(typeof rendercolaborador === 'function' && typeof usuario !== 'undefined') rendercolaborador(usuario);
+  if(r.legacy){
+    _markLocalChange('ordenes', r.legacy.id);
+    ps.push(db.collection('ordenes').doc(r.legacy.id).update({ estado: nuevoEstado }));
+  }
+  Promise.all(ps).then(function(){
+    if(r.nota) r.nota.estado = nuevoEstado;
+    if(r.espejo) r.espejo.estado = estTarea;
+    if(r.legacy) r.legacy.estado = nuevoEstado;
+    gLS();
+    toast('Estado actualizado', 'ok');
+    _renderPostNotaHugo();
+  }).catch(_errWrite('moverNotaHugo', '⚠️ NO se guardó el cambio de estado — reintentá'));
+}
+
+// Reflejo tarea→bandeja: cuando una tarea espejo cambia de estado por el circuito normal
+// (✓ Listo de Mi Día, kanban, check, supervisor), la nota en bandeja_hugo acompaña.
+function sincronizarNotaHugo(orden, estadoTarea){
+  if(!orden || !orden.bandejaHugoId) return;
+  if(typeof db === 'undefined' || !db) return;
+  var est = String(estadoTarea||'').replace(/-/g,'_');
+  var ts = new Date().toISOString();
+  var upd = null;
+  if(est === 'completada') upd = { estado:'publicada', fechaPublicacion:ts, publicadaPor:empActualId||null };
+  else if(est === 'en_curso') upd = { estado:'en-curso' };
+  else if(est === 'cancelada') upd = { estado:'descartada', descartadaPor:empActualId||null, descartadaEn:ts };
+  else if(est === 'pendiente') upd = { estado:'pendiente' };
+  if(!upd) return;
+  db.collection('bandeja_hugo').doc(orden.bandejaHugoId).update(upd).then(function(){
+    var n = bandejaHugo.find(function(x){ return x.id === orden.bandejaHugoId; });
+    if(n) Object.assign(n, upd);
+  }).catch(_errWrite('syncNotaHugo', null));
 }
 
 // Vista Bandeja Hugo — carga lazy (.get() al abrir, no listener siempre-activo, para no
@@ -6897,9 +6975,9 @@ function renderBandejaHugo(forzar){
       var asig = o.asignadoA ? colaboradores.find(function(c){return c.id===o.asignadoA;}) : null;
       var asigNom = asig ? (asig.nombre||'').split(' ')[0] : '';
       var estado = o.estado || 'pendiente';
-      var estLabel = estado==='publicada' ? 'Publicada' : estado==='en-curso'||estado==='en_curso' ? 'En curso' : 'Pendiente';
-      var estBg = estado==='publicada' ? '#e8f5ee' : estado==='en-curso'||estado==='en_curso' ? '#fff3e0' : '#e3f2fd';
-      var estCol = estado==='publicada' ? '#2e7d32' : estado==='en-curso'||estado==='en_curso' ? '#e65100' : '#1565c0';
+      var estLabel = estado==='publicada' ? 'Publicada' : estado==='descartada' ? 'Descartada' : estado==='en-curso'||estado==='en_curso' ? 'En curso' : 'Pendiente';
+      var estBg = estado==='publicada' ? '#e8f5ee' : estado==='descartada' ? '#f5f5f5' : estado==='en-curso'||estado==='en_curso' ? '#fff3e0' : '#e3f2fd';
+      var estCol = estado==='publicada' ? '#2e7d32' : estado==='descartada' ? '#888' : estado==='en-curso'||estado==='en_curso' ? '#e65100' : '#1565c0';
       var fecha = String(o.fechaCreacion||o.created_at||'').slice(0,10);
       return '<div class="dash-panel" style="cursor:pointer;margin-bottom:10px;" onclick="abrirNotaHugo(\''+o.id+'\')">'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">'+
