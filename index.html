@@ -1510,7 +1510,7 @@ header{
      <div class="sidebar-item" onclick="navSidebar('vCacho',this)">
        <span class="sidebar-icon" style="background:#f5ede6;color:#8b5e3c;">🦟</span> Cacho
      </div>
-     <div class="sidebar-item" onclick="navSidebar('vBandejaHugo',this)">
+     <div class="sidebar-item" id="sidebarBandejaHugo" style="display:none" onclick="navSidebar('vBandejaHugo',this)">
        <span class="sidebar-icon" style="background:#ede7f6;color:#7c4dff;">📰</span> Bandeja Hugo
      </div>
      <div class="sidebar-section">Herramientas</div>
@@ -1677,6 +1677,7 @@ header{
         <span class="count-badge" id="bandejaHugoCountBadge">0</span>
         <button class="btn-cancel" onclick="renderBandejaHugo(true)" style="margin-left:auto;">↻ Actualizar</button>
       </div>
+      <div style="font-size:13px;color:var(--ink2);margin-top:4px;">Borradores de notas generados por Hugo para revisar y publicar.</div>
       <div id="bandejaHugoList" style="margin-top:12px"></div>
       <div id="bandejaHugoEmpty" style="display:none;text-align:center;padding:60px 20px;color:#999;font-size:15px;">
         No hay notas de Hugo pendientes.
@@ -2703,6 +2704,18 @@ function toast(msg,tipo=''){
   setTimeout(()=>el.className='toast',2800);
 }
 
+// ══ FALLA DE ESCRITURA (incidente 2026-08-20: órdenes de emp02 perdidas en localStorage) ══
+// Catch estándar para TODO write a Firestore. permission-denied = sesión sin auth
+// (pestaña pre-rules) → toda escritura va a fallar: banner fijo de recarga, no un toast fugaz.
+// msj === null → sin toast (writes masivos/cosméticos), pero el banner de recarga sale igual.
+function _errWrite(contexto, msj){
+  return function(e){
+    console.error('[write] '+contexto+':', (e&&e.message)||e);
+    if(e && e.code === 'permission-denied' && typeof _avisoRecargaPanel === 'function') _avisoRecargaPanel('write:'+contexto);
+    if(msj !== null) toast(msj || '⚠️ NO se guardó — reintentá', 'err');
+  };
+}
+
 // ══ AVATAR / FOTO DE PERFIL ══
 function obtenerIniciales(nombre){
   return (nombre||'').split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
@@ -2736,8 +2749,7 @@ async function subirFotoPerfil(input){
     actualizarAvatarColaborador(col || { nombre: empActualNombre, fotoUrl: url });
     toast('Foto actualizada ✓','ok');
   } catch(e){
-    console.error('Error subiendo foto:', e);
-    toast('Error al subir foto','err');
+    _errWrite('subirFotoPerfil', '⚠️ La foto NO se subió — reintentá')(e);
   }
   input.value = '';
 }
@@ -3033,10 +3045,11 @@ function agregarComentario(){
   });
   _markLocalChange('ordenes', editandoOrdenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).catch(function(e){console.error('Firestore comentario:',e);toast('Error al guardar comentario','err');});}
-  document.getElementById('nuevoComentario').value = '';
-  renderComentarios(orden);
-  toast('Comentario agregado ✓','ok');
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).update({comentarios:orden.comentarios}).then(function(){
+    document.getElementById('nuevoComentario').value = '';
+    renderComentarios(orden);
+    toast('Comentario agregado ✓','ok');
+  }).catch(_errWrite('comentarioOrden', '⚠️ El comentario NO se guardó — reintentá'));}
 }
 
 function renderComentarios(orden){
@@ -3068,9 +3081,18 @@ function resolverComentario(ordenId, comentarioId){
   if(c) c.resuelto = true;
   _markLocalChange('ordenes', ordenId);
   try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).catch(function(e){console.error('Firestore comentario:',e);toast('Error al guardar','err');});}
-  renderComentarios(orden);
-  toast('Comentario resuelto ✓','ok');
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update({comentarios:orden.comentarios}).then(function(){
+    renderComentarios(orden);
+    toast('Comentario resuelto ✓','ok');
+  }).catch(_errWrite('resolverComentario'));}
+}
+
+// ══════════ ASIGNACIÓN ══════════
+// Una orden multi-asignada guarda asignadoA = primer seleccionado + colaboradoresIds = todos.
+// TODO filtro "tareas de X" debe pasar por acá — mirar solo asignadoA deja invisibles a los co-asignados.
+function esAsignado(o, empId){
+  if(!o || !empId) return false;
+  return o.asignadoA === empId || (o.colaboradoresIds||[]).includes(empId) || o.colaboradorId === empId || (o.copiaA||[]).includes(empId);
 }
 
 // ══════════ VALIDACIÓN DE JERARQUÍA EN ÓRDENES ══════════
@@ -3489,15 +3511,14 @@ async function marcarOrdenCompletada(ordenId){
     orden.completadaPor = null;
   }
   orden.estado = nuevoEstado;
-  try {
-    db.collection('ordenes').doc(ordenId).update(update);
-    renderKanban();
-    var vOrd = document.getElementById('vOrdenes');
-    if(vOrd && vOrd.classList.contains('active')) filtrarOrdenes();
-    var vDashO = document.getElementById('vDash');
-    if(vDashO && vDashO.classList.contains('active')) renderDashboard();
+  renderKanban();
+  var vOrd = document.getElementById('vOrdenes');
+  if(vOrd && vOrd.classList.contains('active')) filtrarOrdenes();
+  var vDashO = document.getElementById('vDash');
+  if(vDashO && vDashO.classList.contains('active')) renderDashboard();
+  db.collection('ordenes').doc(ordenId).update(update).then(function(){
     toast(nuevoEstado === 'completada' ? '✅ Completada por ' + empActualNombre.split(' ')[0] : '↩ Reabierta', 'ok');
-  } catch(e){ toast('Error al guardar','err'); }
+  }).catch(_errWrite('toggleCompletada', '⚠️ NO se guardó el cambio de estado — reintentá'));
 }
 
 function pasarARevision(ordenId){
@@ -3516,9 +3537,10 @@ function pasarARevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'📤 Enviado a revisión por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'en_revision', revisionPedidaPor:empActualId, revisionPedidaPorNombre:empActualNombre, revisionPedidaEn:o.revisionPedidaEn, asignadoOriginal:o.asignadoOriginal, estadoPrevio:o.estadoPrevio, comentarios:o.comentarios}).catch(function(e){console.error('Firestore revision:',e);toast('Error al enviar a revisión','err');});
   filtrarOrdenes(); renderKanban();
-  toast('📤 Enviado a revisión de Lucas','ok');
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'en_revision', revisionPedidaPor:empActualId, revisionPedidaPorNombre:empActualNombre, revisionPedidaEn:o.revisionPedidaEn, asignadoOriginal:o.asignadoOriginal, estadoPrevio:o.estadoPrevio, comentarios:o.comentarios}).then(function(){
+    toast('📤 Enviado a revisión de Lucas','ok');
+  }).catch(_errWrite('pasarARevision', '⚠️ NO se envió a revisión — reintentá'));
 }
 
 function aprobarRevision(ordenId){
@@ -3535,9 +3557,10 @@ function aprobarRevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'✅ Aprobado por Lucas', autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'aprobacion'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, fechaCompletada:o.completadoAt, completadaPor:'emp01', comentarios:o.comentarios}).catch(function(e){console.error('Firestore aprobar:',e);toast('Error al aprobar','err');});
   filtrarOrdenes(); renderDashboard();
-  toast('✅ Aprobada','ok');
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:'completada', completadoPor:'emp01', completadoPorNombre:'Lucas', completadoAt:o.completadoAt, fechaCompletada:o.completadoAt, completadaPor:'emp01', comentarios:o.comentarios}).then(function(){
+    toast('✅ Aprobada','ok');
+  }).catch(_errWrite('aprobarRevision', '⚠️ NO se guardó la aprobación — reintentá'));
 }
 
 function devolverRevision(ordenId){
@@ -3555,9 +3578,10 @@ function devolverRevision(ordenId){
   if(comentario && comentario.trim()) textoDevolucion += ': ' + comentario.trim();
   o.comentarios.push({id:uid(), texto:textoDevolucion, autor:'Lucas Marino Aguirre', autorId:'emp01', fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'devolucion'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:estadoAnterior, asignadoA:asigOriginal, comentarios:o.comentarios}).catch(function(e){console.error('Firestore devolver:',e);toast('Error al devolver','err');});
   filtrarOrdenes(); renderDashboard();
-  toast('⤴ Devuelta' + (comentario?' con comentario':''),'ok');
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:estadoAnterior, asignadoA:asigOriginal, comentarios:o.comentarios}).then(function(){
+    toast('⤴ Devuelta' + (comentario?' con comentario':''),'ok');
+  }).catch(_errWrite('devolverRevision', '⚠️ NO se guardó la devolución — reintentá'));
 }
 
 function cancelarRevision(ordenId){
@@ -3569,9 +3593,10 @@ function cancelarRevision(ordenId){
   if(!o.comentarios) o.comentarios = [];
   o.comentarios.push({id:uid(), texto:'↩ Revisión cancelada por '+(empActualNombre||'').split(' ')[0], autor:empActualNombre, autorId:empActualId, fecha:new Date().toLocaleDateString('es-AR'), hora:new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), tipo:'revision_cancelada'});
   gLS();
-  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).catch(function(e){console.error('Firestore cancelar revision:',e);toast('Error al cancelar revisión','err');});
   filtrarOrdenes(); renderKanban();
-  toast('↩ Revisión cancelada','ok');
+  if(typeof db!=='undefined'&&db) db.collection('ordenes').doc(ordenId).update({estado:o.estado, comentarios:o.comentarios}).then(function(){
+    toast('↩ Revisión cancelada','ok');
+  }).catch(_errWrite('cancelarRevision', '⚠️ NO se guardó — reintentá'));
 }
 
 function abrirDerivar(ordenId){
@@ -3620,11 +3645,12 @@ function derivarOrden(ordenId, nuevoAsignado){
       derivadaPorNombre: empActualNombre,
       derivadaEn: o.derivadaEn,
       comentarios: o.comentarios
-    }).catch(function(e){console.error('Firestore derivar:',e);toast('Error al derivar','err');});
+    }).then(function(){
+      toast('📤 Derivado a '+nuevoNombre,'ok');
+    }).catch(_errWrite('derivarOrden', '⚠️ NO se derivó — reintentá'));
   }
   cerrarModal('modalCheckColaborador');
   renderKanban(); filtrarOrdenes();
-  toast('📤 Derivado a '+nuevoNombre,'ok');
 }
 
 function puedeHacerCheck(targetId){
@@ -3649,7 +3675,7 @@ function puedeHacerCheck(targetId){
 function abrirCheckColaborador(empId, nombre){
   if(!puedeHacerCheck(empId)){ toast('No tenés permiso para hacer check de este colaborador', 'error'); return; }
   
-  const tareasEmp = ordenes.filter(o=>o.asignadoA===empId && o.estado!=='completada' && o.estado!=='cancelada');
+  const tareasEmp = ordenes.filter(o=>esAsignado(o, empId) && o.estado!=='completada' && o.estado!=='cancelada');
   if(!tareasEmp.length){
     toast(nombre + ' no tiene tareas pendientes', 'ok');
     return;
@@ -3694,7 +3720,9 @@ async function guardarCheckColaborador(){
       batch.update(db.collection('ordenes').doc(id), upd);
     }
   });
-  await batch.commit();
+  try {
+    await batch.commit();
+  } catch(e){ _errWrite('checkColaborador', '⚠️ El check NO se guardó — reintentá')(e); return; }
   cerrarCheckColaborador();
   renderEstadoEquipo();
   toast('Check guardado ✓', 'ok');
@@ -4408,9 +4436,10 @@ function guardarSeguimiento(clienteId){
   if(!c.seguimientoA.includes(empId)) c.seguimientoA.push(empId);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(function(e){console.warn(e);toast('Error al guardar seguimiento','err');});
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).then(function(){
+      toast('Seguimiento asignado a '+( colaboradores.find(x=>x.id===empId)?.nombre?.split(' ')[0]||empId),'ok');
+    }).catch(_errWrite('asignarSeguimiento', '⚠️ NO se guardó el seguimiento — reintentá'));
   }
-  toast('Seguimiento asignado a '+( colaboradores.find(x=>x.id===empId)?.nombre?.split(' ')[0]||empId),'ok');
   if(typeof filtrarClientes==='function') filtrarClientes();
 }
 
@@ -4420,9 +4449,10 @@ function quitarSeguimiento(clienteId, empId){
   c.seguimientoA = c.seguimientoA.filter(x=>x!==empId);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).catch(function(e){console.warn(e);toast('Error al guardar','err');});
+    db.collection('clientes').doc(clienteId).update({seguimientoA:c.seguimientoA}).then(function(){
+      toast('Seguimiento removido','ok');
+    }).catch(_errWrite('quitarSeguimiento', '⚠️ NO se guardó — reintentá'));
   }
-  toast('Seguimiento removido','ok');
   if(typeof filtrarClientes==='function') filtrarClientes();
 }
 
@@ -4543,10 +4573,21 @@ function guardarCliente(){
   const tipoPauta = Array.from(document.querySelectorAll('.tipoPauta-check:checked')).map(function(cb){return cb.value;});
   const posicionWeb = Array.from(document.querySelectorAll('.posicionWeb-check:checked')).map(function(cb){return cb.value;});
   const datos={nombre,rubro,cuit:cuit,direccion:document.getElementById('fDireccion').value.trim(),estado:document.getElementById('fEstado').value,grupoEmpresarial:grupoEmpresarial,telefono:document.getElementById('fTel').value.trim(),email:document.getElementById('fEmail').value.trim(),pauta:document.getElementById('fPauta').value.trim(),pautaInicio:document.getElementById('fPautaI').value,pautaVence:document.getElementById('fPautaV').value,notas:document.getElementById('fNotas').value.trim(),responsables:responsables,tipoPauta:tipoPauta,posicionWeb:posicionWeb,logoUrl:window._logoClienteBase64||( editandoClienteId ? ((clientes.find(function(x){return x.id===editandoClienteId;})||{}).logoUrl||'') : '' ),...datosConfidenciales};
+  // Éxito recién con el ack del server; si falla, el modal queda abierto con lo cargado.
+  if(typeof db==='undefined'||!db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); return; }
+  function _postGuardadoCliente(msj){
+    cerrarModal('mCliente');
+    try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+    actualizarFiltroRubros(); filtrarClientes();
+    toast(msj,'ok');
+  }
   if(editandoClienteId){
     const i=clientes.findIndex(x=>x.id===editandoClienteId);
-    clientes[i]={...clientes[i],...datos}; toast('Cliente actualizado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).set(clientes[i],{merge:true}).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar cliente','err');});}
+    const actualizado={...clientes[i],...datos};
+    db.collection('clientes').doc(editandoClienteId).set(actualizado,{merge:true}).then(function(){
+      clientes[i]=actualizado;
+      _postGuardadoCliente('Cliente actualizado ✓');
+    }).catch(_errWrite('guardarCliente', '⚠️ El cliente NO se guardó — reintentá'));
   } else {
     // Auto-asignar responsable y etapa para comerciales
     if(!datos.responsables || !datos.responsables.length){
@@ -4559,20 +4600,20 @@ function guardarCliente(){
     datos.deadlineEtapa = null;
     const nuevoId=uid();
     const nuevoCliente={id:nuevoId,fechaAlta:new Date().toLocaleDateString('es-AR'),...datos};
-    clientes.unshift(nuevoCliente);
-    toast('Cliente agregado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('clientes').doc(nuevoId).set(nuevoCliente).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar cliente','err');});}
+    db.collection('clientes').doc(nuevoId).set(nuevoCliente).then(function(){
+      clientes.unshift(nuevoCliente);
+      _postGuardadoCliente('Cliente agregado ✓');
+    }).catch(_errWrite('crearCliente', '⚠️ El cliente NO se guardó — reintentá'));
   }
-  cerrarModal('mCliente');
-  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
-  actualizarFiltroRubros(); filtrarClientes();
 }
 
 function eliminarCliente(){
   if(!confirm('¿Eliminar cliente? Las órdenes vinculadas quedarán sin cliente.'))return;
-  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().catch(function(e){console.error('Firestore clientes:',e);toast('Error al eliminar cliente','err');});}
   clientes=clientes.filter(x=>x.id!==editandoClienteId);
-  gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente'); toast('Cliente eliminado');
+  gLS(); actualizarFiltroRubros(); filtrarClientes(); cerrarModal('mCliente');
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(editandoClienteId).delete().then(function(){
+    toast('Cliente eliminado');
+  }).catch(_errWrite('eliminarCliente', '⚠️ NO se eliminó el cliente — recargá y reintentá'));}
 }
 
 function crearClienteComercial(){
@@ -4670,8 +4711,9 @@ function guardarNotasCliente(){
   const c=clientes.find(x=>x.id===clienteActualId); if(!c)return;
   c.notas=document.getElementById('dNotasArea').value;
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(clienteActualId).update({notas:c.notas}).catch(function(e){console.error('Firestore clientes:',e);toast('Error al guardar notas','err');});}
-  toast('Notas guardadas ✓','ok');
+  if(typeof db!=='undefined'&&db){db.collection('clientes').doc(clienteActualId).update({notas:c.notas}).then(function(){
+    toast('Notas guardadas ✓','ok');
+  }).catch(_errWrite('notasCliente', '⚠️ Las notas NO se guardaron — reintentá'));}
 }
 
 function toggleOrderForm(){
@@ -4689,19 +4731,27 @@ function guardarOrdenCliente(){
   var btn = document.getElementById('btnGuardarOrdenCliente');
   var btnTextoOriginal = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+  function liberar(){ _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
   try {
   const fecha=document.getElementById('oFecha').value;
   const desc=document.getElementById('oDesc').value.trim();
-  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
+  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); liberar(); return; }
   const nuevaOrden={id:uid(),fecha,desc,notas:document.getElementById('oNotas').value.trim(),estado:document.getElementById('oEstado').value,clienteId:clienteActualId};
+  if(typeof db==='undefined'||!db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); liberar(); return; }
+  // Éxito recién con el ack del server; si falla, el form queda abierto con lo tipeado.
   _markLocalChange('ordenes', nuevaOrden.id);
-  ordenes.push(nuevaOrden);
-  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al guardar orden','err');});}
-  const c=clientes.find(x=>x.id===clienteActualId);
-  renderOrdenesCliente(c); toggleOrderForm(); filtrarOrdenes();
-  toast('Orden agregada ✓','ok');
-  } finally { _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
+  db.collection('ordenes').doc(nuevaOrden.id).set(nuevaOrden,{merge:true}).then(function(){
+    if(!ordenes.some(x=>x.id===nuevaOrden.id)) ordenes.push(nuevaOrden);
+    try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
+    const c=clientes.find(x=>x.id===clienteActualId);
+    renderOrdenesCliente(c); toggleOrderForm(); filtrarOrdenes();
+    toast('Orden agregada ✓','ok');
+    liberar();
+  }).catch(function(e){
+    _errWrite('guardarOrdenCliente', '⚠️ La orden NO se guardó — revisá conexión y volvé a tocar Guardar')(e);
+    liberar();
+  });
+  } catch(e){ console.error('[guardarOrdenCliente]', e); liberar(); }
 }
 
 function cambiarEstadoOrden(ordenId,estado){
@@ -4711,7 +4761,7 @@ function cambiarEstadoOrden(ordenId,estado){
   if(estado==='completada'){ o.completadoAt=new Date().toISOString(); o.completadoPor=empActualId; o.fechaCompletada=o.completadoAt; o.completadaPor=empActualId; updateData.completadoAt=o.completadoAt; updateData.completadoPor=empActualId; updateData.fechaCompletada=o.completadoAt; updateData.completadaPor=empActualId; }
   if(estado==='cancelada'){ o.canceladoAt=new Date().toISOString(); o.canceladoPor=empActualId; updateData.canceladoAt=o.canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al cambiar estado','err');});}
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(ordenId).update(updateData).catch(_errWrite('cambiarEstadoOrden', '⚠️ NO se guardó el cambio de estado — reintentá'));}
   const c=clientes.find(x=>x.id===clienteActualId);
   if(c) renderOrdenesCliente(c);
   filtrarOrdenes(); renderDashboard();
@@ -4772,14 +4822,14 @@ function guardarAccionCliente(){
     document.getElementById('accDesc').value='';
     toggleFormAccion();
     renderAccionesCliente();
-  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+  }).catch(_errWrite('accionesCobranza', '⚠️ NO se guardó — reintentá'));
 }
 
 function marcarAccionRealizada(accionId){
   db.collection('clientes').doc(clienteActualId).collection('acciones').doc(accionId).update({estado:'realizada',fechaRealizada:new Date().toISOString()}).then(function(){
     toast('Acción marcada como realizada','ok');
     renderAccionesCliente();
-  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+  }).catch(_errWrite('accionesCobranza', '⚠️ NO se guardó — reintentá'));
 }
 
 // ══ COBRANZA ══
@@ -4837,7 +4887,7 @@ function guardarCobranzaCliente(){
     document.getElementById('cobNotas').value='';
     toggleFormCobranza();
     renderCobranzaCliente();
-  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+  }).catch(_errWrite('accionesCobranza', '⚠️ NO se guardó — reintentá'));
 }
 
 function actualizarCobranza(regId, nuevoEstado){
@@ -4846,7 +4896,7 @@ function actualizarCobranza(regId, nuevoEstado){
   db.collection('clientes').doc(clienteActualId).collection('cobranza').doc(regId).update(update).then(function(){
     toast('Estado actualizado','ok');
     renderCobranzaCliente();
-  }).catch(function(e){ toast('Error: '+e.message,'err'); });
+  }).catch(_errWrite('accionesCobranza', '⚠️ NO se guardó — reintentá'));
 }
 
 // ══ ÓRDENES STANDALONE ══
@@ -4920,7 +4970,7 @@ function filtrarOrdenes(){
     if(fCli && o.clienteId!==fCli) return false;
     if(fEquipo){ var asig=colaboradores.find(function(c){return c.id===o.asignadoA;}); if(!asig||asig.equipo!==fEquipo) return false; }
     var fColab = document.getElementById('filtroOrdenColaborador') ? document.getElementById('filtroOrdenColaborador').value : '';
-    if(fColab && o.asignadoA !== fColab) return false;
+    if(fColab && !esAsignado(o, fColab)) return false;
     if(fBusq){
       var cliB = o.clienteId ? clientes.find(function(c){ return c.id===o.clienteId; }) : null;
       var heno = ((o.titulo||'') + ' ' + (o.descripcion||o.desc||'') + ' ' + (cliB ? cliB.nombre : '')).toLowerCase();
@@ -5081,7 +5131,7 @@ function toggleOrdenGrupo(key){
   try { localStorage.setItem(colKey, JSON.stringify(collapsed)); } catch(e){}
 }
 function abrirNuevaOrden(){
-  editandoOrdenId=null;
+  editandoOrdenId=null; _ordenCreateId=null;
   document.getElementById('mOrdenTitle').textContent='Nueva orden de trabajo';
   document.getElementById('soFecha').value=hoy();
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
@@ -5100,7 +5150,7 @@ function abrirNuevaOrden(){
 
 
 function abrirNuevaOrdenEmp(){
-  editandoOrdenId=null;
+  editandoOrdenId=null; _ordenCreateId=null;
   document.getElementById('mOrdenTitle').textContent='Nueva tarea';
   document.getElementById('soFecha').value=hoy();
   document.getElementById('soDesc').value=''; document.getElementById('soNotas').value='';
@@ -5178,19 +5228,26 @@ function editarOrden(id){
   if(selTipo && o.tipo) selTipo.value = o.tipo;
   abrirModal('mOrden');
 }
+// Incidente 2026-08-20: el guardado optimista mostraba "creada ✓" y cerraba el modal ANTES
+// de confirmar el write; con la sesión sin auth las órdenes quedaban solo en localStorage.
+// Ahora: write primero → recién con el ack del server se cierra el modal y sale el ✓.
+// Si falla, el modal queda abierto con lo tipeado. El id de creación se fija por sesión de
+// modal (_ordenCreateId) para que reintentar no duplique.
+var _ordenCreateId = null;
 function guardarOrdenStandalone(){
   if(_savingOrden) return;
   _savingOrden = true;
   var btn = document.getElementById('btnGuardarOrdenStandalone');
   var btnTextoOriginal = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+  function liberar(){ _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
   try {
   const fecha=document.getElementById('soFecha').value;
   const desc=document.getElementById('soDesc').value.trim();
-  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); return; }
+  if(!fecha||!desc){ toast('Completá fecha y descripción','err'); liberar(); return; }
   const colaboradoresIds = [...document.querySelectorAll('.colab-check:checked')].map(c=>c.value);
   // Validar jerarquía
-  if(!validarJerarquiaOrden(colaboradoresIds)) return;
+  if(!validarJerarquiaOrden(colaboradoresIds)){ liberar(); return; }
   const equipo = document.getElementById('soEquipo')?.value || '';
   const tipo = document.getElementById('soTipo')?.value || '';
   // El primer colaborador seleccionado es el responsable principal
@@ -5208,32 +5265,46 @@ function guardarOrdenStandalone(){
     creadoPor: empActualId || 'emp01',
     creadoPorNombre: empActualNombre || 'Supervisor',
   };
-  if(editandoOrdenId){
-    _markLocalChange('ordenes', editandoOrdenId);
-    const i=ordenes.findIndex(x=>x.id===editandoOrdenId);
+  const esEdicion = !!editandoOrdenId;
+  if(esEdicion){
+    const iPrev=ordenes.findIndex(x=>x.id===editandoOrdenId);
     // Preservar comentarios al editar
-    datos.comentarios = ordenes[i].comentarios || [];
-    ordenes[i]={...ordenes[i],...datos}; toast('Orden actualizada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).set(ordenes[i],{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al guardar orden','err');});}
+    datos.comentarios = (iPrev>=0 && ordenes[iPrev].comentarios) || [];
   } else {
     datos.comentarios = [];
-    const nuevoId=uid();
-    _markLocalChange('ordenes', nuevoId);
-    ordenes.push({id:nuevoId,...datos}); toast('Orden creada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al crear orden','err');});}
+    if(!_ordenCreateId) _ordenCreateId = uid();
   }
-  cerrarModal('mOrden');
-  try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
-  filtrarOrdenes(); renderKanban();
-  } finally { _savingOrden = false; if(btn){ btn.disabled = false; btn.textContent = btnTextoOriginal; } }
+  const docId = esEdicion ? editandoOrdenId : _ordenCreateId;
+  if(typeof db==='undefined'||!db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); liberar(); return; }
+  _markLocalChange('ordenes', docId);
+  db.collection('ordenes').doc(docId).set({id:docId,...datos},{merge:true}).then(function(){
+    if(esEdicion){
+      const i=ordenes.findIndex(x=>x.id===docId);
+      if(i>=0) ordenes[i]={...ordenes[i],...datos};
+    } else {
+      if(!ordenes.some(x=>x.id===docId)) ordenes.push({id:docId,...datos});
+      _ordenCreateId = null;
+    }
+    try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(e){}
+    cerrarModal('mOrden');
+    filtrarOrdenes(); renderKanban();
+    toast(esEdicion ? 'Orden actualizada ✓' : 'Orden creada ✓','ok');
+    liberar();
+  }).catch(function(e){
+    _errWrite('guardarOrden', '⚠️ La orden NO se guardó — revisá conexión y volvé a tocar Guardar')(e);
+    liberar();
+  });
+  } catch(e){ console.error('[guardarOrdenStandalone]', e); liberar(); }
 }
 
 function eliminarOrden(){
   if(!confirm('¿Eliminar esta orden?'))return;
   ordenes=ordenes.filter(x=>x.id!==editandoOrdenId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().catch(function(e){console.error('Firestore ordenes:',e);toast('Error al eliminar orden','err');});}
-  filtrarOrdenes(); cerrarModal('mOrden'); toast('Orden eliminada');
+  filtrarOrdenes(); cerrarModal('mOrden');
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(editandoOrdenId).delete().then(function(){
+    toast('Orden eliminada');
+  }).catch(_errWrite('eliminarOrden', '⚠️ NO se eliminó la orden — recargá y reintentá'));}
 }
 
 // ══ VISTA COLABORADOR ══
@@ -5392,11 +5463,12 @@ function guardarNotaSeguimiento(clienteId){
   c.seguimientoHistorial.push(nota);
   gLS();
   if(typeof db!=='undefined'){
-    db.collection('clientes').doc(clienteId).update({seguimientoHistorial: c.seguimientoHistorial}).catch(function(e){console.warn(e);toast('Error al guardar nota','err');});
-  }
-  input.value = '';
-  toast('Nota de seguimiento guardada','ok');
-  renderEmpMisClientes();
+    db.collection('clientes').doc(clienteId).update({seguimientoHistorial: c.seguimientoHistorial}).then(function(){
+      input.value = '';
+      toast('Nota de seguimiento guardada','ok');
+      renderEmpMisClientes();
+    }).catch(_errWrite('notaSeguimiento', '⚠️ La nota NO se guardó — reintentá'));
+  } else { renderEmpMisClientes(); }
 }
 
 function renderEmpClientes(){
@@ -5629,8 +5701,10 @@ function completarTarea(id){
   const o=ordenes.find(x=>x.id===id); if(!o)return;
   var ahora=new Date().toISOString();
   o.estado='completada'; o.fechaCompletada=ahora; o.completadaPor=empActualId; gLS();
-  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',fechaCompletada:ahora,completadaPor:empActualId,updatedAt:ahora}).catch(function(e){console.error('Firestore ordenes:',e);toast('Error al completar tarea','err');});}
-  rendercolaborador(); toast('Tarea completada ✓','ok');
+  rendercolaborador();
+  if(typeof db!=='undefined'&&db){db.collection('ordenes').doc(id).update({estado:'completada',fechaCompletada:ahora,completadaPor:empActualId,updatedAt:ahora}).then(function(){
+    toast('Tarea completada ✓','ok');
+  }).catch(_errWrite('completarTarea', '⚠️ NO se guardó la tarea como completada — reintentá'));}
 }
 
 // "Mi día" (lanzamiento): lo primero que ve el colaborador al abrir. Sus tareas ACCIONABLES
@@ -5650,6 +5724,9 @@ function renderMiDia(){
   });
   var atrasadas = mias.filter(function(o){ var f=gf(o); return f && f < h; }).sort(function(a,b){ return (gf(a)||'').localeCompare(gf(b)||''); });
   var hoyTareas = mias.filter(function(o){ var f=gf(o); return f===h; });
+  // Próximas: vencimiento futuro. Antes eran invisibles hasta el día del vencimiento —
+  // el colaborador tiene que poder ver TODO lo que tiene asignado (pedido Lucas 2026-08-20).
+  var proximas = mias.filter(function(o){ var f=gf(o); return f && f > h; }).sort(function(a,b){ return (gf(a)||'').localeCompare(gf(b)||''); });
   function row(o, atrasada){
     var t = (typeof dedupTitulo==='function' ? dedupTitulo(o.titulo||o.descripcion||o.desc) : (o.titulo||o.descripcion||o.desc)) || 'Sin título';
     var est=(o.estado||'pendiente').toLowerCase().replace(/-/g,'_');
@@ -5664,8 +5741,28 @@ function renderMiDia(){
       '<button onclick="completarTarea(\''+o.id+'\')" style="flex-shrink:0;background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;">✓ Listo</button>'+
     '</div>';
   }
+  function rowProxima(o){
+    var t = (typeof dedupTitulo==='function' ? dedupTitulo(o.titulo||o.descripcion||o.desc) : (o.titulo||o.descripcion||o.desc)) || 'Sin título';
+    var f = gf(o);
+    var fLabel = f ? ('Vence el '+f.slice(8,10)+'/'+f.slice(5,7)) : '';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);">'+
+      '<div style="width:8px;height:8px;border-radius:50%;background:var(--ink2);opacity:.5;flex-shrink:0;"></div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="font-weight:600;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+t+'</div>'+
+        (fLabel?'<div style="font-size:11px;color:var(--ink2);">'+fLabel+'</div>':'')+
+      '</div>'+
+    '</div>';
+  }
+  var proximasHtml = '';
+  if(proximas.length){
+    proximasHtml = '<details style="border-top:1px solid var(--line);">'+
+      '<summary style="padding:10px 12px;font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;cursor:pointer;list-style-position:inside;">📆 Próximas ('+proximas.length+')</summary>'+
+      proximas.map(rowProxima).join('')+
+    '</details>';
+  }
   if(!atrasadas.length && !hoyTareas.length){
-    cont.innerHTML = '<div style="background:rgba(52,211,153,0.10);border:1px solid rgba(52,211,153,0.3);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px;"><div style="font-size:16px;font-weight:700;color:var(--green);">✓ Estás al día</div><div style="font-size:13px;color:var(--ink2);margin-top:4px;">No tenés tareas atrasadas ni para hoy.</div></div>';
+    var alDia = '<div style="background:rgba(52,211,153,0.10);border:1px solid rgba(52,211,153,0.3);border-radius:14px;padding:18px;text-align:center;"><div style="font-size:16px;font-weight:700;color:var(--green);">✓ Estás al día</div><div style="font-size:13px;color:var(--ink2);margin-top:4px;">No tenés tareas atrasadas ni para hoy.</div></div>';
+    cont.innerHTML = '<div style="margin-bottom:14px;">'+alDia+(proximasHtml?'<div style="border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:10px;background:var(--paper);">'+proximasHtml+'</div>':'')+'</div>';
     return;
   }
   var html = '<div style="border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-bottom:14px;background:var(--paper);">';
@@ -5678,6 +5775,7 @@ function renderMiDia(){
     html += '<div style="padding:10px 12px 4px;font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;">📅 Para hoy ('+hoyTareas.length+')</div>';
     html += hoyTareas.map(function(o){return row(o,false);}).join('');
   }
+  html += proximasHtml;
   html += '</div>';
   cont.innerHTML = html;
 }
@@ -5689,7 +5787,7 @@ let editandoEmpId = null;
 function saveEmps(){
   try { localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); } catch(e){}
   colaboradores.forEach(function(emp){
-    if(typeof db!=='undefined'&&db&&emp.id) db.collection('colaboradores').doc(emp.id).set(emp,{merge:true}).catch(function(e){console.warn('saveEmps error:',e);});
+    if(typeof db!=='undefined'&&db&&emp.id) db.collection('colaboradores').doc(emp.id).set(emp,{merge:true}).catch(_errWrite('saveEmps', null));
   });
 }
 
@@ -5706,7 +5804,7 @@ function verTareasColaborador(id){
     return;
   }
   editandoEmpId = id; // setear para que Editar perfil funcione
-  const tareasEmp = ordenes.filter(o=>o.asignadoA===id || (o.copiaA||[]).includes(id));
+  const tareasEmp = ordenes.filter(o=>esAsignado(o, id));
   const pendientes = tareasEmp.filter(o=>o.estado==='pendiente');
   const enCurso = tareasEmp.filter(o=>o.estado==='en_curso');
   const completadas = tareasEmp.filter(o=>o.estado==='completada');
@@ -5841,29 +5939,39 @@ function guardarcolaborador(){
     telegram: document.getElementById('eTelegram')?.value.trim()||'',
     notas: document.getElementById('eNotas')?.value.trim()||'',
   };
+  // Éxito recién con el ack del server; si falla, el modal queda abierto con lo cargado.
+  if(typeof db==='undefined'||!db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); return; }
+  function _postGuardadoEmp(msj){
+    cerrarModal('mcolaborador');
+    try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+    filtrarcolaboradores();
+    // also update orden form colaborador selector
+    actualizarFiltroOrdenes();
+    toast(msj,'ok');
+  }
   if(editandoEmpId){
     const i = colaboradores.findIndex(x=>x.id===editandoEmpId);
-    colaboradores[i] = {...colaboradores[i], ...datos}; toast('colaborador actualizado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).update(datos).catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al guardar colaborador','err');});}
+    db.collection('colaboradores').doc(editandoEmpId).update(datos).then(function(){
+      colaboradores[i] = {...colaboradores[i], ...datos};
+      _postGuardadoEmp('colaborador actualizado ✓');
+    }).catch(_errWrite('guardarColaborador', '⚠️ NO se guardó el colaborador — reintentá'));
   } else {
     const nuevoId=uid();
-    colaboradores.push({id:nuevoId, ...datos});
-    toast('colaborador agregado ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al crear colaborador','err');});}
+    db.collection('colaboradores').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).then(function(){
+      colaboradores.push({id:nuevoId, ...datos});
+      _postGuardadoEmp('colaborador agregado ✓');
+    }).catch(_errWrite('crearColaborador', '⚠️ NO se creó el colaborador — reintentá'));
   }
-  cerrarModal('mcolaborador');
-  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
-  filtrarcolaboradores();
-  // also update orden form colaborador selector
-  actualizarFiltroOrdenes();
 }
 
 function eliminarcolaborador(){
   if(!confirm('¿Eliminar este colaborador?')) return;
   colaboradores = colaboradores.filter(x=>x.id!==editandoEmpId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().catch(function(e){console.error('Firestore colaboradores:',e);toast('Error al eliminar colaborador','err');});}
-  filtrarcolaboradores(); cerrarModal('mcolaborador'); toast('colaborador eliminado');
+  filtrarcolaboradores(); cerrarModal('mcolaborador');
+  if(typeof db!=='undefined'&&db){db.collection('colaboradores').doc(editandoEmpId).delete().then(function(){
+    toast('colaborador eliminado');
+  }).catch(_errWrite('eliminarColaborador', '⚠️ NO se eliminó — recargá y reintentá'));}
 }
 
 function filtrarcolaboradores(){
@@ -6223,13 +6331,14 @@ function cambiarEstadoOrden(id, nuevoEstado){
   if(nuevoEstado==='completada'){ ordenes[i].completadoAt=new Date().toISOString(); ordenes[i].completadoPor=empActualId; ordenes[i].fechaCompletada=ordenes[i].completadoAt; ordenes[i].completadaPor=empActualId; updateData.completadoAt=ordenes[i].completadoAt; updateData.completadoPor=empActualId; updateData.fechaCompletada=ordenes[i].completadoAt; updateData.completadaPor=empActualId; }
   if(nuevoEstado==='cancelada'){ ordenes[i].canceladoAt=new Date().toISOString(); ordenes[i].canceladoPor=empActualId; updateData.canceladoAt=ordenes[i].canceladoAt; updateData.canceladoPor=empActualId; }
   gLS();
-  if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update(updateData).catch(function(e){console.warn('Firestore update error:', e);toast('Error al cambiar estado','err');});
-  }
   _markLocalChange('ordenes', id);
   rendercolaborador();
   renderKanban();
-  toast('Estado: ' + nuevoEstado, 'ok');
+  if(typeof db !== 'undefined'){
+    db.collection('ordenes').doc(id).update(updateData).then(function(){
+      toast('Estado: ' + nuevoEstado, 'ok');
+    }).catch(_errWrite('cambiarEstadoOrdenEmp', '⚠️ NO se guardó el cambio de estado — reintentá'));
+  }
 }
 
 function abrirComentarioOrden(id){
@@ -6241,9 +6350,10 @@ function abrirComentarioOrden(id){
   o.comentarios = [...(o.comentarios||[]), {texto, autor: empActualId, fecha: new Date().toISOString()}];
   gLS();
   if(typeof db !== 'undefined'){
-    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).catch(function(e){console.warn('Firestore update error:', e);toast('Error al guardar comentario','err');});
+    db.collection('ordenes').doc(id).update({comentarios: o.comentarios}).then(function(){
+      toast('Comentario guardado', 'ok');
+    }).catch(_errWrite('comentarioOrdenEmp', '⚠️ El comentario NO se guardó — reintentá'));
   }
-  toast('Comentario guardado', 'ok');
 }
 
 function moverTarea(id, nuevoEstado){
@@ -6260,14 +6370,13 @@ function moverTarea(id, nuevoEstado){
     db.collection('ordenes').doc(id).update(updateData).then(function(){
       toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
     }).catch(function(e){
-      console.error('[moverTarea] Firestore error:', e);
       ordenes[i].estado = estadoPrevio;
       try { localStorage.setItem('d_ordenes', JSON.stringify(ordenes)); } catch(ex){}
       renderKanban();
-      toast('Error al guardar — reintentá','err');
+      _errWrite('moverTarea', '⚠️ NO se guardó — reintentá')(e);
     });
   } else {
-    toast(nuevoEstado==='completada'?'¡Tarea completada! ✓':'Estado actualizado','ok');
+    toast('⚠️ Sin conexión a la base — NO se guardó','err');
   }
 }
 
@@ -6356,28 +6465,38 @@ function guardarReunion(){
     creadoPor: editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.creadoPor||empActualId) : empActualId,
     cumplimiento: editandoReunionId ? (reuniones.find(x=>x.id===editandoReunionId)?.cumplimiento||{}) : {}
   };
+  // Éxito recién con el ack del server; si falla, el modal queda abierto con lo cargado.
+  if(typeof db==='undefined'||!db){ toast('⚠️ Sin conexión a la base — NO se guardó','err'); return; }
+  function _postGuardadoReunion(msj){
+    cerrarModal('mReunion');
+    try { gLS(); } catch(e){ console.warn('Sync error:', e); }
+    filtrarReuniones(); renderEmpReuniones();
+    toast(msj,'ok');
+  }
   if(editandoReunionId){
     const i = reuniones.findIndex(x=>x.id===editandoReunionId);
-    reuniones[i] = {...reuniones[i], ...datos};
-    toast('Reunión actualizada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).set(reuniones[i],{merge:true}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al guardar reunión','err');});}
+    const actualizada = {...reuniones[i], ...datos};
+    db.collection('reuniones').doc(editandoReunionId).set(actualizada,{merge:true}).then(function(){
+      reuniones[i] = actualizada;
+      _postGuardadoReunion('Reunión actualizada ✓');
+    }).catch(_errWrite('guardarReunion', '⚠️ La reunión NO se guardó — reintentá'));
   } else {
     const nuevoId=uid();
-    reuniones.push({id:nuevoId, ...datos});
-    toast('Reunión creada ✓','ok');
-    if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al crear reunión','err');});}
+    db.collection('reuniones').doc(nuevoId).set({id:nuevoId,...datos},{merge:true}).then(function(){
+      reuniones.push({id:nuevoId, ...datos});
+      _postGuardadoReunion('Reunión creada ✓');
+    }).catch(_errWrite('crearReunion', '⚠️ La reunión NO se guardó — reintentá'));
   }
-  cerrarModal('mReunion');
-  try { gLS(); } catch(e){ console.warn('Sync error:', e); }
-  filtrarReuniones(); renderEmpReuniones();
 }
 
 function eliminarReunion(){
   if(!confirm('¿Eliminar esta reunión?'))return;
   reuniones = reuniones.filter(x=>x.id!==editandoReunionId);
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().catch(function(e){console.error('Firestore reuniones:',e);toast('Error al eliminar reunión','err');});}
-  cerrarModal('mReunion'); filtrarReuniones(); toast('Reunión eliminada');
+  cerrarModal('mReunion'); filtrarReuniones();
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(editandoReunionId).delete().then(function(){
+    toast('Reunión eliminada');
+  }).catch(_errWrite('eliminarReunion', '⚠️ NO se eliminó la reunión — recargá y reintentá'));}
 }
 
 function filtrarReuniones(){
@@ -6483,9 +6602,10 @@ function toggleCumplimiento(reunionId, empId){
   if(!r.cumplimiento)r.cumplimiento={};
   r.cumplimiento[empId] = !r.cumplimiento[empId];
   gLS();
-  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).catch(function(e){console.error('Firestore reuniones:',e);toast('Error al guardar cumplimiento','err');});}
   renderEmpReuniones();
-  toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
+  if(typeof db!=='undefined'&&db){db.collection('reuniones').doc(reunionId).update({cumplimiento:r.cumplimiento}).then(function(){
+    toast(r.cumplimiento[empId]?'Marcado como realizado ✓':'Desmarcado','ok');
+  }).catch(_errWrite('toggleCumplimiento', '⚠️ NO se guardó — reintentá'));}
 }
 
 function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
@@ -6502,16 +6622,16 @@ function cambiarRsvp(reunionId, targetEmpId, nuevoEstado){
   try { localStorage.setItem('d_reuniones', JSON.stringify(reuniones)); } catch(e){}
   filtrarReuniones(); renderEmpReuniones();
   var labels = {va:'Voy ✅', no_va:'No voy ❌', tal_vez:'Tal vez 🤔', sin_responder:'Sin responder ⏳'};
-  toast(labels[nuevoEstado]||nuevoEstado, 'ok');
-  // Write a Firestore en background
+  // Toast recién con el ack del server
   if(typeof db!=='undefined'&&db){
     var updateObj = {}; updateObj['rsvp.'+targetEmpId] = r.rsvp[targetEmpId];
-    db.collection('reuniones').doc(reunionId).update(updateObj).catch(function(e){
-      console.error('Firestore rsvp:', e);
+    db.collection('reuniones').doc(reunionId).update(updateObj).then(function(){
+      toast(labels[nuevoEstado]||nuevoEstado, 'ok');
+    }).catch(function(e){
       // Rollback en caso de error
       if(prevEstado) r.rsvp[targetEmpId] = prevEstado; else delete r.rsvp[targetEmpId];
       filtrarReuniones(); renderEmpReuniones();
-      toast('Error al guardar RSVP','err');
+      _errWrite('cambiarRsvp', '⚠️ NO se guardó el RSVP — reintentá')(e);
     });
   }
 }
@@ -6731,9 +6851,10 @@ function marcarNotaPublicada(id){
   if(typeof db !== 'undefined'){
     db.collection(loc.col).doc(id).update({
       estado: 'publicada', fechaPublicacion: ts, publicadaPor: empActualId
-    }).catch(function(e){ console.warn(e); toast('Error al marcar como publicada','err'); });
+    }).then(function(){
+      toast('Nota marcada como publicada', 'ok');
+    }).catch(_errWrite('marcarNotaPublicada', '⚠️ NO se guardó — reintentá'));
   }
-  toast('Nota marcada como publicada', 'ok');
   cerrarHugoViewer();
   if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
   if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
@@ -6745,9 +6866,10 @@ function moverNotaHugo(id, nuevoEstado){
   if(!loc) return;
   loc.arr[loc.i].estado = nuevoEstado;
   if(typeof db !== 'undefined'){
-    db.collection(loc.col).doc(id).update({ estado: nuevoEstado }).catch(function(e){ console.warn(e); toast('Error al cambiar estado','err'); });
+    db.collection(loc.col).doc(id).update({ estado: nuevoEstado }).then(function(){
+      toast('Estado actualizado', 'ok');
+    }).catch(_errWrite('moverNotaHugo', '⚠️ NO se guardó el cambio de estado — reintentá'));
   }
-  toast('Estado actualizado', 'ok');
   cerrarHugoViewer();
   if(loc.enBandeja){ if(typeof renderBandejaHugo === 'function') renderBandejaHugo(); return; }
   if(typeof filtrarOrdenes === 'function') filtrarOrdenes();
@@ -6894,8 +7016,7 @@ async function subirFotoEnPerfil(input){
         var wrapH = document.getElementById('svAvatarWrap');
         if(wrapH) wrapH.innerHTML = '<img src="'+base64+'" style="width:100%;height:100%;object-fit:cover;">';
       } catch(err){
-        console.error('Error guardando foto:', err);
-        toast('Error al guardar: ' + err.message, 'err');
+        _errWrite('guardarFotoPerfil', '⚠️ La foto NO se guardó — reintentá')(err);
       }
     };
     img.onerror = function(){ toast('Error al leer la imagen', 'err'); };
@@ -6984,14 +7105,15 @@ function guardarPerfil(){
   if(typeof db !== 'undefined' && u.id){
     const updateData = { nombre, telefono, email, fechaNacimiento: fechaNac };
     if(passNueva) updateData.password = passNueva;
-    db.collection('colaboradores').doc(u.id).set(updateData, {merge: true})
-      .catch(function(err){ console.warn('Firestore update error:', err); toast('Error al guardar perfil','err'); });
-
+    db.collection('colaboradores').doc(u.id).set(updateData, {merge: true}).then(function(){
+      cerrarModal('mPerfil');
+      toast('Perfil actualizado ✓', 'ok');
+    }).catch(_errWrite('guardarPerfil', '⚠️ El perfil NO se guardó — reintentá'));
+  } else {
+    cerrarModal('mPerfil');
   }
 
   try { gLS(); } catch(e) {}
-  cerrarModal('mPerfil');
-  toast('Perfil actualizado ✓', 'ok');
 }
 
 // ══ MODALES ══
@@ -7039,15 +7161,22 @@ function activarCuenta(){
   // Guardar la nueva contraseña en localStorage
   var idx = colaboradores.findIndex(function(c){ return c.id === onbUsuario.id; });
   if(idx === -1){ err.textContent = 'Error: usuario no encontrado'; return; }
-  colaboradores[idx].password = p1;
-  try { localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); } catch(e){}
-  if(typeof db!=='undefined'&&db) db.collection('colaboradores').doc(onbUsuario.id).update({password:p1}).catch(function(e){console.warn('Onboarding save error:',e);toast('Error al guardar contraseña','err');});
-  err.textContent = '';
-  var ok = document.getElementById('onbSuccess');
-  ok.style.display = 'block';
-  ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
-  document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
-  setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
+  if(typeof db==='undefined'||!db){ err.textContent = 'Sin conexión a la base — reintentá'; return; }
+  // La cuenta queda "activada" recién cuando la contraseña persistió en el server
+  db.collection('colaboradores').doc(onbUsuario.id).update({password:p1}).then(function(){
+    colaboradores[idx].password = p1;
+    try { localStorage.setItem('d_colaboradores', JSON.stringify(colaboradores)); } catch(e){}
+    err.textContent = '';
+    var ok = document.getElementById('onbSuccess');
+    ok.style.display = 'block';
+    ok.textContent = '¡Cuenta activada! Ya podés ingresar con tu teléfono y la nueva contraseña.';
+    document.querySelectorAll('#onboardingScreen .btn-login').forEach(function(b){ b.disabled = true; });
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 2500);
+  }).catch(function(e){
+    if(e && e.code === 'permission-denied' && typeof _avisoRecargaPanel === 'function') _avisoRecargaPanel('write:onboardingPassword');
+    err.textContent = 'NO se pudo guardar la contraseña — reintentá';
+    console.error('Onboarding save error:', e);
+  });
 }
 
 // ══════════ TABLERO MÉTRICAS GRUPO ══════════
@@ -7232,6 +7361,14 @@ function aplicarVisibilidad(){
       if(el) el.style.display = '';
     });
   }
+
+  // Bandeja Hugo: solo quienes trabajan lo editorial (Lucas, Toto, Pascali).
+  // A los demás directores les aparecía sin contexto (reporte Adriana 2026-08-20).
+  var VE_BANDEJA_HUGO = ['emp01','emp07','emp16'];
+  ['sidebarBandejaHugo','drawerBandejaHugo'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.display = VE_BANDEJA_HUGO.includes(empActualId) ? '' : 'none';
+  });
 
   // Sidebar Pipeline: visible para PIPELINE_SUPERVISOR
   var pipeSupVisible = typeof PIPELINE_SUPERVISOR !== 'undefined' && PIPELINE_SUPERVISOR.includes(empActualId);
@@ -7560,7 +7697,7 @@ function enviarComentarioTarea(){
     document.getElementById('comentMencionarEmp').value = '';
     renderKanban();
     toast('Comentario enviado','ok');
-  }).catch(()=>toast('Error al guardar','err'));
+  }).catch(_errWrite('comentarioHilo', '⚠️ El comentario NO se guardó — reintentá'));
 }
 
 function cerrarComentariosTarea(){
@@ -7710,7 +7847,7 @@ function enviarMensaje(){
 
   input.value = '';
   if(typeof db !== 'undefined'){
-    db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(e=>console.warn(e));
+    db.collection('mensajes').doc(_chatConId).collection('msgs').add(msg).catch(_errWrite('chatEnviar', '⚠️ El mensaje NO se envió'));
     db.collection('mensajes').doc(_chatConId).set({
       participantes: [empActualId, destId],
       ultimoMensaje: texto,
@@ -8072,7 +8209,7 @@ function navSidebar(vistaId, el){
     <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vProductividad',this)"><span>📈</span> Productividad</button>
     <button class="nav-drawer-item" id="drawerProveedores" style="display:none" onclick="cambiarVistaDrawer('vProveedores',this)"><span>🏢</span> Proveedores</button>
     <button class="nav-drawer-item" id="drawerCacho" style="display:none" onclick="cambiarVistaDrawer('vCacho',this)"><span>🦟</span> Cacho</button>
-    <button class="nav-drawer-item" onclick="cambiarVistaDrawer('vBandejaHugo',this)"><span>📰</span> Bandeja Hugo</button>
+    <button class="nav-drawer-item" id="drawerBandejaHugo" style="display:none" onclick="cambiarVistaDrawer('vBandejaHugo',this)"><span>📰</span> Bandeja Hugo</button>
     <div style="border-top:1px solid rgba(255,255,255,0.1);margin:12px 0;"></div>
     <a href="https://www.laopinionline.ar" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>🌐</span> El Diario</a>
     <a href="https://laopinionline.backend.thinkindot.com/backend/cms.php" target="_blank" class="nav-drawer-item" style="text-decoration:none;"><span>✏️</span> Editor CMS</a>
@@ -8364,8 +8501,7 @@ async function darOkCacho(reportId){
     renderCachoReports(shell);
     toast('Revisado correctamente', 'ok');
   } catch(e){
-    console.error('[cacho] OK error:', e.message);
-    toast('Error al registrar revisión: ' + e.message, 'err');
+    _errWrite('cachoOk', '⚠️ NO se registró la revisión — reintentá')(e);
   }
 }
 // ══ PIPELINE COMERCIAL ══
@@ -8657,8 +8793,7 @@ async function moverEtapa(clienteId, etapaNueva, deadlineDias, motivo){
     renderPipeline('pipelineBoard','desviacionesPanel','pipelineCountBadge','pipelineChips');
     renderPipeline('pipelineBoardEmp','desviacionesPanelEmp','pipelineEmpCountBadge','pipelineChipsEmp');
   } catch(e){
-    console.error('[pipeline] moverEtapa error:', e.message);
-    toast('Error al mover etapa: ' + e.message, 'err');
+    _errWrite('pipelineMoverEtapa', '⚠️ NO se movió de etapa — reintentá')(e);
   }
 }
 
