@@ -2810,6 +2810,7 @@ async function login(){
   }
   // Buscar colaborador por teléfono
   const usuario = colaboradores.find(c => {
+    if(!esColabActivo(c)) return false; // dados de baja no loguean
     const telGuardado = (c.telLogin||'').replace(/[^0-9]/g,'');
     const telAlt = (c.telefono||'').replace(/[^0-9]/g,'');
     return (telGuardado===telInput || telAlt===telInput) && c.password===pass;
@@ -2922,7 +2923,7 @@ const DIRECTORES = {
 // Carolina Cocconi (emp05) pasó a rango colaborador
 const PUEDE_VER_PAUTA = ['emp01', 'emp02'];
 const PUEDE_ASIGNAR_SEGUIMIENTO = ['emp01','emp02','emp07','emp16','emp00'];
-const EQUIPO_COMERCIAL = ['emp01','emp02','emp05','emp07','emp16','emp28','emp29','emp32','emp33','emp36'];
+const EQUIPO_COMERCIAL = ['emp01','emp02','emp07','emp16','emp28','emp29','emp32','emp33','emp36']; // emp05 Cocconi baja 2026-08-20
 const PIPELINE_SUPERVISOR = ['emp01','emp02','emp07','emp16'];
 const TAREAS_POR_EQUIPO = {
   'Redacción': [
@@ -3094,6 +3095,11 @@ function esAsignado(o, empId){
   if(!o || !empId) return false;
   return o.asignadoA === empId || (o.colaboradoresIds||[]).includes(empId) || o.colaboradorId === empId || (o.copiaA||[]).includes(empId);
 }
+
+// Baja lógica (2026-08-20): los docs de colaboradores dados de baja NO se borran
+// (sus ids viven en el histórico: completadaPor, derivadaPor, archivo). Se marcan
+// activo:false + estado:'baja' + fechaBaja y se filtran acá.
+function esColabActivo(c){ return !!c && c.activo !== false && c.estado !== 'baja' && c.estado !== 'inactivo'; }
 
 // ══════════ VALIDACIÓN DE JERARQUÍA EN ÓRDENES ══════════
 function validarJerarquiaOrden(colaboradoresIds){
@@ -4913,7 +4919,7 @@ function actualizarFiltroOrdenes(){
   sel.innerHTML='<option value="">Todos los clientes</option>'+clientes.filter(c=>c.estado==='activo').sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'')).map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
   const selColab=document.getElementById('filtroOrdenColaborador');
   if(selColab){
-    const activos=colaboradores.filter(c=>c.estado!=='inactivo'&&c.jerarquia!=='externo').sort((a,b)=>a.nombre.localeCompare(b.nombre));
+    const activos=colaboradores.filter(c=>esColabActivo(c)&&c.jerarquia!=='externo').sort((a,b)=>a.nombre.localeCompare(b.nombre));
     selColab.innerHTML='<option value="">Todos los colaboradores</option>'+activos.map(c=>`<option value="${c.id}">${c.nombre.split(' ').slice(0,2).join(' ')}</option>`).join('');
   }
   const selC=document.getElementById('soCliente');
@@ -4923,7 +4929,7 @@ function actualizarFiltroOrdenes(){
   if(wrapE){
     // Agrupar por equipo
     var equipos = {};
-    colaboradores.forEach(function(e){
+    colaboradores.filter(esColabActivo).forEach(function(e){
       var eq = e.equipo || 'Sin equipo';
       if(!equipos[eq]) equipos[eq] = [];
       equipos[eq].push(e);
@@ -5991,6 +5997,7 @@ function filtrarcolaboradores(){
   const esDG = empActualId==='emp01' || (yo && yo.jerarquia==='director_general');
   const esAdmin = empActualId==='emp02';
   const lista = colaboradores.filter(e => {
+    if(!esColabActivo(e)) return false; // dados de baja fuera del grid
     // Director solo ve su equipo; director general y admin ven todos
     if(!esDG && !esAdmin && yo && yo.jerarquia==='director' && e.equipo !== yo.equipo) return false;
     if(q && !e.nombre.toLowerCase().includes(q) && !(e.puesto||'').toLowerCase().includes(q)) return false;
@@ -6689,7 +6696,7 @@ function renderProductividad(){
   const {inicio, fin, label} = semanaRango(semanaOffset);
   document.getElementById('semanaLabel').textContent = semanaOffset===0 ? 'Esta semana ('+label+')' : label;
   const hoyStr = hoy();
-  var internos = colaboradores.filter(function(e){ return e.jerarquia !== 'externo' && e.equipo !== 'Externo'; });
+  var internos = colaboradores.filter(function(e){ return esColabActivo(e) && e.jerarquia !== 'externo' && e.equipo !== 'Externo'; });
   // Filter by scope: emp01 sees all, directors see only their direct reports
   if(empActualId && empActualId !== 'emp01'){
     var misReportes = internos.filter(function(e){ return e.reportaA === empActualId; });
@@ -7431,14 +7438,15 @@ function aplicarVisibilidad(){
     tabProv.style.display = '';
   }
 
-  // Mostrar tab Cacho para emp01, emp02, emp16, emp18 (ambos shells + drawers)
+  // Tab Cacho para emp01, emp02, emp16, emp18 (ambos shells + drawers).
+  // Simétrico (mostrar Y esconder): antes solo mostraba, y un logout→login de otro
+  // usuario en la misma pestaña heredaba la visibilidad del anterior.
   const cachoIds = ['emp01','emp02','emp16','emp18'];
-  if(cachoIds.includes(empActualId)){
-    ['tabCacho','tabCachoEmp','drawerCacho','drawerCachoEmp'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) el.style.display = '';
-    });
-  }
+  const veCacho = cachoIds.includes(empActualId);
+  ['tabCacho','tabCachoEmp','drawerCacho','drawerCachoEmp'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.display = veCacho ? '' : 'none';
+  });
 
   // Bandeja Hugo: solo quienes trabajan lo editorial (Lucas, Toto, Pascali).
   // A los demás directores les aparecía sin contexto (reporte Adriana 2026-08-20).
